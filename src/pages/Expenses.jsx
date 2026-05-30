@@ -1,0 +1,269 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { db } from '../db/database';
+import { theme } from '../config/theme';
+import { translations } from '../config/translations';
+import { 
+  Calendar, Coins, ArrowDownCircle, ArrowUpCircle, 
+  Trash2, Plus, FileText, Tag, Wallet 
+} from 'lucide-react';
+
+import LoadingScreen from '../components/LoadingScreen';
+import PageHeader from '../components/PageHeader';
+import FormInput from '../components/FormInput';
+import FormSelect from '../components/FormSelect';
+import PrimaryButton from '../components/PrimaryButton';
+import CustomAlert from '../components/CustomAlert';
+
+export default function Expenses() {
+  const navigate = useNavigate();
+  const [isChecking, setIsChecking] = useState(true);
+  const [language, setLanguage] = useState('si');
+
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [records, setRecords] = useState([]);
+  
+  // Form States
+  const [type, setType] = useState('expense'); // 'income' or 'expense'
+  const [category, setCategory] = useState('');
+  const [amount, setAmount] = useState('');
+  const [note, setNote] = useState('');
+
+  const [alertConfig, setAlertConfig] = useState({ 
+    message: '', type: 'success', showCancel: false, onConfirm: null
+  });
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return navigate('/');
+
+    setLanguage(localStorage.getItem('appLanguage') || 'si');
+    setIsChecking(false);
+  }, [navigate]);
+
+  useEffect(() => {
+    loadRecords();
+  }, [date]);
+
+  const loadRecords = async () => {
+    try {
+      const allRecords = await db.expenses.filter(e => e.date === date).toArray();
+      // අලුත්ම සටහන උඩින් පෙන්වීමට ID එකෙන් sort කිරීම
+      allRecords.sort((a, b) => b.id - a.id);
+      setRecords(allRecords);
+    } catch (error) {
+      console.error("Error loading expenses", error);
+    }
+  };
+
+  const t = translations[language] || translations['si'];
+
+  const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
+  const showAlert = (message, alertType = 'success', showCancel = false, onConfirm = null) => {
+    setAlertConfig({ message, type: alertType, showCancel, onConfirm });
+  };
+
+  const handleAddRecord = async (e) => {
+    e.preventDefault();
+    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
+      showAlert(language === 'si' ? 'කරුණාකර නිවැරදි මුදලක් ඇතුලත් කරන්න.' : 'Please enter a valid amount.', 'error');
+      return;
+    }
+    if (!category) {
+      showAlert(language === 'si' ? 'කරුණාකර කාණ්ඩයක් තෝරන්න.' : 'Please select a category.', 'error');
+      return;
+    }
+
+    try {
+      await db.expenses.add({
+        date,
+        type,
+        category,
+        amount: parseFloat(amount),
+        note,
+        timestamp: Date.now(),
+        syncStatus: 'pending'
+      });
+
+      setAmount('');
+      setNote('');
+      setCategory('');
+      loadRecords();
+      
+      showAlert(language === 'si' ? 'සටහන සාර්ථකව එක් කළා!' : 'Record added successfully!', 'success');
+    } catch (error) {
+      showAlert('Error saving record', 'error');
+    }
+  };
+
+  const handleDelete = (id) => {
+    showAlert(
+      language === 'si' ? 'මෙම සටහන මකා දැමීමට අවශ්‍යද?' : 'Are you sure you want to delete this record?',
+      'confirm',
+      true,
+      async () => {
+        await db.expenses.delete(id);
+        loadRecords();
+        setTimeout(() => showAlert(language === 'si' ? 'සටහන මකා දමන ලදී!' : 'Deleted successfully!', 'success'), 300);
+      }
+    );
+  };
+
+  // Categories based on Type
+  const expenseCategories = [
+    { label: language === 'si' ? 'ඉන්ධන (Fuel)' : 'Fuel', value: 'fuel' },
+    { label: language === 'si' ? 'කෑම බීම (Food)' : 'Food', value: 'food' },
+    { label: language === 'si' ? 'වාහන නඩත්තු (Vehicle)' : 'Vehicle', value: 'vehicle' },
+    { label: language === 'si' ? 'වෙනත් වියදම් (Other)' : 'other_expense', value: 'other_expense' }
+  ];
+
+  const incomeCategories = [
+    { label: language === 'si' ? 'ටිප් එකක් (Tip)' : 'Tip', value: 'tip' },
+    { label: language === 'si' ? 'ලැබුණු වෙනත් මුදල් (Found/Other)' : 'found_money', value: 'found_money' },
+    { label: language === 'si' ? 'අත්තිකාරම් (Advance/Salary)' : 'advance', value: 'advance' }
+  ];
+
+  const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
+
+  // ගණනය කිරීම් (Calculations)
+  const totalIncome = records.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
+  const totalExpense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
+  const netBalance = totalIncome - totalExpense;
+
+  if (isChecking) return <LoadingScreen />;
+
+  return (
+    <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
+      
+      <CustomAlert 
+        message={alertConfig.message} 
+        type={alertConfig.type} 
+        showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm}
+        onClose={closeAlert} 
+        language={language}
+      />
+
+      <PageHeader title={language === 'si' ? 'ආදායම් සහ වියදම්' : 'Income & Expenses'} backPath="/more" />
+
+      <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 hide-scrollbar">
+        
+        {/* Date Selector */}
+        <div className="mb-4">
+          <FormInput type="date" label={t.dateLabel || 'දිනය'} value={date} onChange={(e) => setDate(e.target.value)} icon={Calendar} />
+        </div>
+
+        {/* Summary Card */}
+        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 mb-6 shadow-lg text-white">
+          <p className="text-gray-400 text-[12px] font-bold tracking-wide uppercase mb-1 flex items-center gap-2">
+            <Wallet size={14} /> {language === 'si' ? 'දවසේ ඉතිරිය' : 'Daily Net Balance'}
+          </p>
+          <h2 className={`text-3xl font-bold mb-4 ${netBalance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {netBalance < 0 ? '-' : ''} රු. {Math.abs(netBalance).toFixed(2)}
+          </h2>
+          
+          <div className="flex justify-between border-t border-gray-700 pt-3">
+            <div>
+              <p className="text-gray-400 text-[11px] font-bold">{language === 'si' ? 'ආදායම් (+)' : 'Income'}</p>
+              <p className="text-green-400 font-bold">රු. {totalIncome.toFixed(2)}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-gray-400 text-[11px] font-bold">{language === 'si' ? 'වියදම් (-)' : 'Expense'}</p>
+              <p className="text-red-400 font-bold">රු. {totalExpense.toFixed(2)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Add New Record Form */}
+        <div className={`${theme.colors.cardBg} rounded-2xl border ${theme.colors.inputBorder} p-4 mb-6 shadow-sm`}>
+          <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
+            {language === 'si' ? 'නව සටහනක් එක් කරන්න' : 'Add New Record'}
+          </h3>
+          
+          <form onSubmit={handleAddRecord} className="space-y-4">
+            {/* Type Toggle */}
+            <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => { setType('income'); setCategory(''); }}
+                className={`flex-1 py-2 text-[13px] font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${type === 'income' ? 'bg-green-500 text-white shadow-md' : 'text-gray-500 hover:text-green-600'}`}
+              >
+                <ArrowUpCircle size={16} /> {language === 'si' ? 'ආදායමක්' : 'Income'}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setType('expense'); setCategory(''); }}
+                className={`flex-1 py-2 text-[13px] font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${type === 'expense' ? 'bg-red-500 text-white shadow-md' : 'text-gray-500 hover:text-red-600'}`}
+              >
+                <ArrowDownCircle size={16} /> {language === 'si' ? 'වියදමක්' : 'Expense'}
+              </button>
+            </div>
+
+            <div className="flex gap-3">
+              <div className="flex-1">
+                <FormSelect label={language === 'si' ? 'වර්ගය' : 'Category'} value={category} onChange={(e) => setCategory(e.target.value)} options={currentCategories} icon={Tag} required />
+              </div>
+              <div className="flex-1">
+                <FormInput type="number" label={language === 'si' ? 'මුදල (රු)' : 'Amount (Rs)'} value={amount} onChange={(e) => setAmount(e.target.value)} icon={Coins} placeholder="0.00" required />
+              </div>
+            </div>
+
+            <FormInput type="text" label={t.remarksLabel || 'සටහන (Note)'} value={note} onChange={(e) => setNote(e.target.value)} icon={FileText} placeholder={language === 'si' ? 'කෙටි විස්තරයක්...' : 'Short description...'} />
+
+            <PrimaryButton type="submit" icon={Plus} className={type === 'income' ? 'bg-green-600! hover:bg-green-700!' : 'bg-red-600! hover:bg-red-700!'}>
+               {language === 'si' ? 'එක් කරන්න' : 'Add Record'}
+            </PrimaryButton>
+          </form>
+        </div>
+
+        {/* Records List */}
+        <div>
+          <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
+            {language === 'si' ? 'දවසේ සටහන්' : 'Today\'s Records'}
+          </h3>
+          
+          {records.length === 0 ? (
+            <div className={`p-6 rounded-xl border border-dashed ${theme.colors.inputBorder} text-center`}>
+              <FileText size={28} className={`${theme.colors.mutedText} mx-auto mb-2 opacity-50`} />
+              <p className={`${theme.colors.mutedText} text-sm font-medium`}>
+                {language === 'si' ? 'මෙම දිනය සඳහා සටහන් කිසිවක් නොමැත.' : 'No records for this date.'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {records.map((record) => {
+                const isIncome = record.type === 'income';
+                const catObj = (isIncome ? incomeCategories : expenseCategories).find(c => c.value === record.category);
+                const catLabel = catObj ? catObj.label : record.category;
+
+                return (
+                  <div key={record.id} className={`${theme.colors.cardBg} border ${theme.colors.inputBorder} p-3 rounded-xl shadow-sm flex items-center justify-between`}>
+                    <div className="flex items-center gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isIncome ? 'bg-green-100 text-green-600 dark:bg-green-900/30' : 'bg-red-100 text-red-600 dark:bg-red-900/30'}`}>
+                        {isIncome ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
+                      </div>
+                      <div>
+                        <p className={`font-bold text-[14px] ${theme.colors.inputText}`}>{catLabel}</p>
+                        {record.note && <p className={`text-[11px] ${theme.colors.mutedText} mt-0.5 leading-tight`}>{record.note}</p>}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-4">
+                      <span className={`font-bold text-[15px] ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                        {isIncome ? '+' : '-'} {parseFloat(record.amount).toFixed(2)}
+                      </span>
+                      <button onClick={() => handleDelete(record.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}

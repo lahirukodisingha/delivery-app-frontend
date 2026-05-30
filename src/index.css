@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* Tailwind v4 - Dark Mode එක සිස්ටම් එකෙන් නැතුව අපේ Drop-down (Class) එකෙන් පාලනය කිරීමට */
+@custom-variant dark (&:is(.dark *));
+
+body {
+  font-family: 'Noto Sans Sinhala', sans-serif;
+  background-color: #f4f7fb;
+}
+
+/* Scrollbar එක හංගන්න */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+input, select, textarea {
+    font-size: 16px !important;
+}

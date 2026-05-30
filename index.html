@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#14348c" />
+    <title>frontend</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+
+    <script>
+      // බ්‍රවුසරයේ Service Worker සඳහා සහය දක්වන්නේ නම් පමණක් ක්‍රියාත්මක වීම
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+              console.log('ServiceWorker සාර්ථකව ලියාපදිංචි විය!', registration.scope);
+            })
+            .catch(err => {
+              console.log('ServiceWorker ලියාපදිංචි වීම අසාර්ථකයි: ', err);
+            });
+        });
+      }
+    </script>
+
+  </body>
+</html>
