@@ -11,8 +11,8 @@
 
 html, body {
   /* උඩට/පහලට ඇදෙන (bounce) එක සම්පූර්ණයෙන්ම නවත්වන්නේ මෙතනින් */
-  overscroll-behavior-y: none;
-  overscroll-behavior-x: none;
+  overscroll-behavior-y: none !important;
+  overscroll-behavior-x: none !important;
   
   /* PWA එකක් රියල් ඇප් එකක් වගේ පේන්න අවශ්‍ය සැකසුම් */
   -webkit-tap-highlight-color: transparent;
@@ -24,37 +24,37 @@ body {
   font-family: 'Noto Sans Sinhala', sans-serif;
   
   /* [Light Mode] සාමාන්‍ය පසුබිම් වර්ණය */
-  background-color: #f4f7fb; 
-  color: #1f2937;
+  background-color: #f4f7fb !important; 
+  color: #1f2937 !important;
   
   /* මුළු පිටුවම scroll වෙන එක සම්පූර්ණයෙන්ම නවත්වයි */
-  overflow: hidden;
-  width: 100vw;
-  height: 100vh;
-  margin: 0;
-  padding: 0;
+  overflow: hidden !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
 /* [Dark Mode] සාමාන්‍ය පසුබිම් වර්ණය (Tailwind gray-900) */
 .dark body {
-  background-color: #111827;
-  color: #f9fafb;
+  background-color: #111827 !important;
+  color: #f9fafb !important;
 }
 
 #root {
   /* අන්තර්ගතයට විතරක් scroll වෙන්න දෙනවා (Native Scroll) */
-  width: 100vw;
-  height: 100vh;
-  overflow-y: auto;
-  overscroll-behavior-y: none; 
+  width: 100vw !important;
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: none !important; 
   
   /* ඇදෙන විට නිල් පාට පෙනීම වැළැක්වීමට මෙතනටත් background එක යොදයි */
-  background-color: #f4f7fb;
+  background-color: #f4f7fb !important;
 }
 
 /* [Dark Mode] root පසුබිම් වර්ණය */
 .dark #root {
-  background-color: #111827;
+  background-color: #111827 !important;
 }
 
 
