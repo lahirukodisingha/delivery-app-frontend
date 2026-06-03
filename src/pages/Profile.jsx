@@ -108,31 +108,76 @@ export default function Profile() {
     e.preventDefault();
     
     const userStr = localStorage.getItem('user');
+    let user = null;
     let isPassChanged = false;
 
     if (userStr) {
-      const user = JSON.parse(userStr);
-      user.username = name.trim();
+      user = JSON.parse(userStr);
       
-      // කලින් තිබූ passwordChanged තත්වය ලබාගැනීම
-      const existingProfile = await db.profile.get(1);
-      isPassChanged = existingProfile?.passwordChanged || false;
-
-      // අලුත් පාස්වර්ඩ් එකක් ලබාදී ඇත්නම් එය යාවත්කාලීන කිරීම
+      // =========================================================
+      // 1. මුරපදය වෙනස් කර ඇත්නම් සෘජුවම Backend එකට යැවීම
+      // =========================================================
       if (newPassword.trim().length > 0) {
-        isPassChanged = true;
+        if (currentPassword.trim().length === 0) {
+          showAlert(language === 'si' ? 'දැනට ඇති මුරපදය ඇතුලත් කරන්න' : 'Please enter current password', 'error');
+          return;
+        }
+
+        if (!navigator.onLine) {
+          showAlert(language === 'si' ? 'මුරපදය වෙනස් කිරීමට අන්තර්ජාල සම්බන්ධතාවයක් අවශ්‍යයි!' : 'Internet connection required to change password!', 'error');
+          return;
+        }
+
+        try {
+          // ඔබගේ Backend URL එක මෙහි ලබාදෙන්න 
+          // (උදාහරණයක් ලෙස .env හරහා VITE_API_URL ලබා ගන්නේ නම් මෙලෙස භාවිතා කරන්න)
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          
+          const res = await fetch(`${API_URL}/api/auth/change-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: user.username,
+              currentPassword: currentPassword,
+              newPassword: newPassword
+            })
+          });
+
+          const data = await res.json();
+          
+          if (!res.ok) {
+            showAlert(data.error || 'මුරපදය වෙනස් කිරීම අසාර්ථකයි', 'error');
+            return; // Error එකක් ආවොත් එතනින් නවතී
+          }
+          
+          isPassChanged = true;
+          
+        } catch (error) {
+          console.error("Password change error:", error);
+          showAlert(language === 'si' ? 'සර්වර් එක හා සම්බන්ධ වීමට නොහැක' : 'Could not connect to server', 'error');
+          return;
+        }
       }
 
-      // 1. දත්ත IndexedDB වෙත සුරැකීම
+      // =========================================================
+      // 2. අනෙකුත් දත්ත (Name/Profile Pic) Local DB එකට සේව් කිරීම
+      // =========================================================
+      
+      const existingProfile = await db.profile.get(1);
+      if (!isPassChanged) {
+        isPassChanged = existingProfile?.passwordChanged || false;
+      }
+
+      user.username = name.trim();
+      
       await db.profile.put({
         id: 1,
         username: name.trim(),
         profilePic: profilePic,
         passwordChanged: isPassChanged,
-        syncStatus: 'pending'  // <--- අලුතින් එක් කළ කොටස
+        syncStatus: 'pending' 
       });
 
-      // 2. LocalStorage එකේ ඇති පින්තූර දත්ත ඉවත් කර සැහැල්ලු කිරීම
       delete user.profilePic;
       localStorage.setItem('user', JSON.stringify(user));
     }
@@ -144,7 +189,6 @@ export default function Profile() {
     
     showAlert(t.successMsg || 'සාර්ථකව යාවත්කාලීන කරන ලදී!', 'success', false); 
   };
-
   const handleThemeChange = (e) => {
     const selectedTheme = e.target.value;
     setThemeMode(selectedTheme);
