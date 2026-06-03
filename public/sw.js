@@ -1,4 +1,4 @@
-const CACHE_NAME = 'delivery-app-v2'; // Cache නම වෙනස් කළා අලුත් එක යාවත්කාලීන වෙන්න
+const CACHE_NAME = 'delivery-app-v3'; // Cache නම වෙනස් කළා අලුත් එක යාවත්කාලීන වෙන්න
 
 // 1. Install Event: ප්‍රධාන ෆයිල් ටික සේව් කරගැනීම
 self.addEventListener('install', (event) => {
