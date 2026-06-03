@@ -34,31 +34,19 @@ export default function BottomNav({ language = 'si' }) {
     if (activeIndex === index) return;
     
     setActiveIndex(index);
-    
-    // නවීන පෙනුම සඳහා කාලය මදක් අඩු කර ඇත (350ms -> 250ms)
-    setTimeout(() => {
-      navigate(path);
-    }, 250); 
+    // Timeout එක ඉවත් කර ඇත, ක්ලික් කළ විගසම navigate වේ
+    navigate(path); 
   };
 
   return (
-    // Glassmorphism effect එක මෙතනට එකතු කර ඇත (backdrop-blur)
-    <div className="relative flex-none bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl h-[75px] w-full flex items-center shadow-[0_-8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-8px_30px_rgba(0,0,0,0.4)] z-50 transition-colors duration-300 rounded-t-3xl">
-      
-      {/* Animated Indicator Container */}
-      <div 
-        className="absolute top-0 left-0 w-1/5 h-full flex justify-center pointer-events-none z-0"
-        style={{ 
-          transform: `translateX(${activeIndex * 100}%)`,
-          // Premium Apple-style spring animation curve
-          transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)' 
-        }}
-      >
-        {/* Floating Active Circle (කැත දාර ඉවත් කර, Border එකක් මගින් Cutout එක පෙන්වීම) */}
-        <div className="absolute top-[-24px] w-[60px] h-[60px] rounded-full bg-gradient-to-tr from-[#14348c] to-[#4070f4] dark:from-blue-600 dark:to-blue-400 shadow-[0_8px_20px_rgba(20,52,140,0.5)] border-[6px] border-white dark:border-gray-900 transition-colors duration-300" />
-      </div>
-
-      {/* Navigation Buttons */}
+    <div 
+      className="relative flex-none bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 w-full flex justify-around items-center z-50 transition-colors duration-300 shadow-[0_-4px_20px_rgba(0,0,0,0.04)]"
+      style={{ 
+        paddingTop: '8px',
+        // Phone එකේ යටින් කැපෙන එක නතර කිරීමට Safe Area Inset යොදා ඇත
+        paddingBottom: 'max(env(safe-area-inset-bottom), 16px)' 
+      }}
+    >
       {navItems.map((item, index) => {
         const Icon = item.icon;
         const isActive = activeIndex === index;
@@ -67,35 +55,25 @@ export default function BottomNav({ language = 'si' }) {
           <button 
             key={item.path} 
             onClick={() => handleNavClick(item.path, index)} 
-            className="flex-1 h-full relative z-10 flex flex-col items-center justify-center focus:outline-none group"
+            className="flex flex-col items-center justify-center focus:outline-none min-w-[64px] group"
           >
-            {/* Icon Animation */}
-            <div 
-              className="flex items-center justify-center transition-all duration-500 ease-out"
-              style={{
-                transform: isActive ? 'translateY(-26px)' : 'translateY(2px)',
-              }}
-            >
+            {/* Icon Container with subtle active background */}
+            <div className={`p-1.5 rounded-xl transition-all duration-200 ${isActive ? 'bg-blue-50 dark:bg-blue-900/30' : 'bg-transparent group-hover:bg-gray-50 dark:group-hover:bg-gray-800'}`}>
               <Icon 
                 size={24} 
                 strokeWidth={isActive ? 2.5 : 2} 
-                className={`transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400 dark:text-gray-500 group-hover:text-[#14348c] dark:group-hover:text-blue-400'}`} 
+                className={`transition-colors duration-200 ${isActive ? 'text-[#14348c] dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}`} 
               />
             </div>
             
-            {/* Label Animation */}
+            {/* Label */}
             <span 
-              className={`absolute bottom-3 text-[11px] font-bold tracking-wide transition-all duration-300 ${
-                isActive ? 'text-[#14348c] dark:text-blue-400 opacity-100' : 'text-gray-400 dark:text-gray-500 opacity-0 translate-y-4'
+              className={`text-[11px] font-medium mt-1 transition-colors duration-200 ${
+                isActive ? 'text-[#14348c] dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'
               }`}
             >
               {item.label}
             </span>
-            
-            {/* Active Glow Effect (පහලින් එන කුඩා එළිය) */}
-            {isActive && (
-              <div className="absolute bottom-1 w-1 h-1 rounded-full bg-[#14348c] dark:bg-blue-400 shadow-[0_0_8px_rgba(20,52,140,0.8)]" />
-            )}
           </button>
         );
       })}
