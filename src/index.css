@@ -4,20 +4,64 @@
 /* Tailwind v4 - Dark Mode එක සිස්ටම් එකෙන් නැතුව අපේ Drop-down (Class) එකෙන් පාලනය කිරීමට */
 @custom-variant dark (&:is(.dark *));
 
+
+/* =========================================
+   1. Base & PWA Native App Styles
+   ========================================= */
+
+html, body {
+  /* උඩට/පහලට ඇදෙන (bounce) එක සම්පූර්ණයෙන්ම නවත්වන්නේ මෙතනින් */
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  
+  /* PWA එකක් රියල් ඇප් එකක් වගේ පේන්න අවශ්‍ය සැකසුම් */
+  -webkit-tap-highlight-color: transparent; /* බට්න් ඔබනකොට එන අඳුරු පාට කොටුව අයින් කරනවා */
+  -webkit-touch-callout: none; /* ලින්ක්/පින්තූර ඔබාගෙන හිටියම එන මෙනු එක අයින් කරනවා */
+  user-select: none; /* ඇප් එකේ අකුරු ඔබාගෙන හිටියම select වෙන එක නවත්වනවා */
+}
+
 body {
   font-family: 'Noto Sans Sinhala', sans-serif;
   background-color: #f4f7fb;
+  
+  /* මුළු පිටුවම scroll වෙන එක සම්පූර්ණයෙන්ම නවත්වයි */
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
 }
 
-/* Scrollbar එක හංගන්න */
-.hide-scrollbar::-webkit-scrollbar {
-  display: none;
+#root {
+  /* අන්තර්ගතයට විතරක් scroll වෙන්න දෙනවා (Native Scroll) */
+  width: 100vw;
+  height: 100vh;
+  overflow-y: auto;
+  overscroll-behavior-y: none; 
 }
-.hide-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
+
+
+/* =========================================
+   2. Form Elements
+   ========================================= */
 
 input, select, textarea {
-    font-size: 16px !important;
+  /* iOS වල input එක ක්ලික් කරාම auto-zoom වෙන එක නවත්වන්න 16px යොදා ඇත */
+  font-size: 16px !important;
+  /* Body එකට user-select: none දුන්නත් inputs වල type කරන්න පුළුවන් වෙන්න මේක අනිවාර්යයි */
+  user-select: auto; 
+}
+
+
+/* =========================================
+   3. Utility Classes
+   ========================================= */
+
+/* Scrollbar එක හංගන්න */
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
