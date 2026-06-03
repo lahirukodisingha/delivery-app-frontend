@@ -61,12 +61,40 @@ function GlobalAuthCheck() {
 
 function App() {
   useEffect(() => {
+    // 1. කලින් තිබුණු තීම් එක සකස් කිරීම
     const savedTheme = localStorage.getItem('themeMode') || 'light';
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
     } else {
       document.documentElement.classList.remove('dark');
     }
+
+    // 2. Theme Color Meta Tag එක dynamically වෙනස් කරන Function එක
+    const updateThemeColor = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      let metaTheme = document.querySelector("meta[name='theme-color']");
+      
+      if (!metaTheme) {
+        metaTheme = document.createElement('meta');
+        metaTheme.name = 'theme-color';
+        document.head.appendChild(metaTheme);
+      }
+      
+      // ඇප් එක Dark නම් ඩාර්ක් පාට (#111827), Light නම් ලයිට් පාට (#f4f7fb) යෙදීම
+      metaTheme.setAttribute('content', isDark ? '#111827' : '#f4f7fb');
+    };
+
+    // මුලින්ම ඇප් එක ලෝඩ් වෙද්දී පාට හදන්න
+    updateThemeColor();
+
+    // 3. යූසර් ඇප් එක ඇතුලේ Light/Dark මාරු කරද්දී ඒක අල්ලගන්න Observer එකක්
+    const observer = new MutationObserver(updateThemeColor);
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+
+    return () => observer.disconnect();
   }, []);
 
   useAutoSync();
