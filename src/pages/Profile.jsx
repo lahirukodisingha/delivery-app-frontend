@@ -114,9 +114,7 @@ export default function Profile() {
     if (userStr) {
       user = JSON.parse(userStr);
       
-      // =========================================================
       // 1. මුරපදය වෙනස් කර ඇත්නම් සෘජුවම Backend එකට යැවීම
-      // =========================================================
       if (newPassword.trim().length > 0) {
         if (currentPassword.trim().length === 0) {
           showAlert(language === 'si' ? 'දැනට ඇති මුරපදය ඇතුලත් කරන්න' : 'Please enter current password', 'error');
@@ -129,15 +127,13 @@ export default function Profile() {
         }
 
         try {
-          // ඔබගේ Backend URL එක මෙහි ලබාදෙන්න 
-          // (උදාහරණයක් ලෙස .env හරහා VITE_API_URL ලබා ගන්නේ නම් මෙලෙස භාවිතා කරන්න)
           const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
           
           const res = await fetch(`${API_URL}/api/auth/change-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              username: user.username,
+              username: user.username, // මුල් නමම භාවිතා කරයි
               currentPassword: currentPassword,
               newPassword: newPassword
             })
@@ -147,7 +143,7 @@ export default function Profile() {
           
           if (!res.ok) {
             showAlert(data.error || 'මුරපදය වෙනස් කිරීම අසාර්ථකයි', 'error');
-            return; // Error එකක් ආවොත් එතනින් නවතී
+            return; 
           }
           
           isPassChanged = true;
@@ -159,20 +155,17 @@ export default function Profile() {
         }
       }
 
-      // =========================================================
-      // 2. අනෙකුත් දත්ත (Name/Profile Pic) Local DB එකට සේව් කිරීම
-      // =========================================================
-      
+      // 2. අනෙකුත් දත්ත Local DB එකට සේව් කිරීම (Username එක වෙනස් නොකර)
       const existingProfile = await db.profile.get(1);
       if (!isPassChanged) {
         isPassChanged = existingProfile?.passwordChanged || false;
       }
 
-      user.username = name.trim();
+      // මෙහි තිබූ user.username = name.trim(); ඉවත් කර ඇත. මුල් නම එලෙසම පවතී.
       
       await db.profile.put({
         id: 1,
-        username: name.trim(),
+        username: user.username, // සෑමවිටම මුල් නමම යොදයි
         profilePic: profilePic,
         passwordChanged: isPassChanged,
         syncStatus: 'pending' 
@@ -182,13 +175,14 @@ export default function Profile() {
       localStorage.setItem('user', JSON.stringify(user));
     }
 
-    setOriginalName(name.trim()); 
     setOriginalProfilePic(profilePic); 
     setCurrentPassword(''); 
     setNewPassword('');
     
     showAlert(t.successMsg || 'සාර්ථකව යාවත්කාලීන කරන ලදී!', 'success', false); 
   };
+
+
   const handleThemeChange = (e) => {
     const selectedTheme = e.target.value;
     setThemeMode(selectedTheme);
@@ -279,6 +273,7 @@ export default function Profile() {
             value={name} 
             onChange={(e) => setName(e.target.value)} 
             icon={User} 
+            disabled={true}
             required 
           />
 
