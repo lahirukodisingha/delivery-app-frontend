@@ -18,11 +18,10 @@ import MoreTab from './pages/More';
 import Expenses from './pages/Expenses';
 import './App.css';
 import BackupSync from './pages/BackupSync';
-// අලුතින් හදපු Hook එක Import කරගන්න
 import useAutoSync from './hooks/useAutoSync';
 
 // ==========================================
-// අලුතින් එක් කරන ලද Global Auth Checker එක
+// Global Auth Checker
 // ==========================================
 function GlobalAuthCheck() {
   const navigate = useNavigate();
@@ -34,17 +33,13 @@ function GlobalAuthCheck() {
       if (userStr) {
         const user = JSON.parse(userStr);
         if (user.valid_until) {
-          // වලංගු කාලය සහ දැනට වෙලාව ගන්නවා
           const expiryDate = new Date(user.valid_until).getTime();
           const currentTime = new Date().getTime();
 
-          // දැනට වෙලාව, වලංගු කාලය ඉක්මවා ගොස් ඇත්නම්
           if (currentTime >= expiryDate) {
-            // Local storage එකෙන් දත්ත මකා දමනවා
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             
-            // යූසර් දැනටමත් Login පේජ් එකේ නැත්නම් ඔහුව ලොග් අවුට් කරලා එතනට යවනවා
             if (location.pathname !== '/') {
               navigate('/', { 
                 state: { errorMsg: 'ඔබගේ ගිණුමේ වලංගු කාලය අවසන් වී ඇත. කරුණාකර නැවත ඇතුල් වන්න.' } 
@@ -55,14 +50,13 @@ function GlobalAuthCheck() {
       }
     };
 
-    // සෑම තත්පර 10කට වරක්ම Background එකේ කාලය පරීක්ෂා කරයි
     const interval = setInterval(checkExpiry, 10000);
-    checkExpiry(); // Component එක ලෝඩ් වෙද්දිම එක් වරක් පරීක්ෂා කරයි
+    checkExpiry();
 
     return () => clearInterval(interval);
   }, [navigate, location.pathname]);
 
-  return null; // මෙය UI එකේ පෙන්වීමට දෙයක් නොමැති Component එකකි
+  return null;
 }
 
 function App() {
@@ -79,10 +73,10 @@ function App() {
 
   return (
     <Router>
-      {/* මේක අනිවාර්යයෙන්ම <Router> එක ඇතුලෙම දාන්න ඕනෙ, මොකද useNavigate පාවිච්චි වෙන නිසා */}
       <GlobalAuthCheck />
       
-      <div className="min-h-screen bg-gray-100">
+      {/* මෙහි තිබූ bg-gray-100 ඉවත් කර Light/Dark mode පසුබිම් වර්ණ එක් කර ඇත */}
+      <div className="min-h-screen bg-[#f4f7fb] dark:bg-[#111827] text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/home" element={<Home />} />
