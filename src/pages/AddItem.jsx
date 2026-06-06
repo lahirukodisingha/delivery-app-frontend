@@ -11,7 +11,7 @@ import PageHeader from '../components/PageHeader';
 import FormInput from '../components/FormInput';
 import FormSelect from '../components/FormSelect';
 import PrimaryButton from '../components/PrimaryButton';
-import CustomAlert from '../components/CustomAlert'; // අලුත් ඇලට් එක
+import CustomAlert from '../components/CustomAlert'; 
 
 export default function AddItem() {
   const navigate = useNavigate();
@@ -60,10 +60,8 @@ export default function AddItem() {
 
   const t = translations[language] || translations['si'];
 
-  // ඇලට් එක වසා දැමීමට
   const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
 
-  // ඇලට් පෙන්වීමට හදාගත් function එක
   const showAlert = (message, type = 'success', showCancel = false, onConfirm = null) => {
     setAlertConfig({ message, type, showCancel, onConfirm });
   };
@@ -80,9 +78,26 @@ export default function AddItem() {
   const handleSaveItem = async (e) => {
     e.preventDefault();
     try {
+      const formattedItemName = itemName.trim();
+
+      // =======================================================
+      // Duplicate Item Validation (Offline Check)
+      // =======================================================
+      const isDuplicate = existingItems.some(
+        item => 
+          item.itemName.toLowerCase() === formattedItemName.toLowerCase() && 
+          item.id !== editingItemId // Edit කරන වෙලාවට එයාගේම නම Duplicate එකක් විදිහට ගන්නැති වෙන්න
+      );
+
+      if (isDuplicate) {
+        showAlert(t.duplicateItemAlert || 'Item already exists!', 'error');
+        return; // Duplicate නම් මෙතනින් නවතී, සේව් වෙන්නේ නෑ.
+      }
+      // =======================================================
+
       if (editingItemId) {
         await db.items.update(editingItemId, { 
-          itemName: itemName.trim(), 
+          itemName: formattedItemName, 
           unit, 
           unitPrice: parseFloat(unitPrice) || 0 ,
           syncStatus: 'pending'
@@ -90,7 +105,7 @@ export default function AddItem() {
         showAlert(t.itemUpdatedSuccess || 'භාණ්ඩය සාර්ථකව යාවත්කාලීන කළා!', 'success');
       } else {
         await db.items.add({ 
-          itemName: itemName.trim(), 
+          itemName: formattedItemName, 
           unit, 
           unitPrice: parseFloat(unitPrice) || 0 ,
           syncStatus: 'pending'
@@ -205,7 +220,7 @@ export default function AddItem() {
           {isFormOpen ? <ChevronUp size={24} className="text-[#14348c] dark:text-blue-400" /> : <Plus size={24} className={theme.colors.mutedText} />}
         </button>
 
-        {/* Expandable Form (පින්තූර අප්ලෝඩ් කිරීම ඉවත් කර ඇත) */}
+        {/* Expandable Form */}
         {isFormOpen && (
           <div className="mb-8 p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-blue-100 dark:border-gray-700 shadow-md transition-all animate-in fade-in slide-in-from-top-4">
             <form onSubmit={handleSaveItem} className="space-y-5">

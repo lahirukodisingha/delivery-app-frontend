@@ -245,6 +245,8 @@ export const translations = {
     duplicateRouteAlert: "මෙම නමින් ගමන් මාර්ගයක් (Route) දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.", // අලුතින් එකතු කල පේළිය
 
     duplicateShopAlert: "මෙම නමින් කඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.", // අලුතින් එකතු කල පේළිය
+
+    duplicateItemAlert: "මෙම නමින් භාණ්ඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.", // අලුතින් එකතු කල පේළිය
     
   },
 
@@ -491,6 +493,8 @@ export const translations = {
 
     duplicateShopAlert: "A shop with this name already exists. Please provide a different name.", // අලුතින් එකතු කල පේළිය
 
+    duplicateItemAlert: "An item with this name already exists. Please provide a different name.", // අලුතින් එකතු කල පේළිය
+
   },
 
   ta: {
@@ -734,5 +738,7 @@ export const translations = {
     duplicateRouteAlert: "இந்த பெயரில் ஏற்கனவே ஒரு வழி உள்ளது. வேறு பெயரை உள்ளிடவும்.", // அලුතින් එකතු කල පේළිය
 
     duplicateShopAlert: "இந்த பெயரில் ஏற்கனவே ஒரு கடை உள்ளது. வேறு பெயரை உள்ளிடவும்.", // அලුතින් එකතු කල පේළිය
+
+    duplicateItemAlert: "இந்தப் பெயரில் ஏற்கனவே ஒரு பொருள் உள்ளது. வேறு பெயரை உள்ளிடவும்.", // அලුතින් එකතු කල පේළිය
   }
 };
