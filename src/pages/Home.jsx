@@ -338,7 +338,83 @@ export default function Home() {
 
 
       {/* ======================= NOTIFICATIONS PANEL ======================= */}
-      
+      <div className={`absolute top-0 right-0 h-full w-[300px] sm:w-[350px] ${theme.colors.navBg} z-[70] transform transition-transform duration-300 ease-in-out ${isNotifOpen ? 'translate-x-0' : 'translate-x-full'} shadow-2xl flex flex-col`}>
+        
+        <div className={`p-5 flex justify-between items-center border-b ${theme.colors.navBorder}`}>
+          <h2 className={`text-[18px] font-bold ${theme.colors.headerText} flex items-center gap-2`}>
+            <Bell size={22} className="text-[#14348c] dark:text-blue-400" /> 
+            {language === 'si' ? 'නිවේදන' : language === 'ta' ? 'அறிவிப்புகள்' : 'Notifications'}
+          </h2>
+          <button onClick={() => setIsNotifOpen(false)} className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-800 ${theme.colors.mutedText} transition-colors`}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {unreadCount > 0 && (
+          <div className={`px-5 py-3 flex justify-between items-center bg-blue-50/50 dark:bg-blue-900/20 border-b ${theme.colors.navBorder}`}>
+            <span className="text-[12px] font-bold text-[#14348c] dark:text-blue-400">
+              {unreadCount} {language === 'si' ? 'නව නිවේදන' : 'New'}
+            </span>
+            <button onClick={markAllAsRead} className="text-[12px] font-bold text-blue-600 dark:text-blue-300 hover:underline flex items-center gap-1">
+              <CheckCheck size={14}/> {language === 'si' ? 'සියල්ල කියවූ බව සටහන් කරන්න' : 'Mark all read'}
+            </button>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 hide-scrollbar">
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 text-center opacity-60">
+              <Bell size={36} className={`${theme.colors.mutedText} mb-3`} />
+              <p className={`text-[14px] font-medium ${theme.colors.mutedText}`}>
+                {language === 'si' ? 'නිවේදන කිසිවක් නැත.' : 'No notifications yet.'}
+              </p>
+            </div>
+          ) : (
+            notifications.map(notif => {
+              const isExpanded = expandedNotifId === notif.id;
+              
+              return (
+                <div 
+                  key={notif.id} 
+                  className={`p-4 rounded-xl border transition-all duration-300 ${notif.isRead ? `${theme.colors.inputBorder} ${theme.colors.cardBg} opacity-70` : 'border-blue-300 dark:border-blue-700 bg-blue-50/80 dark:bg-blue-900/40'} shadow-sm relative overflow-hidden`}
+                >
+                  {!notif.isRead && <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600 dark:bg-blue-400"></div>}
+                  
+                  {/* මාතෘකාව සහ ඊතලය */}
+                  <div 
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => handleNotifClick(notif.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-1.5 rounded-full ${notif.isRead ? 'bg-gray-200 dark:bg-gray-800 text-gray-500' : 'bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300'}`}>
+                        <Info size={18} />
+                      </div>
+                      <div>
+                        <h3 className={`text-[14px] ${notif.isRead ? 'font-medium text-gray-600 dark:text-gray-400' : 'font-extrabold text-[#14348c] dark:text-blue-300'}`}>
+                          {notif.title}
+                        </h3>
+                        <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 block mt-0.5">{notif.date}</span>
+                      </div>
+                    </div>
+                    
+                    <button className={`p-1 rounded-full text-gray-400 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
+                      <ChevronDown size={18} />
+                    </button>
+                  </div>
+
+                  {/* Expand වන විස්තරය */}
+                  <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-40 opacity-100 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700' : 'max-h-0 opacity-0 mt-0 pt-0 border-t-0'}`}>
+                    <p className={`text-[13px] leading-relaxed ${notif.isRead ? theme.colors.mutedText : theme.colors.inputText}`}>
+                      {notif.message}
+                    </p>
+                  </div>
+                  
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
       
       {/* ======================= HEADER ======================= */}
       <div className={`flex-none flex items-center justify-between px-4 py-5 ${theme.colors.background} transition-colors duration-300 z-10`}>
