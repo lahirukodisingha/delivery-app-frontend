@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../db/database';
 import { theme } from '../config/theme';
 import { translations } from '../config/translations';
-import { Store, Filter, MoveVertical, Save, GripVertical } from 'lucide-react';
+import { Store, Filter, MoveVertical, Save, ChevronUp, ChevronDown } from 'lucide-react';
 
 // Components 
 import LoadingScreen from '../components/LoadingScreen';
@@ -28,15 +28,6 @@ export default function Shops() {
     type: 'success',
     showCancel: false,
     onConfirm: null
-  });
-
-  const [dragState, setDragState] = useState({
-    isDragging: false,
-    originalIndex: null, 
-    draggedShop: null,   
-    hoverIndex: null,    
-    currentY: 0,
-    currentX: 0
   });
 
   useEffect(() => {
@@ -83,64 +74,25 @@ export default function Shops() {
     }
   }, [selectedRouteId, allShops]);
 
-  const handleDragStart = (e, index, shop) => {
-    if (!isReordering) return;
-    
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    
-    setDragState({
-      isDragging: true,
-      originalIndex: index,
-      draggedShop: shop,
-      hoverIndex: index,
-      currentY: clientY,
-      currentX: clientX
-    });
-    
-    document.body.style.overflow = 'hidden'; 
-  };
-
-  const handleDragMove = (e) => {
-    if (!dragState.isDragging) return;
-    if(e.cancelable) e.preventDefault(); 
-
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    
-    const elem = document.elementFromPoint(clientX, clientY);
-    let newHoverIndex = dragState.hoverIndex;
-    
-    if (elem) {
-      const row = elem.closest('[data-shop-index]');
-      if (row) {
-        const idx = parseInt(row.getAttribute('data-shop-index'), 10);
-        if (!isNaN(idx)) newHoverIndex = idx;
-      }
-    }
-
-    setDragState(prev => ({
-      ...prev,
-      currentY: clientY,
-      currentX: clientX,
-      hoverIndex: newHoverIndex
-    }));
-  };
-
-  const handleDragEnd = () => {
-    if (!dragState.isDragging) return;
-    
+  // ==========================================
+  // අලුත් ක්‍රමය: ඉහළට සහ පහළට මාරු කිරීම
+  // ==========================================
+  const handleMoveUp = (index) => {
+    if (index === 0) return;
     const newShops = [...displayedShops];
-    const shopToMove = newShops.splice(dragState.originalIndex, 1)[0];
-    newShops.splice(dragState.hoverIndex, 0, shopToMove);
-    
+    const temp = newShops[index];
+    newShops[index] = newShops[index - 1];
+    newShops[index - 1] = temp;
     setDisplayedShops(newShops);
-    
-    setDragState({
-      isDragging: false, originalIndex: null, draggedShop: null, hoverIndex: null, currentY: 0, currentX: 0
-    });
-    
-    document.body.style.overflow = '';
+  };
+
+  const handleMoveDown = (index) => {
+    if (index === displayedShops.length - 1) return;
+    const newShops = [...displayedShops];
+    const temp = newShops[index];
+    newShops[index] = newShops[index + 1];
+    newShops[index + 1] = temp;
+    setDisplayedShops(newShops);
   };
 
   const saveOrder = async () => {
@@ -161,12 +113,6 @@ export default function Shops() {
     }
   };
 
-  let renderList = [...displayedShops];
-  if (dragState.isDragging) {
-    renderList.splice(dragState.originalIndex, 1);
-    renderList.splice(dragState.hoverIndex, 0, { isPlaceholder: true, id: 'placeholder' });
-  }
-
   const routeOptions = [
     { label: t.allRoutes, value: 'all' },
     ...routes.map(route => ({ label: route.routeName, value: route.id }))
@@ -175,14 +121,7 @@ export default function Shops() {
   if (isChecking) return <LoadingScreen />;
 
   return (
-    <div 
-      className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}
-      onTouchMove={handleDragMove}
-      onTouchEnd={handleDragEnd}
-      onMouseMove={handleDragMove}
-      onMouseUp={handleDragEnd}
-      onMouseLeave={handleDragEnd}
-    >
+    <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
       <CustomAlert 
         message={alertConfig.message} 
@@ -233,34 +172,36 @@ export default function Shops() {
           </p>
         ) : (
           <div className="space-y-3 relative">
-            {renderList.map((shop, index) => {
-              
-              if (shop.isPlaceholder) {
-                return (
-                  <div key="placeholder" data-shop-index={index} className="h-19 rounded-xl border-2 border-dashed border-[#14348c]/40 dark:border-blue-500/40 bg-blue-50/20 dark:bg-blue-900/10 transition-all duration-200"></div>
-                );
-              }
-
+            {displayedShops.map((shop, index) => {
               return (
                 <div 
                   key={shop.id}
-                  data-shop-index={index}
                   onClick={() => !isReordering && navigate(`/shop-history/${shop.id}`)}
                   className={`flex items-center p-4 rounded-xl border ${theme.colors.inputBorder} ${theme.colors.cardBg} shadow-sm transition-colors ${!isReordering ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-800' : ''}`}
                 >
+                  {/* Up / Down Buttons */}
                   {isReordering && (
-                    <div 
-                      onTouchStart={(e) => handleDragStart(e, index, shop)}
-                      onMouseDown={(e) => handleDragStart(e, index, shop)}
-                      className="text-gray-400 dark:text-gray-500 active:text-[#14348c] dark:active:text-blue-400 cursor-grab active:cursor-grabbing touch-none px-2 py-2 -ml-2 transition-colors z-10"
-                    >
-                      <GripVertical size={24} />
+                    <div className="flex flex-col gap-2 mr-3 px-1 border-r border-gray-200 dark:border-gray-700 pr-4">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
+                        disabled={index === 0}
+                        className={`p-1.5 rounded-lg transition-colors ${index === 0 ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600' : 'bg-blue-50 text-[#14348c] active:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400'}`}
+                      >
+                        <ChevronUp size={20} strokeWidth={3} />
+                      </button>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
+                        disabled={index === displayedShops.length - 1}
+                        className={`p-1.5 rounded-lg transition-colors ${index === displayedShops.length - 1 ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600' : 'bg-blue-50 text-[#14348c] active:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400'}`}
+                      >
+                        <ChevronDown size={20} strokeWidth={3} />
+                      </button>
                     </div>
                   )}
 
-                  <div className={`flex items-center gap-4 ${isReordering ? 'ml-2' : ''}`}>
+                  <div className={`flex items-center gap-4`}>
                     <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm bg-blue-100 dark:bg-gray-700 text-[#14348c] dark:text-blue-400`}>
-                      {displayedShops.findIndex(s => s.id === shop.id) + 1}
+                      {index + 1}
                     </div>
                     <div>
                       <h3 className={`font-bold text-[16px] ${theme.colors.inputText}`}>{shop.shopName}</h3>
@@ -273,29 +214,6 @@ export default function Shops() {
           </div>
         )}
       </div>
-
-      {dragState.isDragging && dragState.draggedShop && (
-        <div 
-          className="fixed z-100 w-[calc(100%-40px)] pointer-events-none shadow-2xl scale-105 rounded-xl bg-white dark:bg-gray-800 border-2 border-[#14348c] dark:border-blue-500 flex items-center p-4"
-          style={{
-            top: dragState.currentY - 35, 
-            left: 20
-          }}
-        >
-          <div className="text-[#14348c] dark:text-blue-400 px-2 py-2 -ml-2">
-            <GripVertical size={24} />
-          </div>
-          <div className="flex items-center gap-4 ml-2">
-            <div className="w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm bg-[#14348c] text-white dark:bg-blue-600">
-              {displayedShops.findIndex(s => s.id === dragState.draggedShop.id) + 1}
-            </div>
-            <div>
-              <h3 className="font-bold text-[16px] text-gray-900 dark:text-white">{dragState.draggedShop.shopName}</h3>
-              <p className="text-[12px] font-medium mt-0.5 text-gray-500 dark:text-gray-400">{dragState.draggedShop.address || dragState.draggedShop.phone}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="absolute bottom-0 w-full z-50">
         <BottomNav language={language} />
