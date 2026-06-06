@@ -3,7 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../db/database';
 import { theme } from '../config/theme';
 import { translations } from '../config/translations';
-import { Store, Filter, MoveVertical, Save, ChevronUp, ChevronDown } from 'lucide-react';
+import { Store, Filter, MoveVertical, Save, GripVertical } from 'lucide-react';
+
+// dnd-kit imports
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // Components 
 import LoadingScreen from '../components/LoadingScreen';
@@ -11,6 +31,64 @@ import BottomNav from '../components/BottomNav';
 import FormSelect from '../components/FormSelect';
 import CustomAlert from '../components/CustomAlert';
 
+// ==========================================
+// Sortable Shop Item Component
+// ==========================================
+function SortableShopItem({ shop, index, isReordering, theme, onNavigate }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ 
+    id: shop.id,
+    disabled: !isReordering // Reorder mode එකේ නැත්නම් Drag කරන්න බෑ
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    // Drag කරද්දී මුල් එකේ opacity අඩු කරනවා (Placeholder එක වගේ පේන්න)
+    opacity: isDragging ? 0.3 : 1, 
+    zIndex: isDragging ? 999 : 1,
+    position: 'relative'
+  };
+
+  return (
+    <div 
+      ref={setNodeRef} 
+      style={style}
+      // Reorder කරනවා නම් Long-press වලින් drag කරන්න දෙනවා, නැත්නම් Click කරලා Shop History එකට යනවා
+      {...(isReordering ? attributes : {})}
+      {...(isReordering ? listeners : {})}
+      onClick={() => !isReordering && onNavigate(shop.id)}
+      className={`flex items-center p-4 rounded-xl border ${theme.colors.inputBorder} ${theme.colors.cardBg} shadow-sm transition-colors ${!isReordering ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-800' : 'cursor-grab active:cursor-grabbing touch-none'}`}
+    >
+      {isReordering && (
+        <div className="text-gray-400 dark:text-gray-500 mr-2">
+          <GripVertical size={24} />
+        </div>
+      )}
+
+      <div className={`flex items-center gap-4`}>
+        <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm bg-blue-100 dark:bg-gray-700 text-[#14348c] dark:text-blue-400`}>
+          {index + 1}
+        </div>
+        <div>
+          <h3 className={`font-bold text-[16px] ${theme.colors.inputText}`}>{shop.shopName}</h3>
+          <p className={`text-[12px] font-medium mt-0.5 ${theme.colors.mutedText}`}>{shop.address || shop.phone}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+// ==========================================
+// Main Shops Component
+// ==========================================
 export default function Shops() {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
@@ -22,6 +100,7 @@ export default function Shops() {
   
   const [selectedRouteId, setSelectedRouteId] = useState('all');
   const [isReordering, setIsReordering] = useState(false);
+  const [activeDragShop, setActiveDragShop] = useState(null);
 
   const [alertConfig, setAlertConfig] = useState({ 
     message: '', 
@@ -29,6 +108,21 @@ export default function Shops() {
     showCancel: false,
     onConfirm: null
   });
+
+  // dnd-kit Sensors (ෆෝන් එකට ගැලපෙන විදිහට Long-press එක හදලා තියෙනවා)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        // ෆෝන් එකේදී අහම්බෙන් drag වෙන එක නවත්වන්න මිලි තත්පර 250ක් ඔබාගෙන ඉන්න ඕනේ (Long Press)
+        delay: 250, 
+        // ඇඟිල්ල ටිකක් එහා මෙහා වුනොත් ඒක cancel නොවෙන්න px ගානක් දෙනවා
+        tolerance: 5, 
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -56,9 +150,7 @@ export default function Shops() {
   }, [navigate]);
 
   const t = translations[language] || translations['si'];
-
   const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
-
   const showAlert = (message, type = 'success', showCancel = false, onConfirm = null) => {
     setAlertConfig({ message, type, showCancel, onConfirm });
   };
@@ -74,26 +166,36 @@ export default function Shops() {
     }
   }, [selectedRouteId, allShops]);
 
-  // ==========================================
-  // අලුත් ක්‍රමය: ඉහළට සහ පහළට මාරු කිරීම
-  // ==========================================
-  const handleMoveUp = (index) => {
-    if (index === 0) return;
-    const newShops = [...displayedShops];
-    const temp = newShops[index];
-    newShops[index] = newShops[index - 1];
-    newShops[index - 1] = temp;
-    setDisplayedShops(newShops);
+
+  // Drag එක පටන් ගන්නකොට
+  const handleDragStart = (event) => {
+    const { active } = event;
+    const shop = displayedShops.find(s => s.id === active.id);
+    setActiveDragShop(shop);
+    // ෆෝන් එකේ ස්ක්‍රෝල් වෙන එක තාවකාලිකව නවත්වනවා
+    document.body.style.overflow = 'hidden'; 
   };
 
-  const handleMoveDown = (index) => {
-    if (index === displayedShops.length - 1) return;
-    const newShops = [...displayedShops];
-    const temp = newShops[index];
-    newShops[index] = newShops[index + 1];
-    newShops[index + 1] = temp;
-    setDisplayedShops(newShops);
+  // Drag කරලා අතාරිනකොට
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    setActiveDragShop(null);
+    document.body.style.overflow = ''; 
+
+    if (over && active.id !== over.id) {
+      setDisplayedShops((items) => {
+        const oldIndex = items.findIndex(s => s.id === active.id);
+        const newIndex = items.findIndex(s => s.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
   };
+
+  const handleDragCancel = () => {
+    setActiveDragShop(null);
+    document.body.style.overflow = '';
+  };
+
 
   const saveOrder = async () => {
     try {
@@ -117,6 +219,10 @@ export default function Shops() {
     { label: t.allRoutes, value: 'all' },
     ...routes.map(route => ({ label: route.routeName, value: route.id }))
   ];
+
+  const dropAnimationConfig = {
+    sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }),
+  };
 
   if (isChecking) return <LoadingScreen />;
 
@@ -171,47 +277,56 @@ export default function Shops() {
             {t.noItems || "කඩවල් කිසිවක් හමු නොවීය."}
           </p>
         ) : (
-          <div className="space-y-3 relative">
-            {displayedShops.map((shop, index) => {
-              return (
-                <div 
-                  key={shop.id}
-                  onClick={() => !isReordering && navigate(`/shop-history/${shop.id}`)}
-                  className={`flex items-center p-4 rounded-xl border ${theme.colors.inputBorder} ${theme.colors.cardBg} shadow-sm transition-colors ${!isReordering ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-800' : ''}`}
-                >
-                  {/* Up / Down Buttons */}
-                  {isReordering && (
-                    <div className="flex flex-col gap-2 mr-3 px-1 border-r border-gray-200 dark:border-gray-700 pr-4">
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleMoveUp(index); }}
-                        disabled={index === 0}
-                        className={`p-1.5 rounded-lg transition-colors ${index === 0 ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600' : 'bg-blue-50 text-[#14348c] active:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400'}`}
-                      >
-                        <ChevronUp size={20} strokeWidth={3} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleMoveDown(index); }}
-                        disabled={index === displayedShops.length - 1}
-                        className={`p-1.5 rounded-lg transition-colors ${index === displayedShops.length - 1 ? 'bg-gray-100 text-gray-300 dark:bg-gray-800 dark:text-gray-600' : 'bg-blue-50 text-[#14348c] active:bg-blue-200 dark:bg-blue-900/40 dark:text-blue-400'}`}
-                      >
-                        <ChevronDown size={20} strokeWidth={3} />
-                      </button>
-                    </div>
-                  )}
+          
+          // ==========================================
+          // dnd-kit List Container
+          // ==========================================
+          <DndContext 
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragCancel={handleDragCancel}
+          >
+            <div className="space-y-3 relative">
+              <SortableContext 
+                items={displayedShops.map(s => s.id)} 
+                strategy={verticalListSortingStrategy}
+              >
+                {displayedShops.map((shop, index) => (
+                  <SortableShopItem 
+                    key={shop.id} 
+                    shop={shop} 
+                    index={index} 
+                    isReordering={isReordering}
+                    theme={theme}
+                    onNavigate={(id) => navigate(`/shop-history/${id}`)}
+                  />
+                ))}
+              </SortableContext>
+            </div>
 
+            {/* අදින වෙලාවට ඇඟිල්ලට යටින් පේන කොටස (Overlay) */}
+            <DragOverlay dropAnimation={dropAnimationConfig}>
+              {activeDragShop ? (
+                <div className={`flex items-center p-4 rounded-xl border-2 border-[#14348c] dark:border-blue-500 bg-white dark:bg-gray-800 shadow-2xl scale-105 opacity-90 cursor-grabbing`}>
+                  <div className="text-[#14348c] dark:text-blue-400 mr-2">
+                    <GripVertical size={24} />
+                  </div>
                   <div className={`flex items-center gap-4`}>
-                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm bg-blue-100 dark:bg-gray-700 text-[#14348c] dark:text-blue-400`}>
-                      {index + 1}
+                    <div className={`w-8 h-8 shrink-0 rounded-full flex items-center justify-center font-bold text-sm bg-[#14348c] dark:bg-blue-600 text-white`}>
+                      {displayedShops.findIndex(s => s.id === activeDragShop.id) + 1}
                     </div>
                     <div>
-                      <h3 className={`font-bold text-[16px] ${theme.colors.inputText}`}>{shop.shopName}</h3>
-                      <p className={`text-[12px] font-medium mt-0.5 ${theme.colors.mutedText}`}>{shop.address || shop.phone}</p>
+                      <h3 className={`font-bold text-[16px] text-gray-900 dark:text-white`}>{activeDragShop.shopName}</h3>
+                      <p className={`text-[12px] font-medium mt-0.5 text-gray-500 dark:text-gray-400`}>{activeDragShop.address || activeDragShop.phone}</p>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
+
         )}
       </div>
 
