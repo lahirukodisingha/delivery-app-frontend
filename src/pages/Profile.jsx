@@ -33,6 +33,8 @@ export default function Profile() {
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  // අලුතින් එකතු කළ Confirm Password state එක
+  const [confirmPassword, setConfirmPassword] = useState(''); 
   
   const [language, setLanguage] = useState('si'); 
   const [themeMode, setThemeMode] = useState('light'); 
@@ -61,7 +63,6 @@ export default function Profile() {
         document.documentElement.classList.remove('dark');
       }
 
-      // IndexedDB එකෙන් Profile දත්ත ලබාගැනීම
       const profileData = await db.profile.get(1);
       
       if (profileData) {
@@ -114,10 +115,16 @@ export default function Profile() {
     if (userStr) {
       user = JSON.parse(userStr);
       
-      // 1. මුරපදය වෙනස් කර ඇත්නම් සෘජුවම Backend එකට යැවීම
+      // මුරපදය වෙනස් කර ඇත්නම්
       if (newPassword.trim().length > 0) {
         if (currentPassword.trim().length === 0) {
           showAlert(language === 'si' ? 'දැනට ඇති මුරපදය ඇතුලත් කරන්න' : 'Please enter current password', 'error');
+          return;
+        }
+
+        // අලුත් මුරපද දෙක ගැලපෙනවද යන්න පරීක්ෂා කිරීම
+        if (newPassword !== confirmPassword) {
+          showAlert(language === 'si' ? 'නව මුරපදයන් එකිනෙක නොගැලපේ!' : 'New passwords do not match!', 'error');
           return;
         }
 
@@ -133,7 +140,7 @@ export default function Profile() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              username: user.username, // මුල් නමම භාවිතා කරයි
+              username: user.username,
               currentPassword: currentPassword,
               newPassword: newPassword
             })
@@ -155,17 +162,14 @@ export default function Profile() {
         }
       }
 
-      // 2. අනෙකුත් දත්ත Local DB එකට සේව් කිරීම (Username එක වෙනස් නොකර)
       const existingProfile = await db.profile.get(1);
       if (!isPassChanged) {
         isPassChanged = existingProfile?.passwordChanged || false;
       }
-
-      // මෙහි තිබූ user.username = name.trim(); ඉවත් කර ඇත. මුල් නම එලෙසම පවතී.
       
       await db.profile.put({
         id: 1,
-        username: user.username, // සෑමවිටම මුල් නමම යොදයි
+        username: user.username, // නම වෙනස් නොවේ
         profilePic: profilePic,
         passwordChanged: isPassChanged,
         syncStatus: 'pending' 
@@ -178,6 +182,7 @@ export default function Profile() {
     setOriginalProfilePic(profilePic); 
     setCurrentPassword(''); 
     setNewPassword('');
+    setConfirmPassword(''); // Confirm Password එකත් හිස් කිරීම
     
     showAlert(t.successMsg || 'සාර්ථකව යාවත්කාලීන කරන ලදී!', 'success', false); 
   };
@@ -215,9 +220,9 @@ export default function Profile() {
   ];
 
   const isModified = 
-    (name.trim() !== originalName) || 
     (currentPassword.length > 0) || 
     (newPassword.length > 0) ||
+    (confirmPassword.length > 0) ||
     (profilePic !== originalProfilePic);
     
   const isSubmitDisabled = !isModified;
@@ -268,6 +273,7 @@ export default function Profile() {
 
         <form onSubmit={handleSaveProfile} className="space-y-6">
           
+          {/* Username එක අගුළු දමා ඇත (disabled) */}
           <FormInput 
             label={t.nameLabel} 
             value={name}  
@@ -296,6 +302,15 @@ export default function Profile() {
               value={newPassword} 
               onChange={(e) => setNewPassword(e.target.value)} 
               placeholder={t.newPassword} 
+            />
+
+            {/* අලුතින් එක් කළ Confirm Password කොටුව */}
+            <FormInput 
+              type="password"
+              label={language === 'si' ? 'නව මුරපදය තහවුරු කරන්න' : 'Confirm New Password'}
+              value={confirmPassword} 
+              onChange={(e) => setConfirmPassword(e.target.value)} 
+              placeholder={language === 'si' ? 'නව මුරපදය තහවුරු කරන්න' : 'Confirm New Password'} 
             />
           </div>
 
