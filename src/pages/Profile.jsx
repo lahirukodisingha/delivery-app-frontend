@@ -273,15 +273,20 @@ export default function Profile() {
 
         <form onSubmit={handleSaveProfile} className="space-y-6">
           
-          {/* Username එක අගුළු දමා ඇත (disabled) */}
-          <FormInput 
-            label={t.nameLabel} 
-            value={name}  
-            icon={User} 
-            disabled={true}
-            className="opacity-70 cursor-not-allowed"
-            required 
-          />
+          <div className="space-y-1.5">
+            <label className={`block ${theme.fonts.label} ${theme.colors.labelText} flex items-center gap-2`}>
+              <User size={16} className="text-[#14348c] dark:text-blue-400" /> 
+              {t.nameLabel} <span className="text-red-500">*</span>
+            </label>
+            
+            <div className={`w-full p-3.5 rounded-xl border ${theme.colors.inputBorder} bg-gray-100 dark:bg-gray-800/80 text-gray-500 dark:text-gray-400 cursor-not-allowed ${theme.fonts.input} shadow-inner`}>
+              {name || 'Loading...'}
+            </div>
+            
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
+              {language === 'si' ? '* පරිශීලක නාමය (Username) වෙනස් කළ නොහැක' : '* Username cannot be changed'}
+            </p>
+          </div>
 
           <div className={`bg-blue-50/50 dark:bg-gray-800/50 p-4 rounded-xl border border-blue-100 dark:border-gray-700 space-y-4 transition-colors`}>
             <h3 className="font-bold text-[#14348c] dark:text-blue-400 text-[15px] flex items-center gap-2 mb-2">
