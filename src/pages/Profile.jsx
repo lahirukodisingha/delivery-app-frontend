@@ -127,7 +127,7 @@ export default function Profile() {
         }
 
         try {
-          const API_URL = import.meta.env.VITE_API_URL || 'https://delivery-app-frontend-gamma.vercel.app';
+          const API_URL = import.meta.env.VITE_API_URL || 'https://delivery-app-backend-coral.vercel.app';
           
           const res = await fetch(`${API_URL}/api/auth/change-password`, {
             method: 'POST',
