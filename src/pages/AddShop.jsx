@@ -11,7 +11,7 @@ import PageHeader from '../components/PageHeader';
 import FormInput from '../components/FormInput';
 import FormSelect from '../components/FormSelect';
 import PrimaryButton from '../components/PrimaryButton';
-import CustomAlert from '../components/CustomAlert'; // අලුත් ඇලට් එක
+import CustomAlert from '../components/CustomAlert'; 
 
 export default function AddShop() {
   const navigate = useNavigate();
@@ -75,10 +75,8 @@ export default function AddShop() {
 
   const t = translations[language] || translations['si'];
 
-  // ඇලට් එක වසා දැමීමට
   const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
 
-  // ඇලට් පෙන්වීමට හදාගත් function එක
   const showAlert = (message, type = 'success', showCancel = false, onConfirm = null) => {
     setAlertConfig({ message, type, showCancel, onConfirm });
   };
@@ -89,7 +87,7 @@ export default function AddShop() {
     setPhone('');
     setSelectedRouteId(routes.length > 0 ? routes[0].id.toString() : '');
     setEditingShopId(null);
-    setOriginalShop(null); // මුල් දත්තත් reset කරනවා
+    setOriginalShop(null);
     setIsFormOpen(false);
   };
 
@@ -101,10 +99,27 @@ export default function AddShop() {
     }
 
     try {
+      const formattedShopName = shopName.trim();
+
+      // =======================================================
+      // Duplicate Shop Validation (Offline Check)
+      // =======================================================
+      const isDuplicate = existingShops.some(
+        shop => 
+          shop.shopName.toLowerCase() === formattedShopName.toLowerCase() && 
+          shop.id !== editingShopId // Edit කරන වෙලාවට එයාගේම නම Duplicate එකක් විදිහට ගන්නැති වෙන්න
+      );
+
+      if (isDuplicate) {
+        showAlert(t.duplicateShopAlert || 'Shop already exists!', 'error');
+        return; // Duplicate නම් මෙතනින් නවතී, සේව් වෙන්නේ නෑ.
+      }
+      // =======================================================
+
       if (editingShopId) {
         // කඩේ විස්තර යාවත්කාලීන කිරීම (Update)
         await db.shops.update(editingShopId, {
-          shopName: shopName.trim(),
+          shopName: formattedShopName,
           routeId: parseInt(selectedRouteId),
           address: address.trim(),
           phone: phone.trim(),
@@ -117,7 +132,7 @@ export default function AddShop() {
         const newOrderIndex = currentShopsInRoute.length;
 
         await db.shops.add({ 
-          shopName: shopName.trim(), 
+          shopName: formattedShopName, 
           routeId: parseInt(selectedRouteId), 
           address: address.trim(), 
           phone: phone.trim(),
@@ -141,7 +156,7 @@ export default function AddShop() {
     setPhone(shop.phone || '');
     
     setEditingShopId(shop.id);
-    setOriginalShop(shop); // Edit කරද්දී මුල් විස්තර ටික මෙතනින් සෙට් කරනවා
+    setOriginalShop(shop);
     
     setIsFormOpen(true); 
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
@@ -186,22 +201,18 @@ export default function AddShop() {
 
   const routeOptions = routes.map(r => ({ label: r.routeName, value: r.id }));
 
-  // ==========================================
-  // Button Disable කිරීමේ ලොජික් එක
-  // ==========================================
   const isSubmitDisabled = editingShopId 
-    ? !( // Edit කරන වෙලාවට වෙනසක් වෙලාදැයි බලයි
+    ? !( 
         shopName.trim() !== (originalShop?.shopName || '') ||
         selectedRouteId !== (originalShop?.routeId?.toString() || '') ||
         address.trim() !== (originalShop?.address || '') ||
         phone.trim() !== (originalShop?.phone || '')
       )
-    : !shopName.trim() || !selectedRouteId; // අලුතින් Add කරද්දී නමයි රූට් එකයි අනිවාර්යයි
+    : !shopName.trim() || !selectedRouteId; 
 
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
-      {/* Alert Component එක Render කිරීම */}
       <CustomAlert 
         message={alertConfig.message} 
         type={alertConfig.type} 
@@ -222,7 +233,6 @@ export default function AddShop() {
           </div>
         )}
 
-        {/* Add New Shop Toggle Button */}
         <button 
           onClick={toggleForm}
           className={`w-full flex justify-between items-center p-4 rounded-xl border-2 transition-all shadow-sm mb-6 ${
@@ -242,7 +252,6 @@ export default function AddShop() {
           {isFormOpen ? <ChevronUp size={24} className="text-[#14348c] dark:text-blue-400" /> : <Plus size={24} className={theme.colors.mutedText} />}
         </button>
 
-        {/* Expandable Form */}
         {isFormOpen && (
           <div className="mb-8 p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-blue-100 dark:border-gray-700 shadow-md transition-all animate-in fade-in slide-in-from-top-4">
             <form onSubmit={handleSaveShop} className="space-y-5">
@@ -280,7 +289,6 @@ export default function AddShop() {
           </div>
         )}
 
-        {/* Existing Shops List */}
         <div>
           <h2 className={`text-[16px] font-bold ${theme.colors.headerText} mb-3 flex items-center gap-2`}>
             <List size={18} className={theme.colors.mutedText} /> {t.existingShopsTitle || "දැනට ඇති කඩවල්"}
