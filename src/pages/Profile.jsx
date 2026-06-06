@@ -270,10 +270,10 @@ export default function Profile() {
           
           <FormInput 
             label={t.nameLabel} 
-            value={name} 
-            onChange={(e) => setName(e.target.value)} 
+            value={name}  
             icon={User} 
             disabled={true}
+            className="opacity-70 cursor-not-allowed"
             required 
           />
 
