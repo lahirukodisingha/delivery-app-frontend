@@ -10,13 +10,12 @@ import LoadingScreen from '../components/LoadingScreen';
 import PageHeader from '../components/PageHeader';
 import FormInput from '../components/FormInput';
 import PrimaryButton from '../components/PrimaryButton';
-import CustomAlert from '../components/CustomAlert'; // අලුත් ඇලට් එක
+import CustomAlert from '../components/CustomAlert';
 
 export default function AddRoute() {
   const navigate = useNavigate();
   const [isChecking, setIsChecking] = useState(true);
 
-  // Custom Alert State
   const [alertConfig, setAlertConfig] = useState({ 
     message: '', 
     type: 'success',
@@ -46,10 +45,8 @@ export default function AddRoute() {
 
   const t = translations[language] || translations['si'];
 
-  // ඇලට් එක වසා දැමීමට
   const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
 
-  // ඇලට් පෙන්වීමට හදාගත් function එක
   const showAlert = (message, type = 'success', showCancel = false, onConfirm = null) => {
     setAlertConfig({ message, type, showCancel, onConfirm });
   };
@@ -57,19 +54,36 @@ export default function AddRoute() {
   const handleSaveRoute = async (e) => {
     e.preventDefault();
     try {
+      const formattedName = routeName.trim();
+
+      // =======================================================
+      // Duplicate Route Validation (Offline Check)
+      // =======================================================
+      const isDuplicate = existingRoutes.some(
+        route => 
+          route.routeName.toLowerCase() === formattedName.toLowerCase() && 
+          route.id !== editingRouteId // Edit කරන වෙලාවට එයාගේම නම Duplicate එකක් විදිහට ගන්නැති වෙන්න
+      );
+
+      if (isDuplicate) {
+        showAlert(t.duplicateRouteAlert || 'Route already exists!', 'error');
+        return; // Duplicate නම් මෙතනින් නවතී, සේව් වෙන්නේ නෑ.
+      }
+      // =======================================================
+
       if (editingRouteId) {
-        await db.routes.update(editingRouteId, { routeName: routeName.trim(),syncStatus: 'pending' });
+        await db.routes.update(editingRouteId, { routeName: formattedName, syncStatus: 'pending' });
         showAlert(t.routeUpdatedSuccess || 'ගමන් මාර්ගය සාර්ථකව යාවත්කාලීන කරන ලදී!', 'success');
       } else {
-        await db.routes.add({ routeName: routeName.trim(),syncStatus: 'pending' });
+        await db.routes.add({ routeName: formattedName, syncStatus: 'pending' });
         showAlert(t.routeSavedSuccess || 'රූට් එක සාර්ථකව සුරැකුවා!', 'success');
       }
       
-      // සේව් කළ පසු සියල්ල Reset කිරීම
       setRouteName(''); 
       setEditingRouteId(null);
       setOriginalRouteName('');
       setExistingRoutes(await db.routes.toArray());
+      
     } catch (error) {
       showAlert(t.saveError || 'සුරැකීමේදී දෝෂයක් මතු විය!', 'error');
     }
@@ -77,23 +91,21 @@ export default function AddRoute() {
 
   const handleEditClick = (route) => {
     setRouteName(route.routeName);
-    setOriginalRouteName(route.routeName); // මුල් නම මතක තබා ගනී
+    setOriginalRouteName(route.routeName); 
     setEditingRouteId(route.id);
     window.scrollTo({ top: 0, behavior: 'smooth' }); 
   };
 
-  // මකා දැමීම Confirmation ඇලට් එකක් හරහා කිරීම
   const handleDeleteClick = (id) => {
     showAlert(
       t.deleteRouteConfirm || 'මෙම ගමන් මාර්ගය මකා දැමීමට අවශ්‍ය බව ඔබට විශ්වාසද?', 
       'confirm', 
-      true,  // Cancel බටන් එක පෙන්වන්න
-      async () => { // Confirm කළොත් වෙන දේ
+      true,  
+      async () => { 
         try {
           await db.routes.delete(id);
           setExistingRoutes(await db.routes.toArray());
           
-          // මැකූ පසු වෙනත් Alert එකක් පෙන්වන්න ටිකක් ප්‍රමාද කරමු (UI එක Smooth වෙන්න)
           setTimeout(() => {
             showAlert(t.routeDeletedSuccess || 'ගමන් මාර්ගය මකා දමන ලදී!', 'success');
           }, 300);
@@ -120,13 +132,11 @@ export default function AddRoute() {
 
   if (isChecking) return <LoadingScreen />;
 
-  // බටන් එක Disable කළ යුතුදැයි පරීක්ෂා කරන ලොජික් එක
   const isSubmitDisabled = !routeName.trim() || (editingRouteId && routeName.trim() === originalRouteName.trim());
 
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
-      {/* Alert Component එක Render කිරීම */}
       <CustomAlert 
         message={alertConfig.message} 
         type={alertConfig.type} 

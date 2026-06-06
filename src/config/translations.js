@@ -241,6 +241,10 @@ export const translations = {
 
 
     logoutConfirm: "ඔබට ඇප් එකෙන් ඉවත් වීමට අවශ්‍යද?",
+
+    existingRoutesTitle: "දැනට ඇති රූට්",
+    noRoutesYet: "තාමත් රූට් එකතු කර නොමැත.",
+    duplicateRouteAlert: "මෙම නමින් ගමන් මාර්ගයක් (Route) දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.", // අලුතින් එකතු කල පේළිය
     
   },
 
@@ -483,6 +487,10 @@ export const translations = {
 
     logoutConfirm: "Are you sure you want to logout?",
 
+    existingRoutesTitle: "Existing Routes",
+    noRoutesYet: "No routes added yet.",
+    duplicateRouteAlert: "A route with this name already exists. Please provide a different name.", // අලුතින් එකතු කල පේළිය
+
   },
 
   ta: {
@@ -721,5 +729,9 @@ export const translations = {
     stepItem: "புதிய பொருளைச் சேர்க்கவும்",
 
     logoutConfirm: "நீங்கள் பயன்பாட்டிலிருந்து வெளியேற விரும்புகிறீர்களா?",
+
+    existingRoutesTitle: "தற்போதுள்ள வழிகள்",
+    noRoutesYet: "இன்னும் வழிகள் சேர்க்கப்படவில்லை.",
+    duplicateRouteAlert: "இந்த பெயரில் ஏற்கனவே ஒரு வழி உள்ளது. வேறு பெயரை உள்ளிடவும்.", // அලුතින් එකතු කල පේළිය
   }
 };
