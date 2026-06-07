@@ -41,6 +41,10 @@ export default function Expenses() {
     message: '', type: 'success', showCancel: false, onConfirm: null
   });
 
+  // --- Dynamic Categories States ---
+  const [expenseCategories, setExpenseCategories] = useState([]);
+  const [incomeCategories, setIncomeCategories] = useState([]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/');
@@ -53,9 +57,26 @@ export default function Expenses() {
     loadRecords();
   }, [startDate, endDate]);
 
+  // Load Settings from LocalStorage for Dynamic Dropdowns
+  useEffect(() => {
+    const loadDynamicSettings = () => {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        
+        if (parsed.expense_categories && parsed.expense_categories.length > 0) {
+           setExpenseCategories(parsed.expense_categories.map(cat => ({ label: cat, value: cat })));
+        }
+        if (parsed.income_categories && parsed.income_categories.length > 0) {
+           setIncomeCategories(parsed.income_categories.map(cat => ({ label: cat, value: cat })));
+        }
+      }
+    };
+    loadDynamicSettings();
+  }, []);
+
   const loadRecords = async () => {
     try {
-      // දින පරාසයට (Date Range) අදාල සටහන් පමණක් ලබාගැනීම
       const allRecords = await db.expenses
         .filter(e => e.date >= startDate && e.date <= endDate)
         .toArray();
@@ -87,7 +108,7 @@ export default function Expenses() {
 
     try {
       await db.expenses.add({
-        date: recordDate, // ෆෝම් එකේ ඇති දිනය භාවිතා කරයි
+        date: recordDate, 
         type,
         category,
         amount: parseFloat(amount),
@@ -120,43 +141,13 @@ export default function Expenses() {
     );
   };
 
-  const [expenseCategories, setExpenseCategories] = useState([]);
-  const [incomeCategories, setIncomeCategories] = useState([]);
-
-  useEffect(() => {
-    const loadDynamicSettings = () => {
-      const savedSettings = localStorage.getItem('appSettings');
-      if (savedSettings) {
-        const parsed = JSON.parse(savedSettings);
-        
-        if (parsed.expense_categories && parsed.expense_categories.length > 0) {
-           setExpenseCategories(parsed.expense_categories.map(cat => ({ label: cat, value: cat })));
-        }
-        if (parsed.income_categories && parsed.income_categories.length > 0) {
-           setIncomeCategories(parsed.income_categories.map(cat => ({ label: cat, value: cat })));
-        }
-      }
-    };
-    loadDynamicSettings();
-  }, []);
-
   const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
 
-  const incomeCategories = [
-    { label: language === 'si' ? 'ටිප් එකක් (Tip)' : 'Tip', value: 'tip' },
-    { label: language === 'si' ? 'ලැබුණු වෙනත් මුදල් (Found/Other)' : 'found_money', value: 'found_money' },
-    { label: language === 'si' ? 'අත්තිකාරම් (Advance/Salary)' : 'advance', value: 'advance' }
-  ];
-
-  const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
-
-  // Dropdown එක සඳහා මුලටම "තෝරන්න..." එකතු කිරීම
   const dropdownOptions = [
     { label: language === 'si' ? 'තෝරන්න...' : 'Select...', value: '' },
     ...currentCategories
   ];
 
-  // ගණනය කිරීම් (Calculations)
   const totalIncome = records.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
   const totalExpense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
   const netBalance = totalIncome - totalExpense;
@@ -179,7 +170,6 @@ export default function Expenses() {
 
       <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 hide-scrollbar">
         
-        {/* Date Range Selector */}
         <div className="flex gap-3 mb-6">
           <div className="flex-1">
             <FormInput type="date" label={language === 'si' ? 'ආරම්භක දිනය' : 'Start Date'} value={startDate} onChange={(e) => setStartDate(e.target.value)} icon={Calendar} />
@@ -189,7 +179,6 @@ export default function Expenses() {
           </div>
         </div>
 
-        {/* Summary Card - අලුත් වර්ණ රටාව (Light/Dark Mode Support) */}
         <div className={`rounded-2xl p-5 mb-6 shadow-sm border ${theme.colors.cardBg} ${theme.colors.inputBorder} transition-colors`}>
           <p className={`${theme.colors.mutedText} text-[12px] font-bold tracking-wide uppercase mb-1 flex items-center gap-2`}>
             <Wallet size={14} /> {language === 'si' ? 'කාලසීමාවේ ඉතිරිය' : 'Period Net Balance'}
@@ -210,7 +199,6 @@ export default function Expenses() {
           </div>
         </div>
 
-        {/* Add New Record Form */}
         <div className={`${theme.colors.cardBg} rounded-2xl border ${theme.colors.inputBorder} p-4 mb-6 shadow-sm transition-colors`}>
           <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
             {language === 'si' ? 'නව සටහනක් එක් කරන්න' : 'Add New Record'}
@@ -218,12 +206,10 @@ export default function Expenses() {
           
           <form onSubmit={handleAddRecord} className="space-y-4">
             
-            {/* Record Date (අලුත් සටහන සඳහා දිනය) */}
             <div>
               <FormInput type="date" label={language === 'si' ? 'සටහන් කරන දිනය' : 'Record Date'} value={recordDate} onChange={(e) => setRecordDate(e.target.value)} icon={Calendar} required />
             </div>
 
-            {/* Type Toggle */}
             <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
               <button
                 type="button"
@@ -244,7 +230,6 @@ export default function Expenses() {
             <div className="flex gap-3">
               <div className="flex-1 relative">
                 <FormSelect label={language === 'si' ? 'වර්ගය' : 'Category'} value={category} onChange={(e) => setCategory(e.target.value)} options={dropdownOptions} icon={Tag} required />
-                {/* ඩ්‍රොප් ඩවුන් ඊතලය */}
                 <div className="absolute right-3 bottom-[13px] pointer-events-none">
                   <ChevronDown size={18} className={theme.colors.mutedText} />
                 </div>
@@ -268,7 +253,6 @@ export default function Expenses() {
           </form>
         </div>
 
-        {/* Records List */}
         <div>
           <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
             {language === 'si' ? 'සටහන් ලැයිස්තුව' : 'Records List'}
