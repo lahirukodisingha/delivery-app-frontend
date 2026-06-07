@@ -158,23 +158,28 @@ export default function AddBill() {
   };
 
   const handleQuantityChange = (id, value) => {
-    const val = parseFloat(value);
-    if (isNaN(val) || val <= 0) {
+    // අගය හිස් නම් හෝ සෘණ අගයක් නම් එය ඉවත් කරයි
+    if (value === '' || parseFloat(value) < 0) {
       setQuantities(prev => {
         const newState = { ...prev };
         delete newState[id];
         return newState;
       });
     } else {
-      setQuantities(prev => ({ ...prev, [id]: val }));
+      // දශම තිත මැකී යාම වැළැක්වීමට මෙහිදී String එකක් ලෙසම අගය තබා ගනී
+      setQuantities(prev => ({ ...prev, [id]: value }));
     }
   };
 
   const filteredItems = availableItems.filter(item => item.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
-  const activeBillItems = availableItems.filter(item => quantities[item.id] > 0).map(item => ({
-    itemId: item.id, itemName: item.itemName, unit: item.unit, unitPrice: item.unitPrice,
-    quantity: quantities[item.id], subTotal: item.unitPrice * quantities[item.id]
-  }));
+  
+  const activeBillItems = availableItems.filter(item => parseFloat(quantities[item.id]) > 0).map(item => {
+    const parsedQty = parseFloat(quantities[item.id]) || 0;
+    return {
+      itemId: item.id, itemName: item.itemName, unit: item.unit, unitPrice: item.unitPrice,
+      quantity: parsedQty, subTotal: item.unitPrice * parsedQty
+    };
+  });
 
   const totalAmount = activeBillItems.reduce((total, item) => total + item.subTotal, 0);
   const payForToday = isTodayPaymentEdited ? (parseFloat(customTodayPayment) || 0) : totalAmount;
@@ -632,18 +637,23 @@ export default function AddBill() {
 
               <hr className={`${theme.colors.divider} border-t my-2`} />
 
-              <FormInput 
-                type="text" 
-                inputMode="decimal"
-                label={t.cashGivenLabel} 
-                value={cashGiven} 
-                onChange={(e) => {
-                    let val = e.target.value.replace(/[^0-9.]/g, '');
-                    if ((val.match(/\./g) || []).length <= 1) setCashGiven(val);
-                }} 
-                icon={Wallet} 
-                placeholder={t.cashGivenPlaceholder} 
-              />
+              <div>
+                 <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Wallet size={18} className={theme.colors.mutedText} /> {t.cashGivenLabel}</label>
+                 <div className="relative">
+                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
+                   <input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={cashGiven} 
+                    onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if ((val.match(/\./g) || []).length <= 1) setCashGiven(val);
+                    }} 
+                    className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} 
+                    placeholder={t.cashGivenPlaceholder} 
+                  />
+                 </div>
+              </div>
 
               {changeToReturn > 0 && (
                 <div className="flex justify-between items-center bg-[#1b43aa] dark:bg-blue-600 p-4 rounded-xl border border-[#14348c] dark:border-blue-700 shadow-lg animate-pulse mt-4">
