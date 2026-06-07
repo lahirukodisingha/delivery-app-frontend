@@ -5,7 +5,7 @@ import { theme } from '../config/theme';
 import { translations } from '../config/translations';
 import { 
   Calendar, Coins, ArrowDownCircle, ArrowUpCircle, 
-  Trash2, Plus, FileText, Tag, Wallet 
+  Trash2, Plus, FileText, Tag, Wallet, ChevronDown 
 } from 'lucide-react';
 
 import LoadingScreen from '../components/LoadingScreen';
@@ -20,7 +20,15 @@ export default function Expenses() {
   const [isChecking, setIsChecking] = useState(true);
   const [language, setLanguage] = useState('si');
 
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  // Date Range States
+  const [startDate, setStartDate] = useState(todayStr);
+  const [endDate, setEndDate] = useState(todayStr);
+  
+  // New Record Date
+  const [recordDate, setRecordDate] = useState(todayStr);
+  
   const [records, setRecords] = useState([]);
   
   // Form States
@@ -43,12 +51,15 @@ export default function Expenses() {
 
   useEffect(() => {
     loadRecords();
-  }, [date]);
+  }, [startDate, endDate]);
 
   const loadRecords = async () => {
     try {
-      const allRecords = await db.expenses.filter(e => e.date === date).toArray();
-      // අලුත්ම සටහන උඩින් පෙන්වීමට ID එකෙන් sort කිරීම
+      // දින පරාසයට (Date Range) අදාල සටහන් පමණක් ලබාගැනීම
+      const allRecords = await db.expenses
+        .filter(e => e.date >= startDate && e.date <= endDate)
+        .toArray();
+        
       allRecords.sort((a, b) => b.id - a.id);
       setRecords(allRecords);
     } catch (error) {
@@ -70,13 +81,13 @@ export default function Expenses() {
       return;
     }
     if (!category) {
-      showAlert(language === 'si' ? 'කරුණාකර කාණ්ඩයක් තෝරන්න.' : 'Please select a category.', 'error');
+      showAlert(language === 'si' ? 'කරුණාකර වර්ගයක් තෝරන්න.' : 'Please select a category.', 'error');
       return;
     }
 
     try {
       await db.expenses.add({
-        date,
+        date: recordDate, // ෆෝම් එකේ ඇති දිනය භාවිතා කරයි
         type,
         category,
         amount: parseFloat(amount),
@@ -125,6 +136,12 @@ export default function Expenses() {
 
   const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
 
+  // Dropdown එක සඳහා මුලටම "තෝරන්න..." එකතු කිරීම
+  const dropdownOptions = [
+    { label: language === 'si' ? 'තෝරන්න...' : 'Select...', value: '' },
+    ...currentCategories
+  ];
+
   // ගණනය කිරීම් (Calculations)
   const totalIncome = records.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
   const totalExpense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
@@ -148,39 +165,50 @@ export default function Expenses() {
 
       <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 hide-scrollbar">
         
-        {/* Date Selector */}
-        <div className="mb-4">
-          <FormInput type="date" label={t.dateLabel || 'දිනය'} value={date} onChange={(e) => setDate(e.target.value)} icon={Calendar} />
+        {/* Date Range Selector */}
+        <div className="flex gap-3 mb-6">
+          <div className="flex-1">
+            <FormInput type="date" label={language === 'si' ? 'ආරම්භක දිනය' : 'Start Date'} value={startDate} onChange={(e) => setStartDate(e.target.value)} icon={Calendar} />
+          </div>
+          <div className="flex-1">
+            <FormInput type="date" label={language === 'si' ? 'අවසාන දිනය' : 'End Date'} value={endDate} onChange={(e) => setEndDate(e.target.value)} icon={Calendar} />
+          </div>
         </div>
 
-        {/* Summary Card */}
-        <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-5 mb-6 shadow-lg text-white">
-          <p className="text-gray-400 text-[12px] font-bold tracking-wide uppercase mb-1 flex items-center gap-2">
-            <Wallet size={14} /> {language === 'si' ? 'දවසේ ඉතිරිය' : 'Daily Net Balance'}
+        {/* Summary Card - අලුත් වර්ණ රටාව (Light/Dark Mode Support) */}
+        <div className={`rounded-2xl p-5 mb-6 shadow-sm border ${theme.colors.cardBg} ${theme.colors.inputBorder} transition-colors`}>
+          <p className={`${theme.colors.mutedText} text-[12px] font-bold tracking-wide uppercase mb-1 flex items-center gap-2`}>
+            <Wallet size={14} /> {language === 'si' ? 'කාලසීමාවේ ඉතිරිය' : 'Period Net Balance'}
           </p>
-          <h2 className={`text-3xl font-bold mb-4 ${netBalance >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+          <h2 className={`text-3xl font-bold mb-4 ${netBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {netBalance < 0 ? '-' : ''} රු. {Math.abs(netBalance).toFixed(2)}
           </h2>
           
-          <div className="flex justify-between border-t border-gray-700 pt-3">
+          <div className={`flex justify-between border-t ${theme.colors.divider} pt-3`}>
             <div>
-              <p className="text-gray-400 text-[11px] font-bold">{language === 'si' ? 'ආදායම් (+)' : 'Income'}</p>
-              <p className="text-green-400 font-bold">රු. {totalIncome.toFixed(2)}</p>
+              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{language === 'si' ? 'ආදායම් (+)' : 'Income'}</p>
+              <p className="text-green-600 dark:text-green-400 font-bold">රු. {totalIncome.toFixed(2)}</p>
             </div>
             <div className="text-right">
-              <p className="text-gray-400 text-[11px] font-bold">{language === 'si' ? 'වියදම් (-)' : 'Expense'}</p>
-              <p className="text-red-400 font-bold">රු. {totalExpense.toFixed(2)}</p>
+              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{language === 'si' ? 'වියදම් (-)' : 'Expense'}</p>
+              <p className="text-red-600 dark:text-red-400 font-bold">රු. {totalExpense.toFixed(2)}</p>
             </div>
           </div>
         </div>
 
         {/* Add New Record Form */}
-        <div className={`${theme.colors.cardBg} rounded-2xl border ${theme.colors.inputBorder} p-4 mb-6 shadow-sm`}>
+        <div className={`${theme.colors.cardBg} rounded-2xl border ${theme.colors.inputBorder} p-4 mb-6 shadow-sm transition-colors`}>
           <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
             {language === 'si' ? 'නව සටහනක් එක් කරන්න' : 'Add New Record'}
           </h3>
           
           <form onSubmit={handleAddRecord} className="space-y-4">
+            
+            {/* Record Date (අලුත් සටහන සඳහා දිනය) */}
+            <div>
+              <FormInput type="date" label={language === 'si' ? 'සටහන් කරන දිනය' : 'Record Date'} value={recordDate} onChange={(e) => setRecordDate(e.target.value)} icon={Calendar} required />
+            </div>
+
             {/* Type Toggle */}
             <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
               <button
@@ -200,11 +228,21 @@ export default function Expenses() {
             </div>
 
             <div className="flex gap-3">
-              <div className="flex-1">
-                <FormSelect label={language === 'si' ? 'වර්ගය' : 'Category'} value={category} onChange={(e) => setCategory(e.target.value)} options={currentCategories} icon={Tag} required />
+              <div className="flex-1 relative">
+                <FormSelect label={language === 'si' ? 'වර්ගය' : 'Category'} value={category} onChange={(e) => setCategory(e.target.value)} options={dropdownOptions} icon={Tag} required />
+                {/* ඩ්‍රොප් ඩවුන් ඊතලය */}
+                <div className="absolute right-3 bottom-[13px] pointer-events-none">
+                  <ChevronDown size={18} className={theme.colors.mutedText} />
+                </div>
               </div>
               <div className="flex-1">
-                <FormInput type="number" label={language === 'si' ? 'මුදල (රු)' : 'Amount (Rs)'} value={amount} onChange={(e) => setAmount(e.target.value)} icon={Coins} placeholder="0.00" required />
+                <FormInput type="text" inputMode="decimal" label={language === 'si' ? 'මුදල (රු)' : 'Amount (Rs)'} value={amount} 
+                  onChange={(e) => {
+                    let val = e.target.value.replace(/[^0-9.]/g, '');
+                    if ((val.match(/\./g) || []).length <= 1) setAmount(val);
+                  }} 
+                  icon={Coins} placeholder="0.00" required 
+                />
               </div>
             </div>
 
@@ -219,14 +257,14 @@ export default function Expenses() {
         {/* Records List */}
         <div>
           <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
-            {language === 'si' ? 'දවසේ සටහන්' : 'Today\'s Records'}
+            {language === 'si' ? 'සටහන් ලැයිස්තුව' : 'Records List'}
           </h3>
           
           {records.length === 0 ? (
-            <div className={`p-6 rounded-xl border border-dashed ${theme.colors.inputBorder} text-center`}>
+            <div className={`p-6 rounded-xl border border-dashed ${theme.colors.inputBorder} text-center transition-colors`}>
               <FileText size={28} className={`${theme.colors.mutedText} mx-auto mb-2 opacity-50`} />
               <p className={`${theme.colors.mutedText} text-sm font-medium`}>
-                {language === 'si' ? 'මෙම දිනය සඳහා සටහන් කිසිවක් නොමැත.' : 'No records for this date.'}
+                {language === 'si' ? 'මෙම කාලසීමාව සඳහා සටහන් කිසිවක් නොමැත.' : 'No records for this period.'}
               </p>
             </div>
           ) : (
@@ -237,13 +275,14 @@ export default function Expenses() {
                 const catLabel = catObj ? catObj.label : record.category;
 
                 return (
-                  <div key={record.id} className={`${theme.colors.cardBg} border ${theme.colors.inputBorder} p-3 rounded-xl shadow-sm flex items-center justify-between`}>
+                  <div key={record.id} className={`${theme.colors.cardBg} border ${theme.colors.inputBorder} p-3 rounded-xl shadow-sm flex items-center justify-between transition-colors`}>
                     <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isIncome ? 'bg-green-100 text-green-600 dark:bg-green-900/30' : 'bg-red-100 text-red-600 dark:bg-red-900/30'}`}>
+                      <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${isIncome ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
                         {isIncome ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
                       </div>
                       <div>
                         <p className={`font-bold text-[14px] ${theme.colors.inputText}`}>{catLabel}</p>
+                        <p className={`text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-0.5`}>{record.date}</p>
                         {record.note && <p className={`text-[11px] ${theme.colors.mutedText} mt-0.5 leading-tight`}>{record.note}</p>}
                       </div>
                     </div>
