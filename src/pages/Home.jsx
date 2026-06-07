@@ -32,7 +32,6 @@ export default function Home() {
   const [isNotifOpen, setIsNotifOpen] = useState(false); 
   const [notifications, setNotifications] = useState([]); 
   
-  // දැනට Expand කර ඇති Notification එකේ ID එක
   const [expandedNotifId, setExpandedNotifId] = useState(null);
   
   // Onboarding State
@@ -171,11 +170,8 @@ export default function Home() {
     loadNotifications();
   }, [language, todayStr]);
 
-  // නිවේදනයක් ක්ලික් කළ විට එය Expand කර Read තත්වයට පත් කිරීම
   const handleNotifClick = (id) => {
     setExpandedNotifId(prevId => prevId === id ? null : id);
-    
-    // Notification එක කියවූ (Read) බවට යාවත්කාලීන කිරීම
     setNotifications(prevNotifs => 
       prevNotifs.map(n => n.id === id && !n.isRead ? { ...n, isRead: true } : n)
     );
@@ -203,30 +199,20 @@ export default function Home() {
       'confirm',
       true, 
       async () => {
-        // --- අලුත් කොටස: IndexedDB හි ඇති සියලුම දත්ත මකා දැමීම ---
         try {
           await Promise.all([
-            db.settings.clear(),
-            db.profile.clear(),
-            db.routes.clear(),
-            db.shops.clear(),
-            db.items.clear(),
-            db.bills.clear(),
-            db.billItems.clear(),
-            db.expenses.clear()
+            db.settings.clear(), db.profile.clear(), db.routes.clear(),
+            db.shops.clear(), db.items.clear(), db.bills.clear(),
+            db.billItems.clear(), db.expenses.clear()
           ]);
         } catch (dbError) {
           console.error("Error clearing local database:", dbError);
         }
         
-        // localStorage එකෙන් කඩවල්වල ටික් දාපු දත්ත (visited_keys) මැකීම
         Object.keys(localStorage).forEach(key => {
-          if(key.startsWith('visited_')) {
-            localStorage.removeItem(key);
-          }
+          if(key.startsWith('visited_')) localStorage.removeItem(key);
         });
         
-        // Token සහ User දත්ත මැකීම
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         
@@ -336,7 +322,6 @@ export default function Home() {
         </div>
       </div>
 
-
       {/* ======================= NOTIFICATIONS PANEL ======================= */}
       <div className={`absolute top-0 right-0 h-full w-[300px] sm:w-[350px] ${theme.colors.navBg} z-[70] transform transition-transform duration-300 ease-in-out ${isNotifOpen ? 'translate-x-0' : 'translate-x-full'} shadow-2xl flex flex-col`}>
         
@@ -380,7 +365,6 @@ export default function Home() {
                 >
                   {!notif.isRead && <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600 dark:bg-blue-400"></div>}
                   
-                  {/* මාතෘකාව සහ ඊතලය */}
                   <div 
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => handleNotifClick(notif.id)}
@@ -402,13 +386,11 @@ export default function Home() {
                     </button>
                   </div>
 
-                  {/* Expand වන විස්තරය */}
                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-40 opacity-100 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700' : 'max-h-0 opacity-0 mt-0 pt-0 border-t-0'}`}>
                     <p className={`text-[13px] leading-relaxed ${notif.isRead ? theme.colors.mutedText : theme.colors.inputText}`}>
                       {notif.message}
                     </p>
                   </div>
-                  
                 </div>
               );
             })
@@ -427,13 +409,11 @@ export default function Home() {
           </h1>
         </div>
         
-        {/* Bell Icon */}
         <button 
           onClick={() => setIsNotifOpen(true)} 
           className={`${theme.colors.headerText} p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-full transition relative`}
         >
           <Bell size={28} strokeWidth={2.5} />
-          {/* අලුත් ඉලක්කම් සහිත Badge එක (නිවැරදි කරන ලදී) */}
           {unreadCount > 0 && (
             <span className="absolute top-1.5 right-1.5 w-[18px] h-[18px] bg-red-500 rounded-full border-2 border-white dark:border-gray-900 flex items-center justify-center text-[10px] font-bold text-white shadow-sm">
               {unreadCount}
@@ -444,21 +424,13 @@ export default function Home() {
 
       <div className="flex-1 overflow-y-auto px-5 pt-2 pb-24 hide-scrollbar">
         
-        {/* =====================================================================
-            ONBOARDING CHECKLIST VIEW (නව පරිශීලකයින් සඳහා)
-        ====================================================================== */}
         {!onboarding.isCompleted ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            
+            {/* Onboarding View - වෙනස් කර නොමැත */}
             <div className="bg-gradient-to-br from-[#14348c] to-[#1b43aa] rounded-3xl p-6 mb-6 shadow-lg text-white">
-              <h2 className="text-[20px] font-bold mb-2">
-                {t.onboardingWelcome}
-              </h2>
-              <p className="text-blue-100 text-[14px] leading-relaxed mb-5 opacity-90">
-                {t.onboardingDesc}
-              </p>
+              <h2 className="text-[20px] font-bold mb-2">{t.onboardingWelcome}</h2>
+              <p className="text-blue-100 text-[14px] leading-relaxed mb-5 opacity-90">{t.onboardingDesc}</p>
               
-              {/* Progress Bar */}
               <div className="w-full bg-blue-900/50 rounded-full h-2.5 mb-2 overflow-hidden">
                 <div 
                   className="bg-green-400 h-2.5 rounded-full transition-all duration-1000 ease-out" 
@@ -499,21 +471,13 @@ export default function Home() {
                       </div>
                     </div>
                     
-                    {step.isDone ? (
-                      <CheckCircle2 size={24} className="text-green-500" />
-                    ) : (
-                      <Circle size={24} className="text-gray-300 dark:text-gray-600" />
-                    )}
+                    {step.isDone ? <CheckCircle2 size={24} className="text-green-500" /> : <Circle size={24} className="text-gray-300 dark:text-gray-600" />}
                   </button>
                 );
               })}
             </div>
-
           </div>
         ) : (
-          /* =====================================================================
-              DASHBOARD VIEW (පියවර සම්පූර්ණ කළ පසු පෙන්වන සාමාන්‍ය තිරය)
-          ====================================================================== */
           <div className="animate-in fade-in duration-500">
             <div className="mb-3 flex justify-between items-end mt-4">
               <h2 className={`${theme.fonts.label} ${theme.colors.labelText}`}>
@@ -543,6 +507,9 @@ export default function Home() {
                 <p className={`${theme.colors.mutedText} text-sm font-medium`}>{t.noShopsInRoute}</p>
               </div>
             ) : (
+              // =================================================================
+              // අලුත් කළ කඩවල් ලැයිස්තුව (ක්ලික් කළ විට කෙලින්ම Add Bill වෙත යයි)
+              // =================================================================
               <div className={`${theme.colors.cardBg} rounded-xl border ${theme.colors.divider} shadow-sm overflow-hidden mb-6 transition-all duration-500`}>
                 {displayShopsList.map((shop) => {
                   const isVisited = visitedShopIds.includes(shop.id);
@@ -555,8 +522,13 @@ export default function Home() {
                       `}
                     >
                       <div className="flex items-center gap-4 w-full">
+                        
+                        {/* 1. අතින් ටික් එක දාන/අයින් කරන කොටස (පරණ විදිහටම ඇත) */}
                         <button 
-                          onClick={() => handleToggleVisit(shop.id)}
+                          onClick={(e) => {
+                            e.stopPropagation(); // කඩේ ක්ලික් එකෙන් මේක වෙන් කරගැනීමට
+                            handleToggleVisit(shop.id);
+                          }}
                           className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2
                             ${isVisited 
                               ? 'bg-green-500 border-green-500 text-white dark:bg-green-600 dark:border-green-600 shadow-inner' 
@@ -567,7 +539,19 @@ export default function Home() {
                           {isVisited ? <Check size={20} strokeWidth={3} /> : shop.displayNum}
                         </button>
 
-                        <div className={`transition-all duration-300 flex-1 ${isVisited ? 'opacity-40 grayscale' : 'opacity-100'}`}>
+                        {/* 2. කඩේ නම ක්ලික් කර බිලට යෑමේ කොටස */}
+                        <div 
+                          onClick={() => {
+                            // කඩේට ගියා කියලා ටික් එක වැටිලා නැත්නම් විතරක් ඔටෝ ටික් එක දානවා
+                            if (!isVisited) {
+                              handleToggleVisit(shop.id);
+                            }
+                            
+                            // ඊළඟට Add Bill පිටුවට අදාල කඩේ ID එකත් අරගෙන යනවා
+                            navigate('/add-bill', { state: { preSelectedShopId: shop.id } });
+                          }}
+                          className={`transition-all duration-300 flex-1 cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/10 p-2 -my-2 rounded-lg ${isVisited ? 'opacity-40 grayscale' : 'opacity-100'}`}
+                        >
                           <p className={`font-bold ${theme.colors.inputText} text-[16px] ${isVisited ? 'line-through' : ''}`}>
                             {shop.shopName}
                           </p>
@@ -575,25 +559,15 @@ export default function Home() {
                             {shop.address || shop.phone}
                           </p>
                         </div>
+
                       </div>
                     </div>
                   );
                 })}
               </div>
             )}
-
-            <PrimaryButton 
-              onClick={() => {
-                if(!activeRouteName) {
-                  showAlert(t.pleaseSelectRouteFirst, 'error');
-                } else {
-                  navigate('/add-bill');
-                }
-              }} 
-              icon={Plus}
-            >
-              {t.addNewBill}
-            </PrimaryButton>
+            
+            {/* යට තිබුණු "නව බිලක් එක් කරන්න" (Add Bill) බොත්තම ඉවත් කර ඇත */}
           </div>
         )}
 
