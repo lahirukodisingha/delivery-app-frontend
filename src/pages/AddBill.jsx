@@ -607,7 +607,8 @@ export default function AddBill() {
         )}
       </div>
 
-      <div className={`flex-none ${theme.colors.navBg} border-t ${theme.colors.navBorder} px-4 py-3 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.03)] z-50`}>
+      {/* py-3 ඉවත් කර pt-3 සහ pb-8 යොදා යටින් වැඩිපුර ඉඩක් (Bottom Padding) ලබා දී ඇත */}
+      <div className={`flex-none ${theme.colors.navBg} border-t ${theme.colors.navBorder} px-4 pt-3 pb-10 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] z-50`}>
         {currentStep === 1 ? (
           <PrimaryButton onClick={handleNextStep}>
             {t.nextStepBtn} <ArrowRight size={20} />
