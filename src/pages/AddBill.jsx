@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { db } from '../db/database';
 import { theme } from '../config/theme';
 import { translations } from '../config/translations'; 
@@ -27,6 +27,8 @@ const getLocalDate = () => {
 
 export default function AddBill() {
   const navigate = useNavigate();
+  const location = useLocation(); 
+  const preSelectedShopId = location.state?.preSelectedShopId;
   const [isChecking, setIsChecking] = useState(true);
 
   const [alertConfig, setAlertConfig] = useState({ 
@@ -85,14 +87,21 @@ export default function AddBill() {
         setShops(filteredShops);
         setAvailableItems(loadedItems);
         
+        // මේ කොටස අලුතින් Replace කරන්න
         if (filteredShops.length > 0) {
-          const savedVisited = JSON.parse(localStorage.getItem(`visited_${todayStr}`) || '[]');
-          const nextShop = filteredShops.find(s => !savedVisited.includes(s.id));
-          
-          if (nextShop) {
-            setSelectedShopId(nextShop.id.toString());
+          if (preSelectedShopId) {
+            // Home එකෙන් කඩයක් ක්ලික් කරලා ආවා නම් කෙලින්ම ඒක සිලෙක්ට් කරනවා
+            setSelectedShopId(preSelectedShopId.toString());
           } else {
-            setSelectedShopId(filteredShops[0].id.toString());
+            // සාමාන්‍ය විදිහට පල්ලෙහා බට්න් එකෙන් ආවා නම්, ඊළඟට යන්න තියෙන කඩේ ඔටෝ තෝරනවා
+            const savedVisited = JSON.parse(localStorage.getItem(`visited_${todayStr}`) || '[]');
+            const nextShop = filteredShops.find(s => !savedVisited.includes(s.id));
+            
+            if (nextShop) {
+              setSelectedShopId(nextShop.id.toString());
+            } else {
+              setSelectedShopId(filteredShops[0].id.toString());
+            }
           }
         } else {
           setSelectedShopId('');
