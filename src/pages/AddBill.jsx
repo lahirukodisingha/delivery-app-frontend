@@ -5,7 +5,7 @@ import { theme } from '../config/theme';
 import { translations } from '../config/translations'; 
 import { 
   Calendar, Store, Banknote, Receipt, 
-  FileText, Save, Plus, Minus, ShoppingCart, Search, ArrowRight, AlertCircle, Coins, Wallet, CheckCircle2, Printer, X
+  FileText, Save, Plus, Minus, ShoppingCart, Search, ArrowRight, AlertCircle, Coins, Wallet, CheckCircle2, Printer, X,ChevronDown
 } from 'lucide-react';
 
 // Components
@@ -449,8 +449,13 @@ export default function AddBill() {
               <div className="w-1/2">
                  <FormInput type="date" label={t.dateLabel} value={date} onChange={(e) => setDate(e.target.value)} icon={Calendar} required />
               </div>
-              <div className="w-1/2">
+              <div className="w-1/2 relative">
                  <FormSelect label={t.shopLabel} value={selectedShopId} onChange={(e) => setSelectedShopId(e.target.value)} options={shopOptions} disabled={shops.length === 0} icon={Store} required placeholderOption={shops.length === 0 ? (localStorage.getItem('activeRouteId') ? t.noShopsInRoute : t.pleaseSelectRouteFirst) : undefined} />
+                 
+                 {/* අලුතින් එකතු කළ ත්‍රිකෝණ අයිකන් එක */}
+                 <div className="absolute right-3 bottom-[13px] pointer-events-none">
+                   <ChevronDown size={18} className={theme.colors.mutedText} />
+                 </div>
               </div>
             </div>
 
