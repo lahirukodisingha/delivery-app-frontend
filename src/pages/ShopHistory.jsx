@@ -336,14 +336,25 @@ export default function ShopHistory() {
                     </div>
                   </div>
 
-                  <div className="p-4 flex justify-between items-center relative">
-                    <div>
+                  <div className="p-4 flex justify-between items-start relative">
+                    <div className="space-y-1.5">
                       <p className={`text-[13px] ${theme.colors.mutedText} flex items-center gap-1`}>
                         <Banknote size={14} className="text-green-600" /> {t.paidAmount} 
-                        <strong className="text-green-600 ml-1">රු. {(parseFloat(bill.receivedAmount) + parseFloat(bill.pastDueReceived || 0)).toFixed(2)}</strong>
+                        {/* මෙහි තිබූ (receivedAmount + pastDueReceived) වෙනුවට receivedAmount පමණක් යොදා ඇත */}
+                        <strong className="text-green-600 ml-1">රු. {parseFloat(bill.receivedAmount || 0).toFixed(2)}</strong>
                       </p>
+
+                      {/* අලුතින් එක් කළ හිඟ මුදල් ලැබුණු බව පෙන්වන තැඹිලි පාට කොටස */}
+                      {parseFloat(bill.pastDueReceived) > 0 && (
+                        <p className={`text-[13px] ${theme.colors.mutedText} flex items-center gap-1`}>
+                          <Banknote size={14} className="text-orange-500" /> {t.pastDueReceivedLabel || 'ලැබුණු හිඟ මුදල:'} 
+                          <strong className="text-orange-500 ml-1">රු. {parseFloat(bill.pastDueReceived).toFixed(2)}</strong>
+                        </p>
+                      )}
+
+                      {/* පරණ ණය පෙන්වන රතු පාට කොටස */}
                       {parseFloat(bill.dueAmount) > 0 && (
-                        <p className={`text-[13px] ${theme.colors.mutedText} flex items-center gap-1 mt-1`}>
+                        <p className={`text-[13px] ${theme.colors.mutedText} flex items-center gap-1`}>
                           <AlertCircle size={14} className="text-red-500" /> {t.dueAmount} 
                           <strong className="text-red-500 ml-1">රු. {parseFloat(bill.dueAmount).toFixed(2)}</strong>
                         </p>
@@ -374,17 +385,19 @@ export default function ShopHistory() {
                         <Trash2 size={18} />
                       </button>
                     </div>
-
-                    {/* Remarks Toggle Button - රීමාර්ක් එකක් ඇත්නම් පමණක් පෙන්වීම */}
-                    {bill.remarks && (
-                      <button 
-                        onClick={() => toggleRemarks(bill.id)}
-                        className={`absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white dark:bg-gray-800 border ${theme.colors.divider} rounded-full p-1 shadow-sm text-gray-400 hover:text-[#14348c] dark:hover:text-blue-400 transition-all duration-300 z-10 ${isRemarksExpanded ? 'bg-gray-50 dark:bg-gray-700' : ''}`}
-                      >
-                        {isRemarksExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                      </button>
-                    )}
                   </div>
+
+                  {/* Expand වෙන ත්‍රිකෝණය ඉවත් කර කෙලින්ම රීමාර්ක් එක පෙන්වීම */}
+                  {bill.remarks && (
+                    <div className={`bg-gray-50 dark:bg-gray-900/50 border-t ${theme.colors.divider} py-3 px-4`}>
+                      <p className={`text-[13px] font-medium ${theme.colors.mutedText} flex gap-2 items-start`}>
+                        <FileText size={16} className="text-[#14348c] dark:text-blue-400 mt-0.5 shrink-0" />
+                        <span className="leading-relaxed">
+                          {bill.remarks}
+                        </span>
+                      </p>
+                    </div>
+                  )}
 
                   {/* Expandable Remarks Area - රීමාර්ක් එකක් ඇත්නම් පමණක් මෙය සෑදේ */}
                   {bill.remarks && (
