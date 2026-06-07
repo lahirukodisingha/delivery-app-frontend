@@ -27,8 +27,16 @@ export default function Login() {
     }
 
     const token = localStorage.getItem('token');
-    if (token) {
-      navigate('/home');
+    const userStr = localStorage.getItem('user');
+
+    if (token && userStr) {
+      const user = JSON.parse(userStr);
+      // ලොග් වී ඇති කෙනා ඇඩ්මින් නම් ඇඩ්මින් පිටුවටත්, නැත්නම් Home එකටත් යවයි
+      if (user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/home');
+      }
     } else {
       setIsChecking(false); 
     }

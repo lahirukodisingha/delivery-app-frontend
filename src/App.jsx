@@ -59,6 +59,9 @@ function GlobalAuthCheck() {
   return null;
 }
 
+// ==========================================
+// Admin Route Guard
+// ==========================================
 function AdminRoute({ children }) {
   const userStr = localStorage.getItem('user');
   
@@ -75,6 +78,26 @@ function AdminRoute({ children }) {
   }
   
   // ඇඩ්මින් නම් පමණක් අදාල පිටුවට යන්න දෙනවා
+  return children;
+}
+
+// ==========================================
+// Driver Route Guard 
+// ==========================================
+function DriverRoute({ children }) {
+  const userStr = localStorage.getItem('user');
+  
+  if (!userStr) {
+    return <Navigate to="/" replace />;
+  }
+  
+  const user = JSON.parse(userStr);
+  
+  // ඇඩ්මින් කෙනෙක් සාමාන්‍ය පිටුවලට (උදා: /home) එන්න හැදුවොත් එයාව ආපහු ඇඩ්මින් පැනල් එකටම විසි කරනවා
+  if (user.role === 'admin') {
+    return <Navigate to="/admin" replace />;
+  }
+  
   return children;
 }
 
@@ -122,11 +145,12 @@ function App() {
     <Router>
       <GlobalAuthCheck />
       
-      {/* මෙහි තිබූ bg-gray-100 ඉවත් කර Light/Dark mode පසුබිම් වර්ණ එක් කර ඇත */}
       <div className="min-h-screen bg-[#f4f7fb] dark:bg-[#111827] text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <Routes>
+          {/* Public Route */}
           <Route path="/" element={<Login />} />
-          <Route path="/home" element={<Home />} />
+          
+          {/* Admin Routes */}
           <Route 
             path="/admin" 
             element={
@@ -135,20 +159,24 @@ function App() {
               </AdminRoute>
             } 
           />
-          <Route path="/settings" element={<BusinessProfile />} />
-          <Route path="/add-route" element={<AddRoute />} />
-          <Route path="/add-shop" element={<AddShop />} />
-          <Route path="/add-item" element={<AddItem />} />
-          <Route path="/add-bill" element={<AddBill />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/routes" element={<RoutesTab />} />
-          <Route path="/shops" element={<Shops />} />
-          <Route path="/shop-history/:shopId" element={<ShopHistory />} />
-          <Route path="/edit-bill/:billId" element={<EditBill />} />
-          <Route path="/reports" element={<Reports />} />
-          <Route path="/more" element={<MoreTab />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path='/backup' element={<BackupSync/>}/>
+
+          {/* Driver Routes (සාමාන්‍ය රියදුරුට පමණක් පිවිසිය හැකි පිටු) */}
+          <Route path="/home" element={<DriverRoute><Home /></DriverRoute>} />
+          <Route path="/settings" element={<DriverRoute><BusinessProfile /></DriverRoute>} />
+          <Route path="/add-route" element={<DriverRoute><AddRoute /></DriverRoute>} />
+          <Route path="/add-shop" element={<DriverRoute><AddShop /></DriverRoute>} />
+          <Route path="/add-item" element={<DriverRoute><AddItem /></DriverRoute>} />
+          <Route path="/add-bill" element={<DriverRoute><AddBill /></DriverRoute>} />
+          <Route path="/profile" element={<DriverRoute><Profile /></DriverRoute>} />
+          <Route path="/routes" element={<DriverRoute><RoutesTab /></DriverRoute>} />
+          <Route path="/shops" element={<DriverRoute><Shops /></DriverRoute>} />
+          <Route path="/shop-history/:shopId" element={<DriverRoute><ShopHistory /></DriverRoute>} />
+          <Route path="/edit-bill/:billId" element={<DriverRoute><EditBill /></DriverRoute>} />
+          <Route path="/reports" element={<DriverRoute><Reports /></DriverRoute>} />
+          <Route path="/more" element={<DriverRoute><MoreTab /></DriverRoute>} />
+          <Route path="/expenses" element={<DriverRoute><Expenses /></DriverRoute>} />
+          <Route path='/backup' element={<DriverRoute><BackupSync/></DriverRoute>} />
+          
         </Routes>
       </div>
     </Router>
