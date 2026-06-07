@@ -39,6 +39,13 @@ export default function AddItem() {
   const [existingItems, setExistingItems] = useState([]);
   const [language, setLanguage] = useState('si');
 
+  // --- අලුතින් එක්කළ කොටස: Drop-down එක සඳහා State එක ---
+  const [unitOptions, setUnitOptions] = useState([
+    { value: 'packet', label: 'packet' }, { value: 'kg', label: 'kg' }, { value: 'g', label: 'g' },
+    { value: 'L', label: 'L' }, { value: 'ml', label: 'ml' }, { value: 'bottle', label: 'bottle' },
+    { value: 'box', label: 'box' }, { value: 'piece', label: 'piece' }
+  ]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/');
@@ -57,6 +64,21 @@ export default function AddItem() {
     };
     loadItems();
   }, [navigate]);
+
+  // --- අලුතින් එක්කළ කොටස: LocalStorage එකෙන් Units ලබාගැනීම ---
+  useEffect(() => {
+    const loadDynamicSettings = () => {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        if (parsed.units && parsed.units.length > 0) {
+          // ඇඩ්මින් පැනල් එකෙන් එන දත්ත FormSelect එකට ගැලපෙන ලෙස සකස් කිරීම
+          setUnitOptions(parsed.units.map(u => ({ value: u, label: u })));
+        }
+      }
+    };
+    loadDynamicSettings();
+  }, []);
 
   const t = translations[language] || translations['si'];
 
@@ -80,20 +102,17 @@ export default function AddItem() {
     try {
       const formattedItemName = itemName.trim();
 
-      // =======================================================
       // Duplicate Item Validation (Offline Check)
-      // =======================================================
       const isDuplicate = existingItems.some(
         item => 
           item.itemName.toLowerCase() === formattedItemName.toLowerCase() && 
-          item.id !== editingItemId // Edit කරන වෙලාවට එයාගේම නම Duplicate එකක් විදිහට ගන්නැති වෙන්න
+          item.id !== editingItemId 
       );
 
       if (isDuplicate) {
         showAlert(t.duplicateItemAlert || 'Item already exists!', 'error');
-        return; // Duplicate නම් මෙතනින් නවතී, සේව් වෙන්නේ නෑ.
+        return; 
       }
-      // =======================================================
 
       if (editingItemId) {
         await db.items.update(editingItemId, { 
@@ -166,15 +185,8 @@ export default function AddItem() {
     }
   };
 
-  const unitOptions = [
-    { value: 'packet', label: 'packet' }, { value: 'kg', label: 'kg' }, { value: 'g', label: 'g' },
-    { value: 'L', label: 'L' }, { value: 'ml', label: 'ml' }, { value: 'bottle', label: 'bottle' },
-    { value: 'box', label: 'box' }, { value: 'piece', label: 'piece' }
-  ];
-
   if (isChecking) return <LoadingScreen />;
 
-  // Button Disable කිරීමේ ලොජික් එක
   const isSubmitDisabled = editingItemId 
     ? !(
         itemName.trim() !== (originalItem?.itemName || '') ||
@@ -186,7 +198,6 @@ export default function AddItem() {
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
-      {/* Alert Component එක Render කිරීම */}
       <CustomAlert 
         message={alertConfig.message} 
         type={alertConfig.type} 
@@ -200,7 +211,6 @@ export default function AddItem() {
 
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-8 hide-scrollbar">
         
-        {/* Add New Item Toggle Button */}
         <button 
           onClick={toggleForm}
           className={`w-full flex justify-between items-center p-4 rounded-xl border-2 transition-all shadow-sm mb-6 ${
@@ -220,13 +230,13 @@ export default function AddItem() {
           {isFormOpen ? <ChevronUp size={24} className="text-[#14348c] dark:text-blue-400" /> : <Plus size={24} className={theme.colors.mutedText} />}
         </button>
 
-        {/* Expandable Form */}
         {isFormOpen && (
           <div className="mb-8 p-5 bg-white dark:bg-gray-800/40 rounded-2xl border border-blue-100 dark:border-gray-700 shadow-md transition-all animate-in fade-in slide-in-from-top-4">
             <form onSubmit={handleSaveItem} className="space-y-5">
               
               <FormInput label={t.itemNameLabel} value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder={t.itemNamePlaceholder} icon={Box} required />
               
+              {/* මෙහි අලුතින් හැදූ unitOptions යොදා ඇත */}
               <FormSelect label={t.unitLabel} value={unit} onChange={(e) => setUnit(e.target.value)} options={unitOptions} />
               
               <FormInput type="number" step="0.01" label={t.unitPriceLabel} value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder={t.unitPricePlaceholder} required />
@@ -252,7 +262,6 @@ export default function AddItem() {
           </div>
         )}
 
-        {/* Existing Items List */}
         <div>
           <h2 className={`text-[16px] font-bold ${theme.colors.headerText} mb-3 flex items-center gap-2`}>
             <List size={18} className={theme.colors.mutedText} /> {t.existingItemsTitle || "දැනට ඇති භාණ්ඩ"}

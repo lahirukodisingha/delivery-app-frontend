@@ -104,6 +104,11 @@ export default function Login() {
               if(dbData.bills && dbData.bills.length > 0) await db.bills.bulkPut(dbData.bills);
               if(dbData.billItems && dbData.billItems.length > 0) await db.billItems.bulkPut(dbData.billItems);
               if(dbData.expenses && dbData.expenses.length > 0) await db.expenses.bulkPut(dbData.expenses);
+
+              // --- අලුතින් එක් කළ කොටස: App Settings LocalStorage එකේ සේව් කිරීම ---
+              if(dbData.appSettings) {
+                localStorage.setItem('appSettings', JSON.stringify(dbData.appSettings));
+              }
             }
           } catch (syncErr) {
             console.error("Data Sync Error at Login:", syncErr);

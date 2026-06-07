@@ -4,7 +4,7 @@ import { theme } from '../config/theme';
 import { translations } from '../config/translations'; 
 import { db } from '../db/database';
 import { 
-  Menu, Bell, Plus, User, MapPin, PackagePlus, LogOut, X, Check, Store, Building2, Circle, CheckCircle2, ChevronRight, ChevronDown, CheckCheck, Info
+  Menu, Bell, Plus, User, MapPin, PackagePlus, LogOut, X, Check, Store, Building2, Circle, CheckCircle2, ChevronRight, ChevronDown, CheckCheck, Info, Megaphone
 } from 'lucide-react';
 
 // Components
@@ -44,6 +44,30 @@ export default function Home() {
     isCompleted: false,
     progressPercent: 0
   });
+
+  const [globalNotice, setGlobalNotice] = useState('');
+
+  // අලුත් සැකසුම් ලබා ගැනීමේ useEffect එක
+  useEffect(() => {
+    const fetchGlobalSettings = async () => {
+      try {
+        const res = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/settings');
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem('appSettings', JSON.stringify(data)); // අලුත්ම දත්ත සේව් කිරීම
+          setGlobalNotice(data.global_notice || '');
+        }
+      } catch (error) {
+        // Offline නම් LocalStorage එකෙන් ලබාගැනීම
+        const savedSettings = localStorage.getItem('appSettings');
+        if (savedSettings) {
+          const parsed = JSON.parse(savedSettings);
+          setGlobalNotice(parsed.global_notice || '');
+        }
+      }
+    };
+    fetchGlobalSettings();
+  }, []);
   
   const [language, setLanguage] = useState('si');
   
@@ -423,6 +447,18 @@ export default function Home() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pt-2 pb-24 hide-scrollbar">
+
+        {/* අලුතින් එක්කළ Global Notice කොටස */}
+        {globalNotice && (
+          <div className="mb-4 bg-yellow-100 dark:bg-yellow-900/40 border-l-4 border-yellow-500 p-4 rounded-r-xl shadow-sm animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-start gap-3">
+              <Megaphone size={20} className="text-yellow-600 dark:text-yellow-500 shrink-0 mt-0.5" />
+              <p className="text-[13px] font-bold text-yellow-800 dark:text-yellow-200 leading-relaxed">
+                {globalNotice}
+              </p>
+            </div>
+          </div>
+        )}
         
         {!onboarding.isCompleted ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">

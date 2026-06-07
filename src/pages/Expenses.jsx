@@ -120,13 +120,27 @@ export default function Expenses() {
     );
   };
 
-  // Categories based on Type
-  const expenseCategories = [
-    { label: language === 'si' ? 'ඉන්ධන (Fuel)' : 'Fuel', value: 'fuel' },
-    { label: language === 'si' ? 'කෑම බීම (Food)' : 'Food', value: 'food' },
-    { label: language === 'si' ? 'වාහන නඩත්තු (Vehicle)' : 'Vehicle', value: 'vehicle' },
-    { label: language === 'si' ? 'වෙනත් වියදම් (Other)' : 'other_expense', value: 'other_expense' }
-  ];
+  const [expenseCategories, setExpenseCategories] = useState([]);
+  const [incomeCategories, setIncomeCategories] = useState([]);
+
+  useEffect(() => {
+    const loadDynamicSettings = () => {
+      const savedSettings = localStorage.getItem('appSettings');
+      if (savedSettings) {
+        const parsed = JSON.parse(savedSettings);
+        
+        if (parsed.expense_categories && parsed.expense_categories.length > 0) {
+           setExpenseCategories(parsed.expense_categories.map(cat => ({ label: cat, value: cat })));
+        }
+        if (parsed.income_categories && parsed.income_categories.length > 0) {
+           setIncomeCategories(parsed.income_categories.map(cat => ({ label: cat, value: cat })));
+        }
+      }
+    };
+    loadDynamicSettings();
+  }, []);
+
+  const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
 
   const incomeCategories = [
     { label: language === 'si' ? 'ටිප් එකක් (Tip)' : 'Tip', value: 'tip' },
