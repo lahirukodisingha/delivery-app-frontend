@@ -423,7 +423,6 @@ export default function AddBill() {
               <div className="border-t-2 border-dashed border-gray-400 my-3"></div>
               <div className="text-center font-bold pb-2">
                 <p>Thank You!</p>
-                <p>Come Again</p>
               </div>
             </div>
 
