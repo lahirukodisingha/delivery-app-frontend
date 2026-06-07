@@ -510,15 +510,16 @@ export default function AddBill() {
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={() => handleDecrement(item.id)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
                           <input 
-                          type="number" 
-                          value={qty} 
-                          onChange={(e) => {
-                              let val = e.target.value.replace(/[^0-9.]/g, '');
-                              if ((val.match(/\./g) || []).length <= 1) handleQuantityChange(item.id, val);
-                          }}
-                          className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} 
-                          placeholder="0" 
-                        />
+                            type="text" 
+                            inputMode="decimal"
+                            value={qty} 
+                            onChange={(e) => {
+                                let val = e.target.value.replace(/[^0-9.]/g, '');
+                                if ((val.match(/\./g) || []).length <= 1) handleQuantityChange(item.id, val);
+                            }}
+                            className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} 
+                            placeholder="0" 
+                          />
                           <button type="button" onClick={() => handleIncrement(item.id)} className="w-9 h-9 rounded-full bg-[#1b43aa] dark:bg-blue-600 flex items-center justify-center text-white shadow-sm transition"><Plus size={18} /></button>
                         </div>
                       </div>
@@ -552,7 +553,8 @@ export default function AddBill() {
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => handleDecrement(item.itemId)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
                         <input 
-                          type="number" 
+                          type="text" 
+                          inputMode="decimal"
                           value={item.quantity} 
                           onChange={(e) => {
                               let val = e.target.value.replace(/[^0-9.]/g, '');
@@ -590,7 +592,8 @@ export default function AddBill() {
                 <div className="relative">
                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
                   <input 
-                    type="number" 
+                    type="text" 
+                    inputMode="decimal"
                     value={isTodayPaymentEdited ? customTodayPayment : (totalAmount > 0 ? totalAmount : '')} 
                     onChange={(e) => { 
                         let val = e.target.value.replace(/[^0-9.]/g, '');
@@ -613,15 +616,16 @@ export default function AddBill() {
                    <div className="relative">
                      <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
                      <input 
-                        type="number" 
-                        value={pastDuePayment} 
-                        onChange={(e) => {
-                            let val = e.target.value.replace(/[^0-9.]/g, '');
-                            if ((val.match(/\./g) || []).length <= 1) setPastDuePayment(val);
-                        }} 
-                        className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} 
-                        placeholder="0.00" 
-                      />
+                      type="text" 
+                      inputMode="decimal"
+                      value={pastDuePayment} 
+                      onChange={(e) => {
+                          let val = e.target.value.replace(/[^0-9.]/g, '');
+                          if ((val.match(/\./g) || []).length <= 1) setPastDuePayment(val);
+                      }} 
+                      className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} 
+                      placeholder="0.00" 
+                    />
                    </div>
                 </div>
               )}
@@ -629,7 +633,8 @@ export default function AddBill() {
               <hr className={`${theme.colors.divider} border-t my-2`} />
 
               <FormInput 
-                type="number" 
+                type="text" 
+                inputMode="decimal"
                 label={t.cashGivenLabel} 
                 value={cashGiven} 
                 onChange={(e) => {
