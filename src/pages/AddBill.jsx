@@ -270,8 +270,21 @@ export default function AddBill() {
     }
   };
 
+  // 1. ප්‍රින්ට් නොකර නිකන්ම සේව් කිරීම සඳහා
+  const handleOnlySave = () => {
+    setShowPrintPopup(false);
+    setTimeout(() => {
+      showAlert(
+        t.billSavedSuccess || 'සටහන සාර්ථකව සුරැකුවා!', 
+        'success', 
+        false, 
+        () => navigate('/home') 
+      );
+    }, 150);
+  };
+
+  // 2. ප්‍රින්ට් කර සේව් කිරීම සඳහා
   const handlePrint = async () => {
-    // ඩේටාබේස් එකේ බිල ප්‍රින්ට් කළ බවට සටහන් කිරීම
     try {
       await db.bills.update(parseInt(currentBillData.billId), { isPrinted: true });
     } catch (error) {
@@ -286,25 +299,31 @@ export default function AddBill() {
         t.printSuccess || 'සාර්ථකව ප්‍රින්ට් වුණා!', 
         'success', 
         false, 
-        // AddBill සඳහා '/home' ද, EditBill සඳහා -1 ද ලෙස මෙහි navigate එක ඔබගේ ෆයිල් එකට අදාලව තබාගන්න
         () => navigate('/home') 
       );
     }, 150);
   };
 
-  const handleCancelPrint = () => {
-    // 1. Popup එක වසා දමන්න
-    setShowPrintPopup(false);
-    
-    // 2. සේව් වූ බවට Alert එක පෙන්වීම
-    setTimeout(() => {
-      showAlert(
-        t.billSavedSuccess || 'සටහන සාර්ථකව සුරැකුවා!', 
-        'success', 
-        false, 
-        () => navigate('/home') // Alert එකේ 'හරි' එබූ පසු Home යයි
-      );
-    }, 150);
+  // 3. කතිරය එබූ විට මුළු බිලම මකා දමා කැන්සල් කිරීම සඳහා
+  const handleCancelEntireBill = () => {
+    showAlert(
+      language === 'si' ? 'ඔබට මෙම බිල්පත අවලංගු කිරීමට අවශ්‍ය බව විශ්වාසද? (දත්ත මැකී යනු ඇත)' : 'Are you sure you want to cancel? (Data will be lost)',
+      'confirm',
+      true,
+      async () => {
+        try {
+          // සුරැකූ බිල සහ භාණ්ඩ දත්ත ගබඩාවෙන් මකා දැමීම
+          await db.bills.delete(currentBillData.billId);
+          const itemsToDelete = await db.billItems.filter(item => item.billId === currentBillData.billId).toArray();
+          const itemIds = itemsToDelete.map(item => item.id);
+          await db.billItems.bulkDelete(itemIds);
+        } catch (error) {
+          console.error("Error deleting cancelled bill:", error);
+        }
+        setShowPrintPopup(false);
+        navigate('/home');
+      }
+    );
   };
 
   const shopOptions = shops.map(shop => ({ label: shop.shopName, value: shop.id }));
@@ -331,7 +350,8 @@ export default function AddBill() {
               <h3 className="font-bold text-gray-700 flex items-center gap-2">
                 <Printer size={18}/> Print Preview
               </h3>
-              <button onClick={handleCancelPrint} className="text-gray-500 hover:text-red-500 transition"><X size={20}/></button>
+              {/* මෙහි onClick එක handleCancelEntireBill ලෙස වෙනස් කර ඇත */}
+              <button onClick={handleCancelEntireBill} className="text-gray-500 hover:text-red-500 transition"><X size={20}/></button>
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 bg-white font-mono text-black text-[12px] leading-tight">
@@ -428,16 +448,16 @@ export default function AddBill() {
 
             <div className="p-4 bg-gray-50 border-t flex gap-3">
               <button 
-                onClick={handleCancelPrint}
-                className="flex-1 py-3 bg-red-100 text-red-600 font-bold rounded-xl hover:bg-red-200 transition"
+                onClick={handleOnlySave}
+                className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition flex justify-center items-center gap-2 shadow-lg"
               >
-                {t.cancelBtn || 'Cancel'}
+                <Save size={20}/> {language === 'si' ? 'සේව් කරන්න' : 'Save'}
               </button>
               <button 
                 onClick={handlePrint}
                 className="flex-1 py-3 bg-[#14348c] text-white font-bold rounded-xl hover:bg-[#1b43aa] transition flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30"
               >
-                <Printer size={20}/> Print
+                <Printer size={20}/> {language === 'si' ? 'ප්‍රින්ට් කරන්න' : 'Print'}
               </button>
             </div>
 
