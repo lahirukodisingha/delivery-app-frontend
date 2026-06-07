@@ -567,7 +567,8 @@ export default function AddBill() {
                         <input 
                           type="text" 
                           inputMode="decimal"
-                          value={item.quantity} 
+                          // මෙහිදී item.quantity වෙනුවට quantities[item.itemId] යොදා ඇත
+                          value={quantities[item.itemId] || ''} 
                           onChange={(e) => {
                               let val = e.target.value.replace(/[^0-9.]/g, '');
                               if ((val.match(/\./g) || []).length <= 1) handleQuantityChange(item.itemId, val);
