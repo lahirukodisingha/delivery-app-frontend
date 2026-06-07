@@ -67,7 +67,7 @@ export default function Login() {
         if (data.user.role === 'admin') {
           // ඇඩ්මින් කෙනෙක් නම් කෙලින්ම Admin Dashboard එකට යවන්න
           setIsLoading(false);
-          navigate('/admin-dashboard'); 
+          navigate('/admin'); // <--- '/admin' ලෙස පමණක් වෙනස් කරන්න
         } else {
           // සාමාන්‍ය ඩ්‍රයිවර් කෙනෙක් නම් පමණක් Initial Data අරන් IndexedDB එකට දැමීම
           try {
