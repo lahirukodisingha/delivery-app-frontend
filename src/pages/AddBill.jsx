@@ -143,17 +143,24 @@ export default function AddBill() {
     setAlertConfig({ message, type, showCancel, onConfirm });
   };
 
-  const handleIncrement = (id) => setQuantities(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+  const handleIncrement = (id) => {
+    setQuantities(prev => {
+      // දශම සංඛ්‍යාවක් ලෙස නිවැරදිව ලබාගෙන 1ක් එකතු කිරීම
+      const currentVal = parseFloat(prev[id]) || 0;
+      return { ...prev, [id]: String(currentVal + 1) };
+    });
+  };
   
   const handleDecrement = (id) => {
     setQuantities(prev => {
-      const current = prev[id] || 0;
-      if (current <= 1) {
+      // දශම සංඛ්‍යාවක් ලෙස නිවැරදිව ලබාගෙන 1ක් අඩු කිරීම
+      const currentVal = parseFloat(prev[id]) || 0;
+      if (currentVal <= 1) {
         const newState = { ...prev };
         delete newState[id]; 
         return newState;
       }
-      return { ...prev, [id]: current - 1 };
+      return { ...prev, [id]: String(currentVal - 1) };
     });
   };
 
