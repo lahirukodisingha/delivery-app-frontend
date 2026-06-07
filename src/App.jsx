@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -59,6 +59,25 @@ function GlobalAuthCheck() {
   return null;
 }
 
+function AdminRoute({ children }) {
+  const userStr = localStorage.getItem('user');
+  
+  // යූසර් කෙනෙක් ලොග් වෙලා නැත්නම් Login එකට යවයි
+  if (!userStr) {
+    return <Navigate to="/" replace />;
+  }
+  
+  const user = JSON.parse(userStr);
+  
+  // ලොග් වෙලා ඉන්න කෙනා 'admin' නෙවෙයි නම්, සාමාන්‍ය Home එකට යවයි
+  if (user.role !== 'admin') {
+    return <Navigate to="/home" replace />;
+  }
+  
+  // ඇඩ්මින් නම් පමණක් අදාල පිටුවට යන්න දෙනවා
+  return children;
+}
+
 function App() {
   useEffect(() => {
     // 1. කලින් තිබුණු තීම් එක සකස් කිරීම
@@ -108,7 +127,14 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route 
+            path="/admin" 
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            } 
+          />
           <Route path="/settings" element={<BusinessProfile />} />
           <Route path="/add-route" element={<AddRoute />} />
           <Route path="/add-shop" element={<AddShop />} />
