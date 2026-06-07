@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock } from 'lucide-react';
+import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock, Megaphone, Save, Plus, X, ListPlus } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -17,7 +17,18 @@ export default function AdminDashboard() {
   const [drivers, setDrivers] = useState([]);
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
 
-  // --- Modal States (For Edit & Reset Password) ---
+  // --- App Settings & Notifications States ---
+  const [globalNotice, setGlobalNotice] = useState('');
+  const [units, setUnits] = useState([]);
+  const [expenseCategories, setExpenseCategories] = useState([]);
+  const [incomeCategories, setIncomeCategories] = useState([]);
+  
+  const [unitInput, setUnitInput] = useState('');
+  const [expenseInput, setExpenseInput] = useState('');
+  const [incomeInput, setIncomeInput] = useState('');
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // --- Modal States ---
   const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', driver: null });
   const [modalInput, setModalInput] = useState('');
   const [modalLoading, setModalLoading] = useState(false);
@@ -35,7 +46,6 @@ export default function AdminDashboard() {
     { id: 'settings', name: 'App Settings', icon: Settings },
   ];
 
-  // 1. යූසර්ලා ලැයිස්තුව ලබා ගැනීම
   const fetchDrivers = async () => {
     setIsLoadingDrivers(true);
     try {
@@ -50,47 +60,54 @@ export default function AdminDashboard() {
     setIsLoadingDrivers(false);
   };
 
-  useEffect(() => {
-    if (activeTab === 'users') {
-      fetchDrivers();
+  const fetchSettings = async () => {
+    try {
+      const res = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/settings');
+      if (res.ok) {
+        const data = await res.json();
+        setGlobalNotice(data.global_notice || '');
+        setUnits(data.units || []);
+        setExpenseCategories(data.expense_categories || []);
+        setIncomeCategories(data.income_categories || []);
+      }
+    } catch (err) {
+      console.error("Error fetching settings", err);
     }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'users') fetchDrivers();
+    if (activeTab === 'notifications' || activeTab === 'settings') fetchSettings();
   }, [activeTab]);
 
-  // 2. අලුත් ඩ්‍රයිවර් කෙනෙක් ඇඩ් කිරීම
   const handleAddUser = async (e) => {
     e.preventDefault();
     setIsAdding(true); setAddMessage(null); setAddError(null);
-
     try {
       const response = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/register-driver', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: newUsername, password: newPassword }),
       });
-
       const data = await response.json();
       if (response.ok) {
-        setAddMessage(`සාර්ථකයි! ${data.username} ගේ ගිණුම ${data.valid_until} දක්වා වලංගුයි.`);
+        setAddMessage(`සාර්ථකයි! ${data.username} ගේ ගිණුම සාදන ලදී.`);
         setNewUsername(''); setNewPassword('');
-        fetchDrivers(); // ලිස්ට් එක අලුත් කිරීම
+        fetchDrivers(); 
       } else {
         setAddError(data.error || 'ලියාපදිංචි කිරීම අසාර්ථකයි.');
       }
     } catch (err) {
-      setAddError('සර්වර් එක හා සම්බන්ධ වීමේ දෝෂයක්.');
+      setAddError('සර්වර් දෝෂයකි.');
     }
     setIsAdding(false);
   };
 
-  // 3. Modals සඳහා Action (Submit) කිරීම
   const handleModalSubmit = async () => {
     setModalLoading(true);
     const { type, driver } = modalConfig;
-    
     try {
-      let url = '';
-      let bodyData = {};
-
+      let url = ''; let bodyData = {};
       if (type === 'validity') {
         url = `https://delivery-app-backend-coral.vercel.app/api/admin/drivers/${driver._id}/validity`;
         bodyData = { valid_until: modalInput };
@@ -98,26 +115,21 @@ export default function AdminDashboard() {
         url = `https://delivery-app-backend-coral.vercel.app/api/admin/drivers/${driver._id}/reset-password`;
         bodyData = { new_password: modalInput };
       }
-
       const res = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(bodyData)
       });
-
       const data = await res.json();
-
       if (res.ok) {
         alert(data.message);
         setModalConfig({ isOpen: false, type: '', driver: null });
         setModalInput('');
-        fetchDrivers(); // දත්ත යාවත්කාලීන කිරීම
+        fetchDrivers(); 
       } else {
         alert(data.error || 'දෝෂයක් මතු විය!');
       }
-    } catch (err) {
-      alert("සර්වර් දෝෂයකි.");
-    }
+    } catch (err) { alert("සර්වර් දෝෂයකි."); }
     setModalLoading(false);
   };
 
@@ -125,6 +137,68 @@ export default function AdminDashboard() {
     setModalConfig({ isOpen: true, type, driver });
     setModalInput(type === 'validity' ? driver.account_valid_until : '');
   };
+
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const res = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          global_notice: globalNotice,
+          units: units,
+          expense_categories: expenseCategories,
+          income_categories: incomeCategories
+        })
+      });
+      if (res.ok) {
+        alert("සැකසුම් සාර්ථකව සුරැකුවා!");
+      }
+    } catch (error) {
+      alert("දෝෂයක් මතු විය!");
+    }
+    setIsSavingSettings(false);
+  };
+
+  const addItemToArray = (item, setArray, array, setInput) => {
+    if (item.trim() && !array.includes(item.trim())) {
+      setArray([...array, item.trim()]);
+      setInput('');
+    }
+  };
+
+  const removeItemFromArray = (index, setArray, array) => {
+    const newArray = [...array];
+    newArray.splice(index, 1);
+    setArray(newArray);
+  };
+
+  // පොදු Component එකක් - Array එකක් කළමනාකරණය කිරීමට (Tags)
+  const ArrayManager = ({ title, placeholder, array, setArray, input, setInput }) => (
+    <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl">
+      <label className="block text-gray-700 font-bold mb-2 text-sm">{title}</label>
+      <div className="flex gap-2 mb-4">
+        <input 
+          type="text" value={input} onChange={(e) => setInput(e.target.value)}
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+          placeholder={placeholder}
+          onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addItemToArray(input, setArray, array, setInput))}
+        />
+        <button type="button" onClick={() => addItemToArray(input, setArray, array, setInput)} className="px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded-lg hover:bg-blue-200 transition flex items-center gap-1">
+          <Plus size={16}/> Add
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {array.map((item, idx) => (
+          <div key={idx} className="bg-white border border-gray-300 px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm font-medium text-gray-700 shadow-sm">
+            {item}
+            <button type="button" onClick={() => removeItemFromArray(idx, setArray, array)} className="text-gray-400 hover:text-red-500 transition"><X size={14}/></button>
+          </div>
+        ))}
+        {array.length === 0 && <span className="text-xs text-gray-400">කිසිවක් එකතු කර නැත</span>}
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -152,104 +226,101 @@ export default function AdminDashboard() {
       <div className="flex-1 p-8 overflow-y-auto">
         
         {activeTab === 'dashboard' && (
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard Summary</h1>
-            <p className="text-gray-600">මෙතනට අපි ඉදිරියේදී මුළු සාරාංශයම ගේමු.</p>
-          </div>
+          <div><h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard Summary</h1><p className="text-gray-600">මෙතනට අපි ඉදිරියේදී මුළු සාරාංශයම ගේමු.</p></div>
         )}
 
-        {/* User Management Section */}
+        {/* --- USER MANAGEMENT TAB --- */}
         {activeTab === 'users' && (
           <div className="space-y-8">
             <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-            
             <div className="flex flex-col lg:flex-row gap-8 items-start">
-              
-              {/* 1. Add New User Card */}
+              {/* Add User Card */}
               <div className="w-full lg:w-1/3 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h2 className="text-lg font-bold text-[#14348c] mb-6 flex items-center gap-2">
-                  <UserPlus size={20} /> නව රියදුරු ගිණුමක් සෑදීම
-                </h2>
-
+                <h2 className="text-lg font-bold text-[#14348c] mb-6 flex items-center gap-2"><UserPlus size={20} /> නව රියදුරු ගිණුමක් සෑදීම</h2>
                 {addMessage && <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-medium">{addMessage}</div>}
                 {addError && <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-medium">{addError}</div>}
-
                 <form onSubmit={handleAddUser} className="space-y-4">
-                  <div>
-                    <label className="block text-gray-700 font-bold mb-1.5 text-sm">Username</label>
-                    <input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: kamal" required />
-                  </div>
-                  <div>
-                    <label className="block text-gray-700 font-bold mb-1.5 text-sm">Password</label>
-                    <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="අවම අකුරු 6ක්..." required />
-                  </div>
-                  <button type="submit" disabled={isAdding} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-md text-sm ${isAdding ? 'bg-blue-400' : 'bg-[#14348c] hover:bg-blue-800 hover:shadow-lg'}`}>
-                    {isAdding ? 'සාදමින් පවතී...' : 'නව ගිණුම සාදන්න'}
-                  </button>
+                  <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Username</label><input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: kamal" required /></div>
+                  <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Password</label><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="අවම අකුරු 6ක්..." required /></div>
+                  <button type="submit" disabled={isAdding} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-md text-sm ${isAdding ? 'bg-blue-400' : 'bg-[#14348c] hover:bg-blue-800 hover:shadow-lg'}`}>{isAdding ? 'සාදමින් පවතී...' : 'නව ගිණුම සාදන්න'}</button>
                 </form>
               </div>
 
-              {/* 2. Existing Users List */}
+              {/* Existing Users List */}
               <div className="w-full lg:w-2/3 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h2 className="text-lg font-bold text-[#14348c] mb-6 flex items-center gap-2">
-                  <Users size={20} /> දැනට සිටින රියදුරන්
-                </h2>
-
-                {isLoadingDrivers ? (
-                  <p className="text-gray-500 text-sm">ලෝඩ් වෙමින් පවතී...</p>
-                ) : (
+                <h2 className="text-lg font-bold text-[#14348c] mb-6 flex items-center gap-2"><Users size={20} /> දැනට සිටින රියදුරන්</h2>
+                {isLoadingDrivers ? <p className="text-gray-500 text-sm">ලෝඩ් වෙමින් පවතී...</p> : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50 text-gray-600 font-medium">
-                        <tr>
-                          <th className="py-3 px-4 rounded-l-xl">Username</th>
-                          <th className="py-3 px-4">Status / Validity</th>
-                          <th className="py-3 px-4">Last Login</th>
-                          <th className="py-3 px-4 rounded-r-xl text-right">Actions</th>
-                        </tr>
-                      </thead>
+                      <thead className="bg-gray-50 text-gray-600 font-medium"><tr><th className="py-3 px-4 rounded-l-xl">Username</th><th className="py-3 px-4">Status / Validity</th><th className="py-3 px-4">Last Login</th><th className="py-3 px-4 rounded-r-xl text-right">Actions</th></tr></thead>
                       <tbody className="divide-y divide-gray-100">
                         {drivers.map(driver => (
                           <tr key={driver._id} className="hover:bg-gray-50/50 transition-colors">
                             <td className="py-4 px-4 font-bold text-gray-800">{driver.username}</td>
-                            <td className="py-4 px-4">
-                              <div className="flex flex-col gap-1">
-                                {driver.is_active ? 
-                                  <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Active</span> : 
-                                  <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-bold w-max">Expired</span>
-                                }
-                                <span className="text-xs text-gray-500 font-medium">{driver.account_valid_until} තෙක්</span>
-                              </div>
-                            </td>
+                            <td className="py-4 px-4"><div className="flex flex-col gap-1">{driver.is_active ? <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Active</span> : <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-bold w-max">Expired</span>}<span className="text-xs text-gray-500 font-medium">{driver.account_valid_until} තෙක්</span></div></td>
                             <td className="py-4 px-4 text-xs text-gray-500 flex items-center gap-1 mt-2"><Clock size={14}/> {driver.last_login_date}</td>
-                            <td className="py-4 px-4 text-right">
-                              <div className="flex justify-end gap-2">
-                                <button onClick={() => openModal('validity', driver)} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition" title="Edit Validity">
-                                  <Calendar size={16} />
-                                </button>
-                                <button onClick={() => openModal('password', driver)} className="p-2 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition" title="Reset Password">
-                                  <KeyRound size={16} />
-                                </button>
-                              </div>
-                            </td>
+                            <td className="py-4 px-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openModal('validity', driver)} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition" title="Edit Validity"><Calendar size={16} /></button><button onClick={() => openModal('password', driver)} className="p-2 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition" title="Reset Password"><KeyRound size={16} /></button></div></td>
                           </tr>
                         ))}
-                        {drivers.length === 0 && (
-                          <tr><td colSpan="4" className="py-6 text-center text-gray-500">රියදුරන් කිසිවෙකු නොමැත.</td></tr>
-                        )}
+                        {drivers.length === 0 && <tr><td colSpan="4" className="py-6 text-center text-gray-500">රියදුරන් කිසිවෙකු නොමැත.</td></tr>}
                       </tbody>
                     </table>
                   </div>
                 )}
               </div>
+            </div>
+          </div>
+        )}
 
+        {/* --- NOTIFICATIONS TAB --- */}
+        {activeTab === 'notifications' && (
+          <div className="space-y-8 max-w-3xl">
+            <h1 className="text-3xl font-bold text-gray-800">Global Notifications</h1>
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+              <h2 className="text-lg font-bold text-[#14348c] mb-2 flex items-center gap-2">
+                <Megaphone size={20} /> සියලුම රියදුරන්ට පණිවිඩයක් යවන්න
+              </h2>
+              <p className="text-sm text-gray-500 mb-6">මෙහි යොදන පණිවිඩය රියදුරන්ගේ Home පිටුවේ ඉහලින්ම දිස්වනු ඇත. ඉවත් කිරීමට හිස් කර Save කරන්න.</p>
+              
+              <textarea 
+                value={globalNotice}
+                onChange={(e) => setGlobalNotice(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none mb-4 min-h-[120px] text-sm"
+                placeholder="හදිසි පණිවිඩයක් මෙහි ටයිප් කරන්න..."
+              ></textarea>
+
+              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="px-6 py-3 bg-[#14348c] text-white font-bold rounded-xl hover:bg-blue-800 transition shadow-md flex items-center gap-2">
+                <Save size={18}/> {isSavingSettings ? 'සුරකිනවා...' : 'පණිවිඩය ප්‍රකාශයට පත් කරන්න'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* --- APP SETTINGS TAB --- */}
+        {activeTab === 'settings' && (
+          <div className="space-y-8 max-w-4xl">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-bold text-gray-800">App Settings (Drop-downs)</h1>
+              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center gap-2">
+                <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
+              </button>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
+              <p className="text-sm text-gray-500 mb-2 border-b pb-4">මෙහි වෙනස් කරන දත්ත ඇප් එකේ Drop-down මෙනු සඳහා අලුතින් එක් වේ.</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <ArrayManager title="භාණ්ඩ මිනුම් ඒකක (Units)" placeholder="උදා: kg, ml, පීරිසි..." array={units} setArray={setUnits} input={unitInput} setInput={setUnitInput} />
+                <ArrayManager title="වියදම් වර්ග (Expense Categories)" placeholder="උදා: ඉන්ධන..." array={expenseCategories} setArray={setExpenseCategories} input={expenseInput} setInput={setExpenseInput} />
+                <ArrayManager title="ආදායම් වර්ග (Income Categories)" placeholder="උදා: ටිප් එකක්..." array={incomeCategories} setArray={setIncomeCategories} input={incomeInput} setInput={setIncomeInput} />
+              </div>
             </div>
           </div>
         )}
 
       </div>
 
-      {/* --- Action Modal --- */}
+      {/* --- Action Modal (Edit Validity / Reset Password) --- */}
       {modalConfig.isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
@@ -257,32 +328,11 @@ export default function AdminDashboard() {
               {modalConfig.type === 'validity' ? <Calendar className="text-blue-600"/> : <KeyRound className="text-orange-600"/>}
               {modalConfig.type === 'validity' ? 'කාලය වෙනස් කිරීම' : 'මුරපදය රීසෙට් කිරීම'}
             </h3>
-            
-            <p className="text-sm text-gray-600 mb-4">
-              <strong>{modalConfig.driver.username}</strong> ගේ {modalConfig.type === 'validity' ? 'වලංගු දිනය (YYYY-MM-DD)' : 'නව මුරපදය'} ඇතුලත් කරන්න.
-            </p>
-
-            <input 
-              type={modalConfig.type === 'validity' ? 'date' : 'text'}
-              value={modalInput}
-              onChange={(e) => setModalInput(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none mb-6"
-            />
-
+            <p className="text-sm text-gray-600 mb-4"><strong>{modalConfig.driver?.username}</strong> ගේ {modalConfig.type === 'validity' ? 'වලංගු දිනය' : 'නව මුරපදය'} ඇතුලත් කරන්න.</p>
+            <input type={modalConfig.type === 'validity' ? 'date' : 'text'} value={modalInput} onChange={(e) => setModalInput(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none mb-6" />
             <div className="flex gap-3">
-              <button 
-                onClick={() => setModalConfig({ isOpen: false, type: '', driver: null })}
-                className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200"
-              >
-                අවලංගු කරන්න
-              </button>
-              <button 
-                onClick={handleModalSubmit}
-                disabled={modalLoading}
-                className="flex-1 py-2.5 bg-[#14348c] text-white font-bold rounded-xl hover:bg-blue-800"
-              >
-                {modalLoading ? 'Updating...' : 'සේව් කරන්න'}
-              </button>
+              <button onClick={() => setModalConfig({ isOpen: false, type: '', driver: null })} className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">අවලංගු කරන්න</button>
+              <button onClick={handleModalSubmit} disabled={modalLoading} className="flex-1 py-2.5 bg-[#14348c] text-white font-bold rounded-xl hover:bg-blue-800">{modalLoading ? 'Updating...' : 'සේව් කරන්න'}</button>
             </div>
           </div>
         </div>
