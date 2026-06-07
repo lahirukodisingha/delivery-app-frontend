@@ -333,14 +333,17 @@ export default function AddBill() {
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
-      <CustomAlert 
-        message={alertConfig.message} 
-        type={alertConfig.type} 
-        showCancel={alertConfig.showCancel}
-        onConfirm={alertConfig.onConfirm}
-        onClose={closeAlert} 
-        language={language}
-      />
+      {/* Alert එක Print Popup එකටත් උඩින් පෙන්වීමට z-[200] යොදා ඇත */}
+      <div className="relative z-[200]">
+        <CustomAlert 
+          message={alertConfig.message} 
+          type={alertConfig.type} 
+          showCancel={alertConfig.showCancel}
+          onConfirm={alertConfig.onConfirm}
+          onClose={closeAlert} 
+          language={language}
+        />
+      </div>
 
       {showPrintPopup && currentBillData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
