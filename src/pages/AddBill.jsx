@@ -509,20 +509,16 @@ export default function AddBill() {
                         </div>
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={() => handleDecrement(item.id)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
-                          <input type="number" value={qty} onChange={(e) => handleQuantityChange(item.id, e.target.value)} onKeyDown={(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} onInput={(e) => {
-    // 1. දැනට තියෙන වටිනාකම අරගන්නවා
-    let val = e.target.value;
-    
-    // 2. දශම තිතට වඩා වැඩි අගයක් තිබුනොත් ඒක අයින් කරනවා (එක දශම තිතකට වඩා තියෙන්න බෑ)
-    if ((val.match(/\./g) || []).length > 1) {
-        e.target.value = val.slice(0, -1);
-        return;
-    }
-
-    // 3. ඉලක්කම් (0-9) සහ දශම තිත (.) හැර අනිත් අකුරු ටයිප් වුනොත් ඒවා විතරක් අයින් කරනවා
-    // කලින් තිබුණු 900 වගේ අගය මැකෙන්නේ නැහැ, වැරදි අකුර විතරයි මැකෙන්නේ
-    e.target.value = val.replace(/[^0-9.]/g, '');
-}} className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0` } placeholder="0" />
+                          <input 
+                          type="number" 
+                          value={qty} 
+                          onChange={(e) => {
+                              let val = e.target.value.replace(/[^0-9.]/g, '');
+                              if ((val.match(/\./g) || []).length <= 1) handleQuantityChange(item.id, val);
+                          }}
+                          className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} 
+                          placeholder="0" 
+                        />
                           <button type="button" onClick={() => handleIncrement(item.id)} className="w-9 h-9 rounded-full bg-[#1b43aa] dark:bg-blue-600 flex items-center justify-center text-white shadow-sm transition"><Plus size={18} /></button>
                         </div>
                       </div>
@@ -555,20 +551,15 @@ export default function AddBill() {
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => handleDecrement(item.itemId)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
-                        <input type="number" value={item.quantity} onChange={(e) => handleQuantityChange(item.itemId, e.target.value)} onKeyDown={(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} onInput={(e) => {
-    // 1. දැනට තියෙන වටිනාකම අරගන්නවා
-    let val = e.target.value;
-    
-    // 2. දශම තිතට වඩා වැඩි අගයක් තිබුනොත් ඒක අයින් කරනවා (එක දශම තිතකට වඩා තියෙන්න බෑ)
-    if ((val.match(/\./g) || []).length > 1) {
-        e.target.value = val.slice(0, -1);
-        return;
-    }
-
-    // 3. ඉලක්කම් (0-9) සහ දශම තිත (.) හැර අනිත් අකුරු ටයිප් වුනොත් ඒවා විතරක් අයින් කරනවා
-    // කලින් තිබුණු 900 වගේ අගය මැකෙන්නේ නැහැ, වැරදි අකුර විතරයි මැකෙන්නේ
-    e.target.value = val.replace(/[^0-9.]/g, '');
-}} className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} />
+                        <input 
+                          type="number" 
+                          value={item.quantity} 
+                          onChange={(e) => {
+                              let val = e.target.value.replace(/[^0-9.]/g, '');
+                              if ((val.match(/\./g) || []).length <= 1) handleQuantityChange(item.itemId, val);
+                          }}
+                          className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} 
+                        />
                         <button type="button" onClick={() => handleIncrement(item.itemId)} className="w-9 h-9 rounded-full bg-[#1b43aa] dark:bg-blue-600 flex items-center justify-center text-white shadow-sm transition"><Plus size={18} /></button>
                       </div>
                     </div>
@@ -598,20 +589,20 @@ export default function AddBill() {
                 <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Banknote size={18} className="text-green-600 dark:text-green-400" /> {t.todayPaymentLabel}</label>
                 <div className="relative">
                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
-                  <input type="number" value={isTodayPaymentEdited ? customTodayPayment : (totalAmount > 0 ? totalAmount : '')} onChange={(e) => { setIsTodayPaymentEdited(true); setCustomTodayPayment(e.target.value); }} onInput={(e) => {
-    // 1. දැනට තියෙන වටිනාකම අරගන්නවා
-    let val = e.target.value;
-    
-    // 2. දශම තිතට වඩා වැඩි අගයක් තිබුනොත් ඒක අයින් කරනවා (එක දශම තිතකට වඩා තියෙන්න බෑ)
-    if ((val.match(/\./g) || []).length > 1) {
-        e.target.value = val.slice(0, -1);
-        return;
-    }
-
-    // 3. ඉලක්කම් (0-9) සහ දශම තිත (.) හැර අනිත් අකුරු ටයිප් වුනොත් ඒවා විතරක් අයින් කරනවා
-    // කලින් තිබුණු 900 වගේ අගය මැකෙන්නේ නැහැ, වැරදි අකුර විතරයි මැකෙන්නේ
-    e.target.value = val.replace(/[^0-9.]/g, '');
-}} onKeyDown={(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} className={`w-full pl-12 pr-4 py-3.5 border border-green-300 dark:border-green-800 rounded-xl text-xl font-bold text-green-700 dark:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 bg-green-50 dark:bg-green-900/20 shadow-inner`} placeholder="0.00" disabled={totalAmount === 0} />
+                  <input 
+                    type="number" 
+                    value={isTodayPaymentEdited ? customTodayPayment : (totalAmount > 0 ? totalAmount : '')} 
+                    onChange={(e) => { 
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if ((val.match(/\./g) || []).length <= 1) {
+                            setIsTodayPaymentEdited(true); 
+                            setCustomTodayPayment(val); 
+                        }
+                    }} 
+                    className={`w-full pl-12 pr-4 py-3.5 border border-green-300 dark:border-green-800 rounded-xl text-xl font-bold text-green-700 dark:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 bg-green-50 dark:bg-green-900/20 shadow-inner`} 
+                    placeholder="0.00" 
+                    disabled={totalAmount === 0} 
+                  />
                 </div>
                 {dueForToday > 0 && <p className="text-red-500 dark:text-red-400 text-sm font-bold mt-1.5 flex items-center gap-1"><AlertCircle size={14}/> {t.todayDueAmount} රු. {dueForToday.toFixed(2)}</p>}
               </div>
@@ -621,40 +612,33 @@ export default function AddBill() {
                    <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Receipt size={18} className="text-orange-500 dark:text-orange-400" /> {t.pastDuePaymentLabel}</label>
                    <div className="relative">
                      <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
-                     <input type="number" value={pastDuePayment} onChange={(e) => setPastDuePayment(e.target.value)} onKeyDown={(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} onInput={(e) => {
-    // 1. දැනට තියෙන වටිනාකම අරගන්නවා
-    let val = e.target.value;
-    
-    // 2. දශම තිතට වඩා වැඩි අගයක් තිබුනොත් ඒක අයින් කරනවා (එක දශම තිතකට වඩා තියෙන්න බෑ)
-    if ((val.match(/\./g) || []).length > 1) {
-        e.target.value = val.slice(0, -1);
-        return;
-    }
-
-    // 3. ඉලක්කම් (0-9) සහ දශම තිත (.) හැර අනිත් අකුරු ටයිප් වුනොත් ඒවා විතරක් අයින් කරනවා
-    // කලින් තිබුණු 900 වගේ අගය මැකෙන්නේ නැහැ, වැරදි අකුර විතරයි මැකෙන්නේ
-    e.target.value = val.replace(/[^0-9.]/g, '');
-}} className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} placeholder="0.00" />
+                     <input 
+                        type="number" 
+                        value={pastDuePayment} 
+                        onChange={(e) => {
+                            let val = e.target.value.replace(/[^0-9.]/g, '');
+                            if ((val.match(/\./g) || []).length <= 1) setPastDuePayment(val);
+                        }} 
+                        className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} 
+                        placeholder="0.00" 
+                      />
                    </div>
                 </div>
               )}
 
               <hr className={`${theme.colors.divider} border-t my-2`} />
 
-              <FormInput type="number" label={t.cashGivenLabel} value={cashGiven} onChange={(e) => setCashGiven(e.target.value)} onInput={(e) => {
-    // 1. දැනට තියෙන වටිනාකම අරගන්නවා
-    let val = e.target.value;
-    
-    // 2. දශම තිතට වඩා වැඩි අගයක් තිබුනොත් ඒක අයින් කරනවා (එක දශම තිතකට වඩා තියෙන්න බෑ)
-    if ((val.match(/\./g) || []).length > 1) {
-        e.target.value = val.slice(0, -1);
-        return;
-    }
-
-    // 3. ඉලක්කම් (0-9) සහ දශම තිත (.) හැර අනිත් අකුරු ටයිප් වුනොත් ඒවා විතරක් අයින් කරනවා
-    // කලින් තිබුණු 900 වගේ අගය මැකෙන්නේ නැහැ, වැරදි අකුර විතරයි මැකෙන්නේ
-    e.target.value = val.replace(/[^0-9.]/g, '');
-}} onKeyDown={(e) => ['e', 'E', '+', '-'].includes(e.key) && e.preventDefault()} icon={Wallet} placeholder={t.cashGivenPlaceholder} />
+              <FormInput 
+                type="number" 
+                label={t.cashGivenLabel} 
+                value={cashGiven} 
+                onChange={(e) => {
+                    let val = e.target.value.replace(/[^0-9.]/g, '');
+                    if ((val.match(/\./g) || []).length <= 1) setCashGiven(val);
+                }} 
+                icon={Wallet} 
+                placeholder={t.cashGivenPlaceholder} 
+              />
 
               {changeToReturn > 0 && (
                 <div className="flex justify-between items-center bg-[#1b43aa] dark:bg-blue-600 p-4 rounded-xl border border-[#14348c] dark:border-blue-700 shadow-lg animate-pulse mt-4">
