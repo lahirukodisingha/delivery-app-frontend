@@ -46,7 +46,7 @@ export default function Login() {
     setError(null);
 
     try {
-      // 1. මුලින්ම Auth API එක හරහා Login වීම
+      // 1. Auth API එක හරහා Login වීම
       const response = await fetch('https://delivery-app-backend-coral.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
@@ -61,42 +61,51 @@ export default function Login() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user)); 
 
-        // --- අලුත් කොටස: සර්වර් එකෙන් Initial Data අරන් IndexedDB එකට දැමීම ---
-        try {
-          // Username එක යවලා අදාල යූසර්ගේ දත්ත පමණක් ඉල්ලීම
-          const syncRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/initial-data?username=${username}`);
-          if (syncRes.ok) {
-            const dbData = await syncRes.json();
-            
-            // 2. පරණ දත්ත තියෙනව නම් Tables 8ම Clear කිරීම
-            await Promise.all([
-              db.settings.clear(),
-              db.profile.clear(),
-              db.routes.clear(),
-              db.shops.clear(),
-              db.items.clear(),
-              db.bills.clear(),
-              db.billItems.clear(),
-              db.expenses.clear()
-            ]);
+        // ==============================================================
+        // අලුත් කොටස: Admin ද, Driver ද කියා හඳුනාගෙන නිවැරදි පිටුවට යැවීම
+        // ==============================================================
+        if (data.user.role === 'admin') {
+          // ඇඩ්මින් කෙනෙක් නම් කෙලින්ම Admin Dashboard එකට යවන්න
+          setIsLoading(false);
+          navigate('/admin-dashboard'); 
+        } else {
+          // සාමාන්‍ය ඩ්‍රයිවර් කෙනෙක් නම් පමණක් Initial Data අරන් IndexedDB එකට දැමීම
+          try {
+            const syncRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/initial-data?username=${username}`);
+            if (syncRes.ok) {
+              const dbData = await syncRes.json();
+              
+              // පරණ දත්ත තියෙනව නම් Tables 8ම Clear කිරීම
+              await Promise.all([
+                db.settings.clear(),
+                db.profile.clear(),
+                db.routes.clear(),
+                db.shops.clear(),
+                db.items.clear(),
+                db.bills.clear(),
+                db.billItems.clear(),
+                db.expenses.clear()
+              ]);
 
-            // 3. සර්වර් එකෙන් ආපු අලුත් දත්ත Tables 8ටම ඇතුලත් කිරීම
-            if(dbData.settings && dbData.settings.length > 0) await db.settings.bulkPut(dbData.settings);
-            if(dbData.profile && dbData.profile.length > 0) await db.profile.bulkPut(dbData.profile);
-            if(dbData.routes && dbData.routes.length > 0) await db.routes.bulkPut(dbData.routes);
-            if(dbData.shops && dbData.shops.length > 0) await db.shops.bulkPut(dbData.shops);
-            if(dbData.items && dbData.items.length > 0) await db.items.bulkPut(dbData.items);
-            if(dbData.bills && dbData.bills.length > 0) await db.bills.bulkPut(dbData.bills);
-            if(dbData.billItems && dbData.billItems.length > 0) await db.billItems.bulkPut(dbData.billItems);
-            if(dbData.expenses && dbData.expenses.length > 0) await db.expenses.bulkPut(dbData.expenses);
+              // සර්වර් එකෙන් ආපු අලුත් දත්ත Tables 8ටම ඇතුලත් කිරීම
+              if(dbData.settings && dbData.settings.length > 0) await db.settings.bulkPut(dbData.settings);
+              if(dbData.profile && dbData.profile.length > 0) await db.profile.bulkPut(dbData.profile);
+              if(dbData.routes && dbData.routes.length > 0) await db.routes.bulkPut(dbData.routes);
+              if(dbData.shops && dbData.shops.length > 0) await db.shops.bulkPut(dbData.shops);
+              if(dbData.items && dbData.items.length > 0) await db.items.bulkPut(dbData.items);
+              if(dbData.bills && dbData.bills.length > 0) await db.bills.bulkPut(dbData.bills);
+              if(dbData.billItems && dbData.billItems.length > 0) await db.billItems.bulkPut(dbData.billItems);
+              if(dbData.expenses && dbData.expenses.length > 0) await db.expenses.bulkPut(dbData.expenses);
+            }
+          } catch (syncErr) {
+            console.error("Data Sync Error at Login:", syncErr);
           }
-        } catch (syncErr) {
-          console.error("Data Sync Error at Login:", syncErr);
+          
+          setIsLoading(false);
+          navigate('/home'); 
         }
-        // ------------------------------------------------------------------
+        // ==============================================================
 
-        setIsLoading(false);
-        navigate('/home'); 
       } else {
         setError(data.error || t.loginFailed);
         setIsLoading(false);
