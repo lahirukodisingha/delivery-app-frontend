@@ -169,6 +169,9 @@ export default function Home() {
       // Local Database (Profile Table) එක අප්ඩේට් කර Sync වීම සඳහා Pending කිරීම
       const profileData = await db.profile.get(1) || { id: 1 };
       await db.profile.put({ ...profileData, id: 1, readNotifications: newReadIds, syncStatus: 'pending' });
+      
+      // --- අලුතින් එක් කළ කොටස: එවලෙම Sync වීමට උපදෙස් දීම ---
+      window.dispatchEvent(new Event('force-sync')); 
     }
   };
 
@@ -181,6 +184,9 @@ export default function Home() {
     // Local Database එක අප්ඩේට් කර Sync වීම සඳහා Pending කිරීම
     const profileData = await db.profile.get(1) || { id: 1 };
     await db.profile.put({ ...profileData, id: 1, readNotifications: allIds, syncStatus: 'pending' });
+    
+    // --- අලුතින් එක් කළ කොටස: එවලෙම Sync වීමට උපදෙස් දීම ---
+    window.dispatchEvent(new Event('force-sync'));
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
