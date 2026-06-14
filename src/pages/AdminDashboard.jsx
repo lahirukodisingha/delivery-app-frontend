@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock, Megaphone, Save, Plus, X, ListPlus } from 'lucide-react';
+import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock, Megaphone, Save, Plus, X, Trash2 } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -13,12 +13,14 @@ export default function AdminDashboard() {
   const [addMessage, setAddMessage] = useState(null);
   const [addError, setAddError] = useState(null);
 
-  // --- Driver List States ---
   const [drivers, setDrivers] = useState([]);
   const [isLoadingDrivers, setIsLoadingDrivers] = useState(true);
 
   // --- App Settings & Notifications States ---
-  const [globalNotice, setGlobalNotice] = useState('');
+  const [notifications, setNotifications] = useState([]);
+  const [notifTitle, setNotifTitle] = useState('');
+  const [notifMessage, setNotifMessage] = useState('');
+
   const [units, setUnits] = useState([]);
   const [expenseCategories, setExpenseCategories] = useState([]);
   const [incomeCategories, setIncomeCategories] = useState([]);
@@ -65,7 +67,7 @@ export default function AdminDashboard() {
       const res = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/settings');
       if (res.ok) {
         const data = await res.json();
-        setGlobalNotice(data.global_notice || '');
+        setNotifications(data.notifications || []);
         setUnits(data.units || []);
         setExpenseCategories(data.expense_categories || []);
         setIncomeCategories(data.income_categories || []);
@@ -145,14 +147,14 @@ export default function AdminDashboard() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          global_notice: globalNotice,
+          notifications: notifications,
           units: units,
           expense_categories: expenseCategories,
           income_categories: incomeCategories
         })
       });
       if (res.ok) {
-        alert("සැකසුම් සාර්ථකව සුරැකුවා!");
+        alert("දත්ත සාර්ථකව සුරැකුවා!");
       }
     } catch (error) {
       alert("දෝෂයක් මතු විය!");
@@ -160,6 +162,28 @@ export default function AdminDashboard() {
     setIsSavingSettings(false);
   };
 
+  // --- Notification Handlers ---
+  const handleAddNotification = () => {
+    if (!notifTitle.trim() || !notifMessage.trim()) {
+      alert("Title සහ Description දෙකම ඇතුලත් කරන්න!");
+      return;
+    }
+    const newNotif = {
+      id: Date.now().toString(),
+      title: notifTitle.trim(),
+      message: notifMessage.trim(),
+      date: new Date().toISOString().split('T')[0]
+    };
+    setNotifications([newNotif, ...notifications]); // අලුත් එක උඩට එන සේ
+    setNotifTitle('');
+    setNotifMessage('');
+  };
+
+  const handleRemoveNotification = (id) => {
+    setNotifications(notifications.filter(n => n.id !== id));
+  };
+
+  // --- Array Managers ---
   const addItemToArray = (item, setArray, array, setInput) => {
     if (item.trim() && !array.includes(item.trim())) {
       setArray([...array, item.trim()]);
@@ -173,7 +197,6 @@ export default function AdminDashboard() {
     setArray(newArray);
   };
 
-  // පොදු Component එකක් - Array එකක් කළමනාකරණය කිරීමට (Tags)
   const ArrayManager = ({ title, placeholder, array, setArray, input, setInput }) => (
     <div className="bg-gray-50 border border-gray-200 p-4 rounded-xl">
       <label className="block text-gray-700 font-bold mb-2 text-sm">{title}</label>
@@ -272,26 +295,58 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* --- NOTIFICATIONS TAB --- */}
+        {/* --- NOTIFICATIONS TAB (අලුත් කළ කොටස) --- */}
         {activeTab === 'notifications' && (
-          <div className="space-y-8 max-w-3xl">
-            <h1 className="text-3xl font-bold text-gray-800">Global Notifications</h1>
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h2 className="text-lg font-bold text-[#14348c] mb-2 flex items-center gap-2">
-                <Megaphone size={20} /> සියලුම රියදුරන්ට පණිවිඩයක් යවන්න
-              </h2>
-              <p className="text-sm text-gray-500 mb-6">මෙහි යොදන පණිවිඩය රියදුරන්ගේ Home පිටුවේ ඉහලින්ම දිස්වනු ඇත. ඉවත් කිරීමට හිස් කර Save කරන්න.</p>
-              
-              <textarea 
-                value={globalNotice}
-                onChange={(e) => setGlobalNotice(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none mb-4 min-h-[120px] text-sm"
-                placeholder="හදිසි පණිවිඩයක් මෙහි ටයිප් කරන්න..."
-              ></textarea>
-
-              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="px-6 py-3 bg-[#14348c] text-white font-bold rounded-xl hover:bg-blue-800 transition shadow-md flex items-center gap-2">
-                <Save size={18}/> {isSavingSettings ? 'සුරකිනවා...' : 'පණිවිඩය ප්‍රකාශයට පත් කරන්න'}
+          <div className="space-y-6 max-w-3xl">
+            <div className="flex justify-between items-center mb-2">
+              <h1 className="text-3xl font-bold text-gray-800">App Notifications</h1>
+              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center gap-2">
+                <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
               </button>
+            </div>
+
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
+              <h2 className="text-lg font-bold text-[#14348c] mb-4 flex items-center gap-2">
+                <Megaphone size={20} /> නව පණිවිඩයක් එක් කරන්න
+              </h2>
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ මාතෘකාව (Title)</label>
+                  <input 
+                    type="text" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none text-sm"
+                    placeholder="උදා: පද්ධති යාවත්කාලීන කිරීමක්!"
+                  />
+                </div>
+                <div>
+                  <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ විස්තරය (Description)</label>
+                  <textarea 
+                    value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none min-h-[100px] text-sm"
+                    placeholder="විස්තරය මෙහි ටයිප් කරන්න..."
+                  ></textarea>
+                </div>
+                <button onClick={handleAddNotification} className="px-6 py-3 bg-blue-100 text-blue-700 font-bold rounded-xl hover:bg-blue-200 transition flex items-center gap-2">
+                  <Plus size={18}/> ලැයිස්තුවට එක් කරන්න
+                </button>
+              </div>
+
+              <hr className="my-6 border-gray-200" />
+
+              <h2 className="text-lg font-bold text-gray-800 mb-4">දැනට ඇති පණිවිඩ ලැයිස්තුව</h2>
+              <div className="space-y-3">
+                 {notifications.map(n => (
+                   <div key={n.id} className="p-4 border border-gray-200 rounded-xl flex justify-between items-start bg-gray-50">
+                     <div>
+                       <h3 className="font-bold text-[#14348c]">{n.title}</h3>
+                       <p className="text-sm text-gray-600 mt-1">{n.message}</p>
+                       <span className="text-xs text-gray-400 mt-2 block font-medium">{n.date}</span>
+                     </div>
+                     <button onClick={() => handleRemoveNotification(n.id)} className="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
+                   </div>
+                 ))}
+                 {notifications.length === 0 && <p className="text-sm text-gray-500 italic">පණිවිඩ කිසිවක් නැත.</p>}
+              </div>
             </div>
           </div>
         )}
@@ -307,8 +362,6 @@ export default function AdminDashboard() {
             </div>
 
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
-              <p className="text-sm text-gray-500 mb-2 border-b pb-4">මෙහි වෙනස් කරන දත්ත ඇප් එකේ Drop-down මෙනු සඳහා අලුතින් එක් වේ.</p>
-              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <ArrayManager title="භාණ්ඩ මිනුම් ඒකක (Units)" placeholder="උදා: kg, ml, පීරිසි..." array={units} setArray={setUnits} input={unitInput} setInput={setUnitInput} />
                 <ArrayManager title="වියදම් වර්ග (Expense Categories)" placeholder="උදා: ඉන්ධන..." array={expenseCategories} setArray={setExpenseCategories} input={expenseInput} setInput={setExpenseInput} />
