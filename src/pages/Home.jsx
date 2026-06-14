@@ -31,6 +31,7 @@ export default function Home() {
   
   // --- Notifications States ---
   const [notifications, setNotifications] = useState([]); 
+  const [readNotifIds, setReadNotifIds] = useState([]);
   const [expandedNotifId, setExpandedNotifId] = useState(null);
   const [globalNotice, setGlobalNotice] = useState('');
   
@@ -48,15 +49,7 @@ export default function Home() {
   const navigate = useNavigate();
   const todayStr = getLocalDate();
 
-  // Helper Function: යූසර්ට අදාල Notification Key එක ලබාගැනීම
-  const getNotifKey = () => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return null;
-    const user = JSON.parse(userStr);
-    return `readNotifs_${user.username}`;
-  };
-
-  // Load Main Data & Notifications
+  // Load Main Data & Notifications (Sequential Load to prevent Race Conditions)
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -64,60 +57,59 @@ export default function Home() {
 
     if (!token || !userStr) {
       navigate('/', { replace: true });
-    } else {
-      const user = JSON.parse(userStr);
-      setDriverName(user.username); 
+      return;
+    }
 
-      // 1. පරණ Visited දත්ත ඉවත් කිරීම
-      const keysToRemove = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && key.startsWith('visited_') && key !== `visited_${todayStr}`) {
-          keysToRemove.push(key);
-        }
+    const user = JSON.parse(userStr);
+    setDriverName(user.username); 
+
+    // පරණ Visited දත්ත ඉවත් කිරීම
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('visited_') && key !== `visited_${todayStr}`) {
+        keysToRemove.push(key);
       }
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      // 2. Notifications පටවා ගැනීම (ප්‍රමාද වී එන දත්ත Overwrite වීම වැළැක්වීම)
-      const loadNotificationsFromData = (data) => {
-        if (data && data.notifications && Array.isArray(data.notifications)) {
-          const key = `readNotifs_${user.username}`;
-          // State එකෙන් නොව, කෙලින්ම Local Storage එකෙන්ම නැවුම් දත්ත ලබාගැනීම
-          const currentReadIds = JSON.parse(localStorage.getItem(key) || '[]');
-          
-          const mappedNotifs = data.notifications.map(n => ({
-            ...n,
-            isRead: currentReadIds.includes(n.id)
-          }));
-          setNotifications(mappedNotifs);
-        }
-      };
+    // ප්‍රධාන දත්ත සියල්ලම අනුපිළිවෙලින් ලෝඩ් කිරීමේ Function එක
+    const loadAllData = async () => {
+      try {
+        // 1. Profile එකෙන් කියවපු Notifications මොනවාදැයි බැලීම (Offline Database එකෙන්)
+        const profileData = await db.profile.get(1);
+        const currentReadIds = profileData?.readNotifications || [];
+        setReadNotifIds(currentReadIds);
+        if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
 
-      const fetchGlobalSettings = async () => {
+        // 2. අලුත් Notifications සහ Settings සර්වර් එකෙන් ලබාගැනීම
+        const loadNotifs = (data) => {
+          if (data && data.notifications && Array.isArray(data.notifications)) {
+            // සර්වර් එකෙන් එන පණිවිඩ, අපේ Profile එකේ තියෙන Read ලිස්ට් එකට ගලපා බැලීම
+            const mappedNotifs = data.notifications.map(n => ({
+              ...n,
+              isRead: currentReadIds.includes(n.id)
+            }));
+            setNotifications(mappedNotifs);
+          }
+        };
+
         try {
           const res = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/settings');
           if (res.ok) {
             const data = await res.json();
             localStorage.setItem('appSettings', JSON.stringify(data));
             setGlobalNotice(data.global_notice || '');
-            loadNotificationsFromData(data);
+            loadNotifs(data);
           }
         } catch (error) {
-          const savedSettings = localStorage.getItem('appSettings');
-          if (savedSettings) {
-            const parsed = JSON.parse(savedSettings);
-            setGlobalNotice(parsed.global_notice || '');
-            loadNotificationsFromData(parsed);
-          }
+          // Offline නම් ලෝකල් එකෙන් ගැනීම
+          const savedSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+          setGlobalNotice(savedSettings.global_notice || '');
+          loadNotifs(savedSettings);
         }
-      };
-      fetchGlobalSettings();
 
-      // 3. Dashboard/Onboarding දත්ත පටවා ගැනීම
-      const loadDashboardData = async () => {
-        const profileData = await db.profile.get(1);
-        if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
-
+        // 3. Dashboard සහ Onboarding දත්ත ගණනය කිරීම
         const bCount = await db.settings.count();
         const rCount = await db.routes.count();
         const sCount = await db.shops.count();
@@ -155,38 +147,40 @@ export default function Home() {
             setRouteShops(filteredShops);
           }
         }
+      } catch (err) {
+        console.error("Error loading home data:", err);
+      } finally {
         setIsChecking(false);
-      };
-      loadDashboardData();
-    }
+      }
+    };
+
+    loadAllData();
   }, [navigate, todayStr]);
 
-  // --- Notification Handlers (100% Real-time Sync with LocalStorage) ---
-  const handleNotifClick = (id) => {
+  // --- Notification Handlers (100% Synced with Database) ---
+  const handleNotifClick = async (id) => {
     setExpandedNotifId(prevId => prevId === id ? null : id);
     
-    const key = getNotifKey();
-    if (!key) return;
-    
-    const currentReadIds = JSON.parse(localStorage.getItem(key) || '[]');
-    
-    if (!currentReadIds.includes(id)) {
-      const newReadIds = [...currentReadIds, id];
-      localStorage.setItem(key, JSON.stringify(newReadIds));
-      
+    if (!readNotifIds.includes(id)) {
+      const newReadIds = [...readNotifIds, id];
+      setReadNotifIds(newReadIds);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      
+      // Local Database (Profile Table) එක අප්ඩේට් කර Sync වීම සඳහා Pending කිරීම
+      const profileData = await db.profile.get(1) || { id: 1 };
+      await db.profile.put({ ...profileData, id: 1, readNotifications: newReadIds, syncStatus: 'pending' });
     }
   };
 
-  const markAllAsRead = () => {
-    const key = getNotifKey();
-    if (!key) return;
-
+  const markAllAsRead = async () => {
     const allIds = notifications.map(n => n.id);
-    localStorage.setItem(key, JSON.stringify(allIds));
-    
+    setReadNotifIds(allIds);
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     setExpandedNotifId(null);
+
+    // Local Database එක අප්ඩේට් කර Sync වීම සඳහා Pending කිරීම
+    const profileData = await db.profile.get(1) || { id: 1 };
+    await db.profile.put({ ...profileData, id: 1, readNotifications: allIds, syncStatus: 'pending' });
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
