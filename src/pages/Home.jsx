@@ -4,7 +4,7 @@ import { theme } from '../config/theme';
 import { translations } from '../config/translations'; 
 import { db } from '../db/database';
 import { 
-  Menu, Bell, Plus, User, MapPin, PackagePlus, LogOut, X, Check, Store, Building2, Circle, CheckCircle2, ChevronRight, ChevronDown, CheckCheck, Info
+  Menu, Bell, Plus, User, MapPin, PackagePlus, LogOut, X, Check, Store, Building2, Circle, CheckCircle2, ChevronRight, ChevronDown, CheckCheck, Info, Megaphone
 } from 'lucide-react';
 
 // Components
@@ -33,6 +33,7 @@ export default function Home() {
   const [notifications, setNotifications] = useState([]); 
   const [readNotifIds, setReadNotifIds] = useState([]);
   const [expandedNotifId, setExpandedNotifId] = useState(null);
+  const [globalNotice, setGlobalNotice] = useState('');
   
   const [onboarding, setOnboarding] = useState({
     profile: false, business: false, routes: false, shops: false, items: false, isCompleted: false, progressPercent: 0
@@ -70,15 +71,16 @@ export default function Home() {
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      // 2. Notifications පටවා ගැනීම
-      const savedReadIds = JSON.parse(localStorage.getItem('readNotifs') || '[]');
+      // 2. Notifications පටවා ගැනීම (යූසර්ගේ නම අනුව)
+      const notifKey = `readNotifs_${user.username}`;
+      const savedReadIds = JSON.parse(localStorage.getItem(notifKey) || '[]');
       setReadNotifIds(savedReadIds);
 
       const loadNotificationsFromData = (data) => {
         if (data && data.notifications && Array.isArray(data.notifications)) {
           const mappedNotifs = data.notifications.map(n => ({
             ...n,
-            isRead: savedReadIds.includes(n.id) // Local Storage එකේ තියෙනවද බැලීම
+            isRead: savedReadIds.includes(n.id) // යූසර්ට අදාලව Read ද බැලීම
           }));
           setNotifications(mappedNotifs);
         }
@@ -90,11 +92,16 @@ export default function Home() {
           if (res.ok) {
             const data = await res.json();
             localStorage.setItem('appSettings', JSON.stringify(data));
+            setGlobalNotice(data.global_notice || '');
             loadNotificationsFromData(data);
           }
         } catch (error) {
           const savedSettings = localStorage.getItem('appSettings');
-          if (savedSettings) loadNotificationsFromData(JSON.parse(savedSettings));
+          if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            setGlobalNotice(parsed.global_notice || '');
+            loadNotificationsFromData(parsed);
+          }
         }
       };
       fetchGlobalSettings();
@@ -155,7 +162,10 @@ export default function Home() {
     if (!readNotifIds.includes(id)) {
       const newReadIds = [...readNotifIds, id];
       setReadNotifIds(newReadIds);
-      localStorage.setItem('readNotifs', JSON.stringify(newReadIds));
+      
+      // යූසර්ගේ නම අනුව Save කිරීම
+      const notifKey = `readNotifs_${driverName}`;
+      localStorage.setItem(notifKey, JSON.stringify(newReadIds));
       
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     }
@@ -164,7 +174,11 @@ export default function Home() {
   const markAllAsRead = () => {
     const allIds = notifications.map(n => n.id);
     setReadNotifIds(allIds);
-    localStorage.setItem('readNotifs', JSON.stringify(allIds));
+    
+    // යූසර්ගේ නම අනුව Save කිරීම
+    const notifKey = `readNotifs_${driverName}`;
+    localStorage.setItem(notifKey, JSON.stringify(allIds));
+    
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     setExpandedNotifId(null);
   };
@@ -325,6 +339,18 @@ export default function Home() {
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pt-2 pb-24 hide-scrollbar">
+
+        {globalNotice && (
+          <div className="mb-4 bg-yellow-100 dark:bg-yellow-900/40 border-l-4 border-yellow-500 p-4 rounded-r-xl shadow-sm animate-in fade-in slide-in-from-top-4">
+            <div className="flex items-start gap-3">
+              <Megaphone size={20} className="text-yellow-600 dark:text-yellow-500 shrink-0 mt-0.5" />
+              <p className="text-[13px] font-bold text-yellow-800 dark:text-yellow-200 leading-relaxed">
+                {globalNotice}
+              </p>
+            </div>
+          </div>
+        )}
+        
         {!onboarding.isCompleted ? (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="bg-gradient-to-br from-[#14348c] to-[#1b43aa] rounded-3xl p-6 mb-6 shadow-lg text-white">
