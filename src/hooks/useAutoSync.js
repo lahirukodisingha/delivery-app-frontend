@@ -74,7 +74,7 @@ export default function useAutoSync() {
       }
     };
 
-    // --- Auto-Sync ක්‍රියාත්මක වන අවස්ථා 4 ---
+    // --- Auto-Sync ක්‍රියාත්මක වන අවස්ථා 3 ---
     
     // 1. ඇප් එක මුලින්ම ලෝඩ් වෙනකොට
     checkAndSyncData(); 
@@ -82,15 +82,11 @@ export default function useAutoSync() {
     // 2. ඉන්ටර්නෙට් (WiFi/Data) අලුතින් සම්බන්ධ වූ ගමන්
     window.addEventListener('online', checkAndSyncData);
     
-    // 3. යම්කිසි ක්‍රියාවක් වූ සැනින් (Instant Sync / Force Sync) - අලුතින් එක්කළ කොටස
-    window.addEventListener('force-sync', checkAndSyncData);
-    
-    // 4. ඇප් එක පාවිච්චි කරන අතරතුර සෑම තත්පර 15 කට වරක්ම
+    // 3. ඇප් එක පාවිච්චි කරන අතරතුර සෑම තත්පර 15 කට වරක්ම
     const interval = setInterval(checkAndSyncData, 15000);
 
     return () => {
       window.removeEventListener('online', checkAndSyncData);
-      window.removeEventListener('force-sync', checkAndSyncData); // Cleanup කිරීම
       clearInterval(interval);
     };
   }, []);
