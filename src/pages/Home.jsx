@@ -31,7 +31,6 @@ export default function Home() {
   
   // --- Notifications States ---
   const [notifications, setNotifications] = useState([]); 
-  const [readNotifIds, setReadNotifIds] = useState([]);
   const [expandedNotifId, setExpandedNotifId] = useState(null);
   const [globalNotice, setGlobalNotice] = useState('');
   
@@ -48,6 +47,14 @@ export default function Home() {
 
   const navigate = useNavigate();
   const todayStr = getLocalDate();
+
+  // Helper Function: යූසර්ට අදාල Notification Key එක ලබාගැනීම
+  const getNotifKey = () => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+    const user = JSON.parse(userStr);
+    return `readNotifs_${user.username}`;
+  };
 
   // Load Main Data & Notifications
   useEffect(() => {
@@ -71,16 +78,16 @@ export default function Home() {
       }
       keysToRemove.forEach(key => localStorage.removeItem(key));
 
-      // 2. Notifications පටවා ගැනීම (යූසර්ගේ නම අනුව)
-      const notifKey = `readNotifs_${user.username}`;
-      const savedReadIds = JSON.parse(localStorage.getItem(notifKey) || '[]');
-      setReadNotifIds(savedReadIds);
-
+      // 2. Notifications පටවා ගැනීම (ප්‍රමාද වී එන දත්ත Overwrite වීම වැළැක්වීම)
       const loadNotificationsFromData = (data) => {
         if (data && data.notifications && Array.isArray(data.notifications)) {
+          const key = `readNotifs_${user.username}`;
+          // State එකෙන් නොව, කෙලින්ම Local Storage එකෙන්ම නැවුම් දත්ත ලබාගැනීම
+          const currentReadIds = JSON.parse(localStorage.getItem(key) || '[]');
+          
           const mappedNotifs = data.notifications.map(n => ({
             ...n,
-            isRead: savedReadIds.includes(n.id) // යූසර්ට අදාලව Read ද බැලීම
+            isRead: currentReadIds.includes(n.id)
           }));
           setNotifications(mappedNotifs);
         }
@@ -154,30 +161,29 @@ export default function Home() {
     }
   }, [navigate, todayStr]);
 
-  // --- Notification Handlers ---
+  // --- Notification Handlers (100% Real-time Sync with LocalStorage) ---
   const handleNotifClick = (id) => {
     setExpandedNotifId(prevId => prevId === id ? null : id);
     
-    // Read ලෙස සටහන් කිරීම
-    if (!readNotifIds.includes(id)) {
-      const newReadIds = [...readNotifIds, id];
-      setReadNotifIds(newReadIds);
-      
-      // යූසර්ගේ නම අනුව Save කිරීම
-      const notifKey = `readNotifs_${driverName}`;
-      localStorage.setItem(notifKey, JSON.stringify(newReadIds));
+    const key = getNotifKey();
+    if (!key) return;
+    
+    const currentReadIds = JSON.parse(localStorage.getItem(key) || '[]');
+    
+    if (!currentReadIds.includes(id)) {
+      const newReadIds = [...currentReadIds, id];
+      localStorage.setItem(key, JSON.stringify(newReadIds));
       
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
     }
   };
 
   const markAllAsRead = () => {
+    const key = getNotifKey();
+    if (!key) return;
+
     const allIds = notifications.map(n => n.id);
-    setReadNotifIds(allIds);
-    
-    // යූසර්ගේ නම අනුව Save කිරීම
-    const notifKey = `readNotifs_${driverName}`;
-    localStorage.setItem(notifKey, JSON.stringify(allIds));
+    localStorage.setItem(key, JSON.stringify(allIds));
     
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     setExpandedNotifId(null);
