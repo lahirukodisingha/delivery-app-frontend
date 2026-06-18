@@ -62,9 +62,7 @@ export default function Home() {
 
     const loadAllData = async () => {
       try {
-        // ==============================================================
         // 1. කෙලින්ම Database (Server) එකෙන් යූසර්ගේ Read Status ලබාගැනීම
-        // ==============================================================
         let serverReadIds = [];
         try {
           const readRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs?username=${user.username}`);
@@ -72,11 +70,10 @@ export default function Home() {
             const readData = await readRes.json();
             serverReadIds = readData.readNotifs || [];
             setReadNotifIds(serverReadIds);
-            // Offline භාවිතය සඳහා සේව් කර තබාගැනීම
             localStorage.setItem(`readNotifs_${user.username}`, JSON.stringify(serverReadIds));
           }
         } catch (err) {
-          // අන්තර්ජාලය නැත්නම් පමණක් LocalStorage එකෙන් ගනී
+          // Offline නම් පමණක් LocalStorage එකෙන් ගනී
           serverReadIds = JSON.parse(localStorage.getItem(`readNotifs_${user.username}`) || '[]');
           setReadNotifIds(serverReadIds);
         }
@@ -90,7 +87,7 @@ export default function Home() {
             setGlobalNotice(data.global_notice || '');
             if (data.notifications) {
               setNotifications(data.notifications.map(n => ({
-                ...n, isRead: serverReadIds.includes(n.id) // සර්වර් එකෙන් ආපු Read ලිස්ට් එකට ගලපා බැලීම
+                ...n, isRead: serverReadIds.includes(n.id) 
               })));
             }
           }
@@ -104,7 +101,7 @@ export default function Home() {
           }
         }
 
-        // 3. අනිත් Dashboard දත්ත පටවා ගැනීම (පරණ කේතයමයි)
+        // 3. අනිත් Dashboard දත්ත පටවා ගැනීම
         const profileData = await db.profile.get(1);
         if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
 
@@ -158,7 +155,7 @@ export default function Home() {
   // ==============================================================
   // --- Notification Handlers (Direct Server API Calls) ---
   // ==============================================================
-  const handleNotifClick = (id) => {
+  const handleNotifClick = async (id) => {
     setExpandedNotifId(prevId => prevId === id ? null : id);
     
     if (!readNotifIds.includes(id)) {
@@ -167,28 +164,38 @@ export default function Home() {
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
       localStorage.setItem(`readNotifs_${driverName}`, JSON.stringify(newReadIds));
       
-      // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම! (මෙය Background එකේ සිදුවේ)
-      fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: driverName, notif_ids: [id] }) // Array එකක් ලෙස යවයි
-      }).catch(e => console.error("Error saving read status:", e));
+      // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම
+      try {
+        await fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: driverName, notif_ids: [id] }),
+            keepalive: true // Mobile එකේදී App එක close කලත් රික්වෙස්ට් එක යැවීම සහතික කරයි
+        });
+      } catch(e) {
+        console.error("Error saving read status:", e);
+      }
     }
   };
 
-  const markAllAsRead = () => {
+  const markAllAsRead = async () => {
     const allIds = notifications.map(n => n.id);
     setReadNotifIds(allIds);
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     setExpandedNotifId(null);
     localStorage.setItem(`readNotifs_${driverName}`, JSON.stringify(allIds));
 
-    // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම!
-    fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: driverName, notif_ids: allIds })
-    }).catch(e => console.error("Error saving read status:", e));
+    // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම
+    try {
+      await fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: driverName, notif_ids: allIds }),
+          keepalive: true // Mobile එකේදී App එක close කලත් රික්වෙස්ට් එක යැවීම සහතික කරයි
+      });
+    } catch(e) {
+      console.error("Error saving read status:", e);
+    }
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
