@@ -1,5 +1,5 @@
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { useEffect } from 'react';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
@@ -19,6 +19,9 @@ import Expenses from './pages/Expenses';
 import './App.css';
 import BackupSync from './pages/BackupSync';
 import useAutoSync from './hooks/useAutoSync';
+
+// අලුතින් සෑදූ SplashScreen එක Import කිරීම
+import SplashScreen from './components/SplashScreen';
 
 // ==========================================
 // Global Auth Checker
@@ -65,19 +68,16 @@ function GlobalAuthCheck() {
 function AdminRoute({ children }) {
   const userStr = localStorage.getItem('user');
   
-  // යූසර් කෙනෙක් ලොග් වෙලා නැත්නම් Login එකට යවයි
   if (!userStr) {
     return <Navigate to="/" replace />;
   }
   
   const user = JSON.parse(userStr);
   
-  // ලොග් වෙලා ඉන්න කෙනා 'admin' නෙවෙයි නම්, සාමාන්‍ය Home එකට යවයි
   if (user.role !== 'admin') {
     return <Navigate to="/home" replace />;
   }
   
-  // ඇඩ්මින් නම් පමණක් අදාල පිටුවට යන්න දෙනවා
   return children;
 }
 
@@ -93,7 +93,6 @@ function DriverRoute({ children }) {
   
   const user = JSON.parse(userStr);
   
-  // ඇඩ්මින් කෙනෙක් සාමාන්‍ය පිටුවලට (උදා: /home) එන්න හැදුවොත් එයාව ආපහු ඇඩ්මින් පැනල් එකටම විසි කරනවා
   if (user.role === 'admin') {
     return <Navigate to="/admin" replace />;
   }
@@ -102,8 +101,10 @@ function DriverRoute({ children }) {
 }
 
 function App() {
+  // Splash Screen එක පෙන්වීමට අවශ්‍ය State එක
+  const [showSplash, setShowSplash] = useState(true);
+
   useEffect(() => {
-    // 1. කලින් තිබුණු තීම් එක සකස් කිරීම
     const savedTheme = localStorage.getItem('themeMode') || 'light';
     if (savedTheme === 'dark') {
       document.documentElement.classList.add('dark');
@@ -111,7 +112,6 @@ function App() {
       document.documentElement.classList.remove('dark');
     }
 
-    // 2. Theme Color Meta Tag එක dynamically වෙනස් කරන Function එක
     const updateThemeColor = () => {
       const isDark = document.documentElement.classList.contains('dark');
       let metaTheme = document.querySelector("meta[name='theme-color']");
@@ -122,14 +122,11 @@ function App() {
         document.head.appendChild(metaTheme);
       }
       
-      // ඇප් එක Dark නම් ඩාර්ක් පාට (#111827), Light නම් ලයිට් පාට (#f4f7fb) යෙදීම
       metaTheme.setAttribute('content', isDark ? '#111827' : '#f4f7fb');
     };
 
-    // මුලින්ම ඇප් එක ලෝඩ් වෙද්දී පාට හදන්න
     updateThemeColor();
 
-    // 3. යූසර් ඇප් එක ඇතුලේ Light/Dark මාරු කරද්දී ඒක අල්ලගන්න Observer එකක්
     const observer = new MutationObserver(updateThemeColor);
     observer.observe(document.documentElement, { 
       attributes: true, 
@@ -142,44 +139,46 @@ function App() {
   useAutoSync();
 
   return (
-    <Router>
-      <GlobalAuthCheck />
+    <>
+      {/* Splash Screen එක Render කිරීම */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
       
-      <div className="min-h-screen bg-[#f4f7fb] dark:bg-[#111827] text-gray-900 dark:text-gray-100 transition-colors duration-300">
-        <Routes>
-          {/* Public Route */}
-          <Route path="/" element={<Login />} />
-          
-          {/* Admin Routes */}
-          <Route 
-            path="/admin" 
-            element={
-              <AdminRoute>
-                <AdminDashboard />
-              </AdminRoute>
-            } 
-          />
+      <Router>
+        <GlobalAuthCheck />
+        
+        <div className="min-h-screen bg-[#f4f7fb] dark:bg-[#111827] text-gray-900 dark:text-gray-100 transition-colors duration-300">
+          <Routes>
+            <Route path="/" element={<Login />} />
+            
+            <Route 
+              path="/admin" 
+              element={
+                <AdminRoute>
+                  <AdminDashboard />
+                </AdminRoute>
+              } 
+            />
 
-          {/* Driver Routes (සාමාන්‍ය රියදුරුට පමණක් පිවිසිය හැකි පිටු) */}
-          <Route path="/home" element={<DriverRoute><Home /></DriverRoute>} />
-          <Route path="/settings" element={<DriverRoute><BusinessProfile /></DriverRoute>} />
-          <Route path="/add-route" element={<DriverRoute><AddRoute /></DriverRoute>} />
-          <Route path="/add-shop" element={<DriverRoute><AddShop /></DriverRoute>} />
-          <Route path="/add-item" element={<DriverRoute><AddItem /></DriverRoute>} />
-          <Route path="/add-bill" element={<DriverRoute><AddBill /></DriverRoute>} />
-          <Route path="/profile" element={<DriverRoute><Profile /></DriverRoute>} />
-          <Route path="/routes" element={<DriverRoute><RoutesTab /></DriverRoute>} />
-          <Route path="/shops" element={<DriverRoute><Shops /></DriverRoute>} />
-          <Route path="/shop-history/:shopId" element={<DriverRoute><ShopHistory /></DriverRoute>} />
-          <Route path="/edit-bill/:billId" element={<DriverRoute><EditBill /></DriverRoute>} />
-          <Route path="/reports" element={<DriverRoute><Reports /></DriverRoute>} />
-          <Route path="/more" element={<DriverRoute><MoreTab /></DriverRoute>} />
-          <Route path="/expenses" element={<DriverRoute><Expenses /></DriverRoute>} />
-          <Route path='/backup' element={<DriverRoute><BackupSync/></DriverRoute>} />
-          
-        </Routes>
-      </div>
-    </Router>
+            <Route path="/home" element={<DriverRoute><Home /></DriverRoute>} />
+            <Route path="/settings" element={<DriverRoute><BusinessProfile /></DriverRoute>} />
+            <Route path="/add-route" element={<DriverRoute><AddRoute /></DriverRoute>} />
+            <Route path="/add-shop" element={<DriverRoute><AddShop /></DriverRoute>} />
+            <Route path="/add-item" element={<DriverRoute><AddItem /></DriverRoute>} />
+            <Route path="/add-bill" element={<DriverRoute><AddBill /></DriverRoute>} />
+            <Route path="/profile" element={<DriverRoute><Profile /></DriverRoute>} />
+            <Route path="/routes" element={<DriverRoute><RoutesTab /></DriverRoute>} />
+            <Route path="/shops" element={<DriverRoute><Shops /></DriverRoute>} />
+            <Route path="/shop-history/:shopId" element={<DriverRoute><ShopHistory /></DriverRoute>} />
+            <Route path="/edit-bill/:billId" element={<DriverRoute><EditBill /></DriverRoute>} />
+            <Route path="/reports" element={<DriverRoute><Reports /></DriverRoute>} />
+            <Route path="/more" element={<DriverRoute><MoreTab /></DriverRoute>} />
+            <Route path="/expenses" element={<DriverRoute><Expenses /></DriverRoute>} />
+            <Route path='/backup' element={<DriverRoute><BackupSync/></DriverRoute>} />
+            
+          </Routes>
+        </div>
+      </Router>
+    </>
   );
 }
 
