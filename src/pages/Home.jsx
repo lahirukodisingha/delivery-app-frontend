@@ -7,6 +7,7 @@ import {
   Menu, Bell, Plus, User, MapPin, PackagePlus, LogOut, X, Check, Store, Building2, Circle, CheckCircle2, ChevronRight, ChevronDown, CheckCheck, Info, Megaphone
 } from 'lucide-react';
 
+// Components
 import LoadingScreen from '../components/LoadingScreen';
 import BottomNav from '../components/BottomNav';
 import PrimaryButton from '../components/PrimaryButton';
@@ -62,10 +63,12 @@ export default function Home() {
 
     const loadAllData = async () => {
       try {
-        // 1. කෙලින්ම Database (Server) එකෙන් යූසර්ගේ Read Status ලබාගැනීම
         let serverReadIds = [];
         try {
-          const readRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs?username=${user.username}`);
+          // මොබයිල් බ්‍රව්සර් වල Cache වීම වැළැක්වීමට t=${Date.now()} යොදා ඇත
+          const readRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs?username=${user.username}&t=${Date.now()}`, {
+            cache: 'no-store'
+          });
           if (readRes.ok) {
             const readData = await readRes.json();
             serverReadIds = readData.readNotifs || [];
@@ -73,14 +76,15 @@ export default function Home() {
             localStorage.setItem(`readNotifs_${user.username}`, JSON.stringify(serverReadIds));
           }
         } catch (err) {
-          // Offline නම් පමණක් LocalStorage එකෙන් ගනී
           serverReadIds = JSON.parse(localStorage.getItem(`readNotifs_${user.username}`) || '[]');
           setReadNotifIds(serverReadIds);
         }
 
-        // 2. Notifications සහ Settings පටවා ගැනීම
         try {
-          const res = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/settings');
+          // මෙතනටත් Cache Buster එක යොදා ඇත
+          const res = await fetch(`https://delivery-app-backend-coral.vercel.app/api/admin/settings?t=${Date.now()}`, {
+            cache: 'no-store'
+          });
           if (res.ok) {
             const data = await res.json();
             localStorage.setItem('appSettings', JSON.stringify(data));
@@ -101,7 +105,6 @@ export default function Home() {
           }
         }
 
-        // 3. අනිත් Dashboard දත්ත පටවා ගැනීම
         const profileData = await db.profile.get(1);
         if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
 
@@ -152,6 +155,7 @@ export default function Home() {
     loadAllData();
   }, [navigate, todayStr]);
 
+
   // ==============================================================
   // --- Notification Handlers (Direct Server API Calls) ---
   // ==============================================================
@@ -162,15 +166,18 @@ export default function Home() {
       const newReadIds = [...readNotifIds, id];
       setReadNotifIds(newReadIds);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
-      localStorage.setItem(`readNotifs_${driverName}`, JSON.stringify(newReadIds));
       
-      // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම
+      // Username එක කෙලින්ම LocalStorage එකෙන් ලබාගැනීම
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return;
+      const currentUsername = JSON.parse(userStr).username;
+      localStorage.setItem(`readNotifs_${currentUsername}`, JSON.stringify(newReadIds));
+      
       try {
         await fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: driverName, notif_ids: [id] }),
-            keepalive: true // Mobile එකේදී App එක close කලත් රික්වෙස්ට් එක යැවීම සහතික කරයි
+            body: JSON.stringify({ username: currentUsername, notif_ids: [id] })
         });
       } catch(e) {
         console.error("Error saving read status:", e);
@@ -183,15 +190,18 @@ export default function Home() {
     setReadNotifIds(allIds);
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     setExpandedNotifId(null);
-    localStorage.setItem(`readNotifs_${driverName}`, JSON.stringify(allIds));
+    
+    // Username එක කෙලින්ම LocalStorage එකෙන් ලබාගැනීම
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return;
+    const currentUsername = JSON.parse(userStr).username;
+    localStorage.setItem(`readNotifs_${currentUsername}`, JSON.stringify(allIds));
 
-    // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම
     try {
       await fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: driverName, notif_ids: allIds }),
-          keepalive: true // Mobile එකේදී App එක close කලත් රික්වෙස්ට් එක යැවීම සහතික කරයි
+          body: JSON.stringify({ username: currentUsername, notif_ids: allIds })
       });
     } catch(e) {
       console.error("Error saving read status:", e);
