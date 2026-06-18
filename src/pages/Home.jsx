@@ -7,7 +7,6 @@ import {
   Menu, Bell, Plus, User, MapPin, PackagePlus, LogOut, X, Check, Store, Building2, Circle, CheckCircle2, ChevronRight, ChevronDown, CheckCheck, Info, Megaphone
 } from 'lucide-react';
 
-// Components
 import LoadingScreen from '../components/LoadingScreen';
 import BottomNav from '../components/BottomNav';
 import PrimaryButton from '../components/PrimaryButton';
@@ -29,7 +28,6 @@ export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false); 
   
-  // --- Notifications States ---
   const [notifications, setNotifications] = useState([]); 
   const [readNotifIds, setReadNotifIds] = useState([]);
   const [expandedNotifId, setExpandedNotifId] = useState(null);
@@ -49,7 +47,6 @@ export default function Home() {
   const navigate = useNavigate();
   const todayStr = getLocalDate();
 
-  // Load Main Data & Notifications (Sequential Load to prevent Race Conditions)
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -63,53 +60,54 @@ export default function Home() {
     const user = JSON.parse(userStr);
     setDriverName(user.username); 
 
-    // පරණ Visited දත්ත ඉවත් කිරීම
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith('visited_') && key !== `visited_${todayStr}`) {
-        keysToRemove.push(key);
-      }
-    }
-    keysToRemove.forEach(key => localStorage.removeItem(key));
-
-    // ප්‍රධාන දත්ත සියල්ලම අනුපිළිවෙලින් ලෝඩ් කිරීමේ Function එක
     const loadAllData = async () => {
       try {
-        // 1. Profile එකෙන් කියවපු Notifications මොනවාදැයි බැලීම (Offline Database එකෙන්)
-        const profileData = await db.profile.get(1);
-        const currentReadIds = profileData?.readNotifications || [];
-        setReadNotifIds(currentReadIds);
-        if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
-
-        // 2. අලුත් Notifications සහ Settings සර්වර් එකෙන් ලබාගැනීම
-        const loadNotifs = (data) => {
-          if (data && data.notifications && Array.isArray(data.notifications)) {
-            // සර්වර් එකෙන් එන පණිවිඩ, අපේ Profile එකේ තියෙන Read ලිස්ට් එකට ගලපා බැලීම
-            const mappedNotifs = data.notifications.map(n => ({
-              ...n,
-              isRead: currentReadIds.includes(n.id)
-            }));
-            setNotifications(mappedNotifs);
+        // ==============================================================
+        // 1. කෙලින්ම Database (Server) එකෙන් යූසර්ගේ Read Status ලබාගැනීම
+        // ==============================================================
+        let serverReadIds = [];
+        try {
+          const readRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs?username=${user.username}`);
+          if (readRes.ok) {
+            const readData = await readRes.json();
+            serverReadIds = readData.readNotifs || [];
+            setReadNotifIds(serverReadIds);
+            // Offline භාවිතය සඳහා සේව් කර තබාගැනීම
+            localStorage.setItem(`readNotifs_${user.username}`, JSON.stringify(serverReadIds));
           }
-        };
+        } catch (err) {
+          // අන්තර්ජාලය නැත්නම් පමණක් LocalStorage එකෙන් ගනී
+          serverReadIds = JSON.parse(localStorage.getItem(`readNotifs_${user.username}`) || '[]');
+          setReadNotifIds(serverReadIds);
+        }
 
+        // 2. Notifications සහ Settings පටවා ගැනීම
         try {
           const res = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/settings');
           if (res.ok) {
             const data = await res.json();
             localStorage.setItem('appSettings', JSON.stringify(data));
             setGlobalNotice(data.global_notice || '');
-            loadNotifs(data);
+            if (data.notifications) {
+              setNotifications(data.notifications.map(n => ({
+                ...n, isRead: serverReadIds.includes(n.id) // සර්වර් එකෙන් ආපු Read ලිස්ට් එකට ගලපා බැලීම
+              })));
+            }
           }
         } catch (error) {
-          // Offline නම් ලෝකල් එකෙන් ගැනීම
           const savedSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
           setGlobalNotice(savedSettings.global_notice || '');
-          loadNotifs(savedSettings);
+          if (savedSettings.notifications) {
+             setNotifications(savedSettings.notifications.map(n => ({
+                ...n, isRead: serverReadIds.includes(n.id)
+             })));
+          }
         }
 
-        // 3. Dashboard සහ Onboarding දත්ත ගණනය කිරීම
+        // 3. අනිත් Dashboard දත්ත පටවා ගැනීම (පරණ කේතයමයි)
+        const profileData = await db.profile.get(1);
+        if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
+
         const bCount = await db.settings.count();
         const rCount = await db.routes.count();
         const sCount = await db.shops.count();
@@ -157,30 +155,40 @@ export default function Home() {
     loadAllData();
   }, [navigate, todayStr]);
 
-  // --- Notification Handlers (100% Synced with Database) ---
-  const handleNotifClick = async (id) => {
+  // ==============================================================
+  // --- Notification Handlers (Direct Server API Calls) ---
+  // ==============================================================
+  const handleNotifClick = (id) => {
     setExpandedNotifId(prevId => prevId === id ? null : id);
     
     if (!readNotifIds.includes(id)) {
       const newReadIds = [...readNotifIds, id];
       setReadNotifIds(newReadIds);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+      localStorage.setItem(`readNotifs_${driverName}`, JSON.stringify(newReadIds));
       
-      // Local Database (Profile Table) එක අප්ඩේට් කර Sync වීම සඳහා Pending කිරීම
-      const profileData = await db.profile.get(1) || { id: 1 };
-      await db.profile.put({ ...profileData, id: 1, readNotifications: newReadIds, syncStatus: 'pending' });
+      // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම! (මෙය Background එකේ සිදුවේ)
+      fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: driverName, notif_ids: [id] }) // Array එකක් ලෙස යවයි
+      }).catch(e => console.error("Error saving read status:", e));
     }
   };
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = () => {
     const allIds = notifications.map(n => n.id);
     setReadNotifIds(allIds);
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     setExpandedNotifId(null);
+    localStorage.setItem(`readNotifs_${driverName}`, JSON.stringify(allIds));
 
-    // Local Database එක අප්ඩේට් කර Sync වීම සඳහා Pending කිරීම
-    const profileData = await db.profile.get(1) || { id: 1 };
-    await db.profile.put({ ...profileData, id: 1, readNotifications: allIds, syncStatus: 'pending' });
+    // ක්ලික් කළ සැනින් කෙලින්ම Database එකට යැවීම!
+    fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: driverName, notif_ids: allIds })
+    }).catch(e => console.error("Error saving read status:", e));
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -202,11 +210,8 @@ export default function Home() {
             db.shops.clear(), db.items.clear(), db.bills.clear(),
             db.billItems.clear(), db.expenses.clear()
           ]);
-        } catch (dbError) { console.error("Error clearing DB:", dbError); }
+        } catch (dbError) {}
         
-        Object.keys(localStorage).forEach(key => {
-          if(key.startsWith('visited_')) localStorage.removeItem(key);
-        });
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/', { replace: true });
