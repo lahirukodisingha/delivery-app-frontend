@@ -7,7 +7,6 @@ import {
   Menu, Bell, Plus, User, MapPin, PackagePlus, LogOut, X, Check, Store, Building2, Circle, CheckCircle2, ChevronRight, ChevronDown, CheckCheck, Info, Megaphone
 } from 'lucide-react';
 
-// Components
 import LoadingScreen from '../components/LoadingScreen';
 import BottomNav from '../components/BottomNav';
 import PrimaryButton from '../components/PrimaryButton';
@@ -63,48 +62,23 @@ export default function Home() {
 
     const loadAllData = async () => {
       try {
-        let serverReadIds = [];
-        try {
-          // මොබයිල් බ්‍රව්සර් වල Cache වීම වැළැක්වීමට t=${Date.now()} යොදා ඇත
-          const readRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs?username=${user.username}&t=${Date.now()}`, {
-            cache: 'no-store'
-          });
-          if (readRes.ok) {
-            const readData = await readRes.json();
-            serverReadIds = readData.readNotifs || [];
-            setReadNotifIds(serverReadIds);
-            localStorage.setItem(`readNotifs_${user.username}`, JSON.stringify(serverReadIds));
-          }
-        } catch (err) {
-          serverReadIds = JSON.parse(localStorage.getItem(`readNotifs_${user.username}`) || '[]');
-          setReadNotifIds(serverReadIds);
+        // =========================================================================
+        // පියවර 1: තත්පරයක්වත් පරක්කු නොවී LocalStorage වලින් දත්ත අරන් පෙන්වීම
+        // =========================================================================
+        let currentReadIds = JSON.parse(localStorage.getItem(`readNotifs_${user.username}`) || '[]');
+        setReadNotifIds(currentReadIds);
+
+        const savedSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
+        setGlobalNotice(savedSettings.global_notice || '');
+        if (savedSettings.notifications) {
+           setNotifications(savedSettings.notifications.map(n => ({
+              ...n, isRead: currentReadIds.includes(n.id)
+           })));
         }
 
-        try {
-          // මෙතනටත් Cache Buster එක යොදා ඇත
-          const res = await fetch(`https://delivery-app-backend-coral.vercel.app/api/admin/settings?t=${Date.now()}`, {
-            cache: 'no-store'
-          });
-          if (res.ok) {
-            const data = await res.json();
-            localStorage.setItem('appSettings', JSON.stringify(data));
-            setGlobalNotice(data.global_notice || '');
-            if (data.notifications) {
-              setNotifications(data.notifications.map(n => ({
-                ...n, isRead: serverReadIds.includes(n.id) 
-              })));
-            }
-          }
-        } catch (error) {
-          const savedSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
-          setGlobalNotice(savedSettings.global_notice || '');
-          if (savedSettings.notifications) {
-             setNotifications(savedSettings.notifications.map(n => ({
-                ...n, isRead: serverReadIds.includes(n.id)
-             })));
-          }
-        }
-
+        // =========================================================================
+        // පියවර 2: අනිත් Dashboard දත්ත පටවා ගැනීම (ඉතා වේගවත්)
+        // =========================================================================
         const profileData = await db.profile.get(1);
         if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
 
@@ -145,29 +119,59 @@ export default function Home() {
             setRouteShops(filteredShops);
           }
         }
+
+        // දත්ත සියල්ලම Load වී අවසන්! දැන් Loading Screen එක අයින් කරන්න.
+        setIsChecking(false);
+
+        // =========================================================================
+        // පියවර 3: අපිට නොපෙනී Background එකෙන් අලුත් නොටිෆිකේෂන් සෙවීම
+        // =========================================================================
+        fetchBackgroundUpdates(user.username, currentReadIds);
+
       } catch (err) {
         console.error("Error loading home data:", err);
-      } finally {
         setIsChecking(false);
+      } 
+    };
+
+    // Background Fetch Function එක
+    const fetchBackgroundUpdates = async (username, initialReadIds) => {
+      try {
+        let serverReadIds = initialReadIds;
+        const readRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs?username=${username}&t=${Date.now()}`, { cache: 'no-store' });
+        if (readRes.ok) {
+          const readData = await readRes.json();
+          serverReadIds = readData.readNotifs || [];
+          setReadNotifIds(serverReadIds);
+          localStorage.setItem(`readNotifs_${username}`, JSON.stringify(serverReadIds));
+        }
+
+        const res = await fetch(`https://delivery-app-backend-coral.vercel.app/api/admin/settings?t=${Date.now()}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          localStorage.setItem('appSettings', JSON.stringify(data));
+          setGlobalNotice(data.global_notice || '');
+          if (data.notifications) {
+            setNotifications(data.notifications.map(n => ({
+              ...n, isRead: serverReadIds.includes(n.id) 
+            })));
+          }
+        }
+      } catch (error) {
+        // Offline නම් හෝ දෝෂයක් ආවොත් කිසිවක් නොකරයි (UI එකට බාධාවක් නැත)
       }
     };
 
     loadAllData();
   }, [navigate, todayStr]);
 
-
-  // ==============================================================
-  // --- Notification Handlers (Direct Server API Calls) ---
-  // ==============================================================
   const handleNotifClick = async (id) => {
     setExpandedNotifId(prevId => prevId === id ? null : id);
-    
     if (!readNotifIds.includes(id)) {
       const newReadIds = [...readNotifIds, id];
       setReadNotifIds(newReadIds);
       setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
       
-      // Username එක කෙලින්ම LocalStorage එකෙන් ලබාගැනීම
       const userStr = localStorage.getItem('user');
       if (!userStr) return;
       const currentUsername = JSON.parse(userStr).username;
@@ -179,9 +183,7 @@ export default function Home() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: currentUsername, notif_ids: [id] })
         });
-      } catch(e) {
-        console.error("Error saving read status:", e);
-      }
+      } catch(e) { }
     }
   };
 
@@ -191,7 +193,6 @@ export default function Home() {
     setNotifications(notifications.map(n => ({ ...n, isRead: true })));
     setExpandedNotifId(null);
     
-    // Username එක කෙලින්ම LocalStorage එකෙන් ලබාගැනීම
     const userStr = localStorage.getItem('user');
     if (!userStr) return;
     const currentUsername = JSON.parse(userStr).username;
@@ -203,13 +204,10 @@ export default function Home() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: currentUsername, notif_ids: allIds })
       });
-    } catch(e) {
-      console.error("Error saving read status:", e);
-    }
+    } catch(e) { }
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
-
   const t = translations[language] || translations['si'];
   const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
   const showAlert = (message, type = 'success', showCancel = false, onConfirm = null) => {
@@ -228,7 +226,6 @@ export default function Home() {
             db.billItems.clear(), db.expenses.clear()
           ]);
         } catch (dbError) {}
-        
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         navigate('/', { replace: true });
@@ -240,7 +237,6 @@ export default function Home() {
     let newVisited;
     if (visitedShopIds.includes(shopId)) newVisited = visitedShopIds.filter(id => id !== shopId);
     else newVisited = [...visitedShopIds, shopId];
-    
     setVisitedShopIds(newVisited);
     localStorage.setItem(`visited_${todayStr}`, JSON.stringify(newVisited));
   };

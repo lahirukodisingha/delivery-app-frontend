@@ -31,7 +31,6 @@ export default function Login() {
 
     if (token && userStr) {
       const user = JSON.parse(userStr);
-      // ලොග් වී ඇති කෙනා ඇඩ්මින් නම් ඇඩ්මින් පිටුවටත්, නැත්නම් Home එකටත් යවයි
       if (user.role === 'admin') {
         navigate('/admin');
       } else {
@@ -54,7 +53,6 @@ export default function Login() {
     setError(null);
 
     try {
-      // 1. Auth API එක හරහා Login වීම
       const response = await fetch('https://delivery-app-backend-coral.vercel.app/api/auth/login', {
         method: 'POST',
         headers: {
@@ -69,21 +67,15 @@ export default function Login() {
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user)); 
 
-        // ==============================================================
-        // අලුත් කොටස: Admin ද, Driver ද කියා හඳුනාගෙන නිවැරදි පිටුවට යැවීම
-        // ==============================================================
         if (data.user.role === 'admin') {
-          // ඇඩ්මින් කෙනෙක් නම් කෙලින්ම Admin Dashboard එකට යවන්න
           setIsLoading(false);
-          navigate('/admin'); // <--- '/admin' ලෙස පමණක් වෙනස් කරන්න
+          navigate('/admin'); 
         } else {
-          // සාමාන්‍ය ඩ්‍රයිවර් කෙනෙක් නම් පමණක් Initial Data අරන් IndexedDB එකට දැමීම
           try {
             const syncRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/initial-data?username=${username}`);
             if (syncRes.ok) {
               const dbData = await syncRes.json();
               
-              // පරණ දත්ත තියෙනව නම් Tables 8ම Clear කිරීම
               await Promise.all([
                 db.settings.clear(),
                 db.profile.clear(),
@@ -95,17 +87,21 @@ export default function Login() {
                 db.expenses.clear()
               ]);
 
-              // සර්වර් එකෙන් ආපු අලුත් දත්ත Tables 8ටම ඇතුලත් කිරීම
-              if(dbData.settings && dbData.settings.length > 0) await db.settings.bulkPut(dbData.settings);
-              if(dbData.profile && dbData.profile.length > 0) await db.profile.bulkPut(dbData.profile);
-              if(dbData.routes && dbData.routes.length > 0) await db.routes.bulkPut(dbData.routes);
-              if(dbData.shops && dbData.shops.length > 0) await db.shops.bulkPut(dbData.shops);
-              if(dbData.items && dbData.items.length > 0) await db.items.bulkPut(dbData.items);
-              if(dbData.bills && dbData.bills.length > 0) await db.bills.bulkPut(dbData.bills);
-              if(dbData.billItems && dbData.billItems.length > 0) await db.billItems.bulkPut(dbData.billItems);
-              if(dbData.expenses && dbData.expenses.length > 0) await db.expenses.bulkPut(dbData.expenses);
+              // =========================================================================
+              // මෙහිදී දත්ත සියල්ල එකවර (Concurrently) ඇතුලත් කර Login එක ඉතා වේගවත් කරයි
+              // =========================================================================
+              const putPromises = [];
+              if(dbData.settings?.length > 0) putPromises.push(db.settings.bulkPut(dbData.settings));
+              if(dbData.profile?.length > 0) putPromises.push(db.profile.bulkPut(dbData.profile));
+              if(dbData.routes?.length > 0) putPromises.push(db.routes.bulkPut(dbData.routes));
+              if(dbData.shops?.length > 0) putPromises.push(db.shops.bulkPut(dbData.shops));
+              if(dbData.items?.length > 0) putPromises.push(db.items.bulkPut(dbData.items));
+              if(dbData.bills?.length > 0) putPromises.push(db.bills.bulkPut(dbData.bills));
+              if(dbData.billItems?.length > 0) putPromises.push(db.billItems.bulkPut(dbData.billItems));
+              if(dbData.expenses?.length > 0) putPromises.push(db.expenses.bulkPut(dbData.expenses));
+              
+              await Promise.all(putPromises);
 
-              // --- අලුතින් එක් කළ කොටස: App Settings LocalStorage එකේ සේව් කිරීම ---
               if(dbData.appSettings) {
                 localStorage.setItem('appSettings', JSON.stringify(dbData.appSettings));
               }
@@ -117,8 +113,6 @@ export default function Login() {
           setIsLoading(false);
           navigate('/home'); 
         }
-        // ==============================================================
-
       } else {
         setError(data.error || t.loginFailed);
         setIsLoading(false);
