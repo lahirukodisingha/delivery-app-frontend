@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import Login from './pages/Login';
 import Home from './pages/Home';
 import AdminDashboard from './pages/AdminDashboard';
@@ -17,10 +17,10 @@ import Reports from './pages/Reports';
 import MoreTab from './pages/More';
 import Expenses from './pages/Expenses';
 import './App.css';
-import BackupSync from './pages/BackupSync';   
+import BackupSync from './pages/BackupSync';
 import useAutoSync from './hooks/useAutoSync';
 
-// අලුතින් සෑදූ SplashScreen එක Import කිරීම
+// අලුතින් සෑදූ SplashScreen එක
 import SplashScreen from './components/SplashScreen';
 
 // ==========================================
@@ -62,41 +62,19 @@ function GlobalAuthCheck() {
   return null;
 }
 
-// ==========================================
-// Admin Route Guard
-// ==========================================
 function AdminRoute({ children }) {
   const userStr = localStorage.getItem('user');
-  
-  if (!userStr) {
-    return <Navigate to="/" replace />;
-  }
-  
+  if (!userStr) return <Navigate to="/" replace />;
   const user = JSON.parse(userStr);
-  
-  if (user.role !== 'admin') {
-    return <Navigate to="/home" replace />;
-  }
-  
+  if (user.role !== 'admin') return <Navigate to="/home" replace />;
   return children;
 }
 
-// ==========================================
-// Driver Route Guard 
-// ==========================================
 function DriverRoute({ children }) {
   const userStr = localStorage.getItem('user');
-  
-  if (!userStr) {
-    return <Navigate to="/" replace />;
-  }
-  
+  if (!userStr) return <Navigate to="/" replace />;
   const user = JSON.parse(userStr);
-  
-  if (user.role === 'admin') {
-    return <Navigate to="/admin" replace />;
-  }
-  
+  if (user.role === 'admin') return <Navigate to="/admin" replace />;
   return children;
 }
 
@@ -122,7 +100,14 @@ function App() {
         document.head.appendChild(metaTheme);
       }
       
-      metaTheme.setAttribute('content', isDark ? '#111827' : '#f4f7fb');
+      // ==============================================================
+      // Splash Screen එක තිබෙන තාක් කල් Status Bar එක දම් පාට කර තබාගැනීම
+      // ==============================================================
+      if (showSplash) {
+        metaTheme.setAttribute('content', '#6d28d9'); // Splash Screen Purple Color
+      } else {
+        metaTheme.setAttribute('content', isDark ? '#111827' : '#f4f7fb'); // Default Colors
+      }
     };
 
     updateThemeColor();
@@ -134,7 +119,7 @@ function App() {
     });
 
     return () => observer.disconnect();
-  }, []);
+  }, [showSplash]); // showSplash වෙනස් වන විටද මෙය Run විය යුතුය
 
   useAutoSync();
 
