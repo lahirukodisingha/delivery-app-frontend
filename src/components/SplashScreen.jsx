@@ -76,7 +76,7 @@ export default function SplashScreen({ onComplete }) {
           )}
           
           {/* සුදු පාට ලොරිය */}
-          <Truck size={80} strokeWidth={2} className="text-white relative z-10 drop-shadow-lg" />
+          <Truck size={80} strokeWidth={2} className="text-white relative z-10 drop-shadow-lg" />     
         </div>
 
         {/* Text කොටස */}

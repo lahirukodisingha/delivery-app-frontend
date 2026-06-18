@@ -17,7 +17,7 @@ import Reports from './pages/Reports';
 import MoreTab from './pages/More';
 import Expenses from './pages/Expenses';
 import './App.css';
-import BackupSync from './pages/BackupSync';
+import BackupSync from './pages/BackupSync';   
 import useAutoSync from './hooks/useAutoSync';
 
 // අලුතින් සෑදූ SplashScreen එක Import කිරීම
