@@ -187,25 +187,6 @@ export default function Home() {
     }
   };
 
-  const markAllAsRead = async () => {
-    const allIds = notifications.map(n => n.id);
-    setReadNotifIds(allIds);
-    setNotifications(notifications.map(n => ({ ...n, isRead: true })));
-    setExpandedNotifId(null);
-    
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return;
-    const currentUsername = JSON.parse(userStr).username;
-    localStorage.setItem(`readNotifs_${currentUsername}`, JSON.stringify(allIds));
-
-    try {
-      await fetch('https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: currentUsername, notif_ids: allIds })
-      });
-    } catch(e) { }
-  };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const t = translations[language] || translations['si'];
@@ -308,9 +289,8 @@ export default function Home() {
         </div>
 
         {unreadCount > 0 && (
-          <div className={`px-5 py-3 flex justify-between items-center bg-blue-50/50 dark:bg-blue-900/20 border-b ${theme.colors.navBorder}`}>
+          <div className={`px-5 py-3 flex items-center bg-blue-50/50 dark:bg-blue-900/20 border-b ${theme.colors.navBorder}`}>
             <span className="text-[12px] font-bold text-[#14348c] dark:text-blue-400">{unreadCount} {language === 'si' ? 'නව නිවේදන' : 'New'}</span>
-            <button onClick={markAllAsRead} className="text-[12px] font-bold text-blue-600 dark:text-blue-300 hover:underline flex items-center gap-1"><CheckCheck size={14}/> {language === 'si' ? 'සියල්ල කියවූ බව සටහන් කරන්න' : 'Mark all read'}</button>
           </div>
         )}
 
