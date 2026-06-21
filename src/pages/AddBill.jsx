@@ -263,8 +263,6 @@ export default function AddBill() {
       // -------------------------------------------------------------------------
 
       const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || 'Unknown Shop';
-
-      const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || 'Unknown Shop';
       setCurrentBillData({
         billId,
         date,
