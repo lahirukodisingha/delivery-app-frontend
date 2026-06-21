@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock, Megaphone, Save, Plus, X, Trash2 } from 'lucide-react';
+import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock, Megaphone, Save, Plus, X, Trash2, Edit } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('users'); 
 
   // --- Add User States ---
+  const [newFirstName, setNewFirstName] = useState(''); // අලුත්
+  const [newLastName, setNewLastName] = useState('');   // අලුත්
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -33,6 +35,8 @@ export default function AdminDashboard() {
   // --- Modal States ---
   const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', driver: null });
   const [modalInput, setModalInput] = useState('');
+  const [modalInput2, setModalInput2] = useState(''); // නමේ අවසන් නම සඳහා
+
   const [modalLoading, setModalLoading] = useState(false);
 
   const handleLogout = () => {
@@ -89,12 +93,17 @@ export default function AdminDashboard() {
       const response = await fetch('https://delivery-app-backend-coral.vercel.app/api/admin/register-driver', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: newUsername, password: newPassword }),
+        body: JSON.stringify({ 
+          username: newUsername, 
+          password: newPassword,
+          first_name: newFirstName, // අලුත්
+          last_name: newLastName    // අලුත්
+        }),
       });
       const data = await response.json();
       if (response.ok) {
         setAddMessage(`සාර්ථකයි! ${data.username} ගේ ගිණුම සාදන ලදී.`);
-        setNewUsername(''); setNewPassword('');
+        setNewFirstName(''); setNewLastName(''); setNewUsername(''); setNewPassword('');
         fetchDrivers(); 
       } else {
         setAddError(data.error || 'ලියාපදිංචි කිරීම අසාර්ථකයි.');
@@ -116,7 +125,11 @@ export default function AdminDashboard() {
       } else if (type === 'password') {
         url = `https://delivery-app-backend-coral.vercel.app/api/admin/drivers/${driver._id}/reset-password`;
         bodyData = { new_password: modalInput };
+      } else if (type === 'name') {
+        url = `https://delivery-app-backend-coral.vercel.app/api/admin/drivers/${driver._id}/name`;
+        bodyData = { first_name: modalInput, last_name: modalInput2 };
       }
+
       const res = await fetch(url, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -126,7 +139,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         alert(data.message);
         setModalConfig({ isOpen: false, type: '', driver: null });
-        setModalInput('');
+        setModalInput(''); setModalInput2('');
         fetchDrivers(); 
       } else {
         alert(data.error || 'දෝෂයක් මතු විය!');
@@ -137,7 +150,34 @@ export default function AdminDashboard() {
 
   const openModal = (type, driver) => {
     setModalConfig({ isOpen: true, type, driver });
-    setModalInput(type === 'validity' ? driver.account_valid_until : '');
+    if (type === 'validity') {
+      setModalInput(driver.account_valid_until);
+    } else if (type === 'name') {
+      setModalInput(driver.first_name || '');
+      setModalInput2(driver.last_name || '');
+    } else {
+      setModalInput('');
+    }
+  };
+
+  // --- අලුතින් එක්කළ Delete Function එක ---
+  const handleDeleteDriver = async (driver) => {
+    if(window.confirm(`ඔබට ${driver.username} ගේ ගිණුම සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද? මෙම ක්‍රියාව ආපසු හැරවිය නොහැක.`)) {
+      try {
+        const res = await fetch(`https://delivery-app-backend-coral.vercel.app/api/admin/drivers/${driver._id}`, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if(res.ok) {
+          alert(data.message);
+          fetchDrivers();
+        } else {
+          alert(data.error || "මකා දැමීමේදී දෝෂයක් මතු විය.");
+        }
+      } catch (err) {
+        alert("සර්වර් දෝෂයකි.");
+      }
+    }
   };
 
   const handleSaveSettings = async () => {
@@ -162,7 +202,6 @@ export default function AdminDashboard() {
     setIsSavingSettings(false);
   };
 
-  // --- Notification Handlers ---
   const handleAddNotification = () => {
     if (!notifTitle.trim() || !notifMessage.trim()) {
       alert("Title සහ Description දෙකම ඇතුලත් කරන්න!");
@@ -174,7 +213,7 @@ export default function AdminDashboard() {
       message: notifMessage.trim(),
       date: new Date().toISOString().split('T')[0]
     };
-    setNotifications([newNotif, ...notifications]); // අලුත් එක උඩට එන සේ
+    setNotifications([newNotif, ...notifications]); 
     setNotifTitle('');
     setNotifMessage('');
   };
@@ -183,7 +222,6 @@ export default function AdminDashboard() {
     setNotifications(notifications.filter(n => n.id !== id));
   };
 
-  // --- Array Managers ---
   const addItemToArray = (item, setArray, array, setInput) => {
     if (item.trim() && !array.includes(item.trim())) {
       setArray([...array, item.trim()]);
@@ -263,7 +301,11 @@ export default function AdminDashboard() {
                 {addMessage && <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-medium">{addMessage}</div>}
                 {addError && <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-medium">{addError}</div>}
                 <form onSubmit={handleAddUser} className="space-y-4">
-                  <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Username</label><input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: kamal" required /></div>
+                  <div className="flex gap-3">
+                    <div className="w-1/2"><label className="block text-gray-700 font-bold mb-1.5 text-sm">මුල් නම</label><input type="text" value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: කමල්" /></div>
+                    <div className="w-1/2"><label className="block text-gray-700 font-bold mb-1.5 text-sm">අවසන් නම</label><input type="text" value={newLastName} onChange={(e) => setNewLastName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: පෙරේරා" /></div>
+                  </div>
+                  <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Username</label><input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: kamal123" required /></div>
                   <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Password</label><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="අවම අකුරු 6ක්..." required /></div>
                   <button type="submit" disabled={isAdding} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-md text-sm ${isAdding ? 'bg-blue-400' : 'bg-[#14348c] hover:bg-blue-800 hover:shadow-lg'}`}>{isAdding ? 'සාදමින් පවතී...' : 'නව ගිණුම සාදන්න'}</button>
                 </form>
@@ -275,14 +317,38 @@ export default function AdminDashboard() {
                 {isLoadingDrivers ? <p className="text-gray-500 text-sm">ලෝඩ් වෙමින් පවතී...</p> : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50 text-gray-600 font-medium"><tr><th className="py-3 px-4 rounded-l-xl">Username</th><th className="py-3 px-4">Status / Validity</th><th className="py-3 px-4">Last Login</th><th className="py-3 px-4 rounded-r-xl text-right">Actions</th></tr></thead>
+                      <thead className="bg-gray-50 text-gray-600 font-medium">
+                        <tr>
+                          <th className="py-3 px-4 rounded-l-xl">නම / Username</th>
+                          <th className="py-3 px-4">Status / Validity</th>
+                          <th className="py-3 px-4">Last Login</th>
+                          <th className="py-3 px-4 rounded-r-xl text-right">Actions</th>
+                        </tr>
+                      </thead>
                       <tbody className="divide-y divide-gray-100">
                         {drivers.map(driver => (
                           <tr key={driver._id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="py-4 px-4 font-bold text-gray-800">{driver.username}</td>
-                            <td className="py-4 px-4"><div className="flex flex-col gap-1">{driver.is_active ? <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Active</span> : <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-bold w-max">Expired</span>}<span className="text-xs text-gray-500 font-medium">{driver.account_valid_until} තෙක්</span></div></td>
-                            <td className="py-4 px-4 text-xs text-gray-500 flex items-center gap-1 mt-2"><Clock size={14}/> {driver.last_login_date}</td>
-                            <td className="py-4 px-4 text-right"><div className="flex justify-end gap-2"><button onClick={() => openModal('validity', driver)} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition" title="Edit Validity"><Calendar size={16} /></button><button onClick={() => openModal('password', driver)} className="p-2 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition" title="Reset Password"><KeyRound size={16} /></button></div></td>
+                            <td className="py-4 px-4">
+                              <p className="font-bold text-gray-800">{driver.first_name || '-'} {driver.last_name || ''}</p>
+                              <p className="text-xs text-gray-500">@{driver.username}</p>
+                            </td>
+                            <td className="py-4 px-4">
+                              <div className="flex flex-col gap-1">
+                                {driver.is_active ? <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Active</span> : <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-bold w-max">Expired</span>}
+                                <span className="text-xs text-gray-500 font-medium">{driver.account_valid_until} තෙක්</span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 text-xs text-gray-500">
+                               <div className="flex items-center gap-1 mt-2"><Clock size={14}/> {driver.last_login_date}</div>
+                            </td>
+                            <td className="py-4 px-4 text-right">
+                              <div className="flex justify-end gap-1.5">
+                                <button onClick={() => openModal('name', driver)} className="p-2 text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 transition" title="Edit Name"><Edit size={16} /></button>
+                                <button onClick={() => openModal('validity', driver)} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition" title="Edit Validity"><Calendar size={16} /></button>
+                                <button onClick={() => openModal('password', driver)} className="p-2 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition" title="Reset Password"><KeyRound size={16} /></button>
+                                <button onClick={() => handleDeleteDriver(driver)} className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition" title="Delete Account"><Trash2 size={16} /></button>
+                              </div>
+                            </td>
                           </tr>
                         ))}
                         {drivers.length === 0 && <tr><td colSpan="4" className="py-6 text-center text-gray-500">රියදුරන් කිසිවෙකු නොමැත.</td></tr>}
@@ -295,7 +361,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* --- NOTIFICATIONS TAB (අලුත් කළ කොටස) --- */}
+        {/* --- NOTIFICATIONS TAB --- */}
         {activeTab === 'notifications' && (
           <div className="space-y-6 max-w-3xl">
             <div className="flex justify-between items-center mb-2">
@@ -373,16 +439,33 @@ export default function AdminDashboard() {
 
       </div>
 
-      {/* --- Action Modal (Edit Validity / Reset Password) --- */}
+      {/* --- Action Modal (Edit Name / Edit Validity / Reset Password) --- */}
       {modalConfig.isOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-              {modalConfig.type === 'validity' ? <Calendar className="text-blue-600"/> : <KeyRound className="text-orange-600"/>}
-              {modalConfig.type === 'validity' ? 'කාලය වෙනස් කිරීම' : 'මුරපදය රීසෙට් කිරීම'}
+              {modalConfig.type === 'validity' && <Calendar className="text-blue-600"/>}
+              {modalConfig.type === 'password' && <KeyRound className="text-orange-600"/>}
+              {modalConfig.type === 'name' && <Edit className="text-teal-600"/>}
+              
+              {modalConfig.type === 'validity' && 'කාලය වෙනස් කිරීම'}
+              {modalConfig.type === 'password' && 'මුරපදය රීසෙට් කිරීම'}
+              {modalConfig.type === 'name' && 'නම වෙනස් කිරීම'}
             </h3>
-            <p className="text-sm text-gray-600 mb-4"><strong>{modalConfig.driver?.username}</strong> ගේ {modalConfig.type === 'validity' ? 'වලංගු දිනය' : 'නව මුරපදය'} ඇතුලත් කරන්න.</p>
-            <input type={modalConfig.type === 'validity' ? 'date' : 'text'} value={modalInput} onChange={(e) => setModalInput(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none mb-6" />
+            
+            <p className="text-sm text-gray-600 mb-4">
+              <strong>{modalConfig.driver?.username}</strong> ගේ {modalConfig.type === 'validity' ? 'වලංගු දිනය' : modalConfig.type === 'password' ? 'නව මුරපදය' : 'නව නම'} ඇතුලත් කරන්න.
+            </p>
+
+            {modalConfig.type === 'name' ? (
+              <div className="flex gap-2 mb-6">
+                <input type="text" placeholder="මුල් නම" value={modalInput} onChange={(e) => setModalInput(e.target.value)} className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none" />
+                <input type="text" placeholder="අවසන් නම" value={modalInput2} onChange={(e) => setModalInput2(e.target.value)} className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none" />
+              </div>
+            ) : (
+              <input type={modalConfig.type === 'validity' ? 'date' : 'text'} value={modalInput} onChange={(e) => setModalInput(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none mb-6" />
+            )}
+
             <div className="flex gap-3">
               <button onClick={() => setModalConfig({ isOpen: false, type: '', driver: null })} className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">අවලංගු කරන්න</button>
               <button onClick={handleModalSubmit} disabled={modalLoading} className="flex-1 py-2.5 bg-[#14348c] text-white font-bold rounded-xl hover:bg-blue-800">{modalLoading ? 'Updating...' : 'සේව් කරන්න'}</button>
