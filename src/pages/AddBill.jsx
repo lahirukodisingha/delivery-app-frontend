@@ -249,6 +249,21 @@ export default function AddBill() {
       
       if (itemsToSave.length > 0) await db.billItems.bulkAdd(itemsToSave);
 
+      if (itemsToSave.length > 0) await db.billItems.bulkAdd(itemsToSave);
+
+      // --- අලුතින් එක්කළ කොටස: බිල සේව් වූ පසු කඩේ ඉබේම 'Visited' ලෙස සටහන් කිරීම ---
+      const todayStr = getLocalDate();
+      const visitedKey = `visited_${todayStr}`;
+      const currentVisited = JSON.parse(localStorage.getItem(visitedKey) || '[]');
+      const shopIdNum = parseInt(selectedShopId);
+      if (!currentVisited.includes(shopIdNum)) {
+        currentVisited.push(shopIdNum);
+        localStorage.setItem(visitedKey, JSON.stringify(currentVisited));
+      }
+      // -------------------------------------------------------------------------
+
+      const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || 'Unknown Shop';
+
       const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || 'Unknown Shop';
       setCurrentBillData({
         billId,

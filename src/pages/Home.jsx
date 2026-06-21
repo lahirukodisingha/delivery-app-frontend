@@ -406,7 +406,7 @@ export default function Home() {
                         <button onClick={(e) => { e.stopPropagation(); handleToggleVisit(shop.id); }} className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-2 ${isVisited ? 'bg-green-500 border-green-500 text-white dark:bg-green-600 dark:border-green-600 shadow-inner' : `bg-transparent ${theme.colors.inputBorder} text-[#14348c] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30`}`}>
                           {isVisited ? <Check size={20} strokeWidth={3} /> : shop.displayNum}
                         </button>
-                        <div onClick={() => { if (!isVisited) { handleToggleVisit(shop.id); } navigate('/add-bill', { state: { preSelectedShopId: shop.id } }); }} className={`transition-all duration-300 flex-1 cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/10 p-2 -my-2 rounded-lg ${isVisited ? 'opacity-40 grayscale' : 'opacity-100'}`}>
+                        <div onClick={() => { navigate('/add-bill', { state: { preSelectedShopId: shop.id } }); }} className={`transition-all duration-300 flex-1 cursor-pointer hover:bg-blue-50/50 dark:hover:bg-blue-900/10 p-2 -my-2 rounded-lg ${isVisited ? 'opacity-40 grayscale' : 'opacity-100'}`}>
                           <p className={`font-bold ${theme.colors.inputText} text-[16px] ${isVisited ? 'line-through' : ''}`}>{shop.shopName}</p>
                           <p className={`text-[13px] font-medium ${theme.colors.mutedText} mt-0.5`}>{shop.address || shop.phone}</p>
                         </div>
