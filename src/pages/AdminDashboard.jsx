@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock, Megaphone, Save, Plus, X, Trash2, Edit } from 'lucide-react';
+import { Users, Bell, Settings, LogOut, LayoutDashboard, UserPlus, Calendar, KeyRound, CheckCircle2, Clock, Megaphone, Save, Plus, X, Trash2, Edit, Menu } from 'lucide-react';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('users'); 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // Mobile Menu State
 
   // --- Add User States ---
-  const [newFirstName, setNewFirstName] = useState(''); // අලුත්
-  const [newLastName, setNewLastName] = useState('');   // අලුත්
+  const [newFirstName, setNewFirstName] = useState(''); 
+  const [newLastName, setNewLastName] = useState('');   
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [isAdding, setIsAdding] = useState(false);
@@ -35,7 +36,7 @@ export default function AdminDashboard() {
   // --- Modal States ---
   const [modalConfig, setModalConfig] = useState({ isOpen: false, type: '', driver: null });
   const [modalInput, setModalInput] = useState('');
-  const [modalInput2, setModalInput2] = useState(''); // නමේ අවසන් නම සඳහා
+  const [modalInput2, setModalInput2] = useState(''); 
 
   const [modalLoading, setModalLoading] = useState(false);
 
@@ -96,8 +97,8 @@ export default function AdminDashboard() {
         body: JSON.stringify({ 
           username: newUsername, 
           password: newPassword,
-          first_name: newFirstName, // අලුත්
-          last_name: newLastName    // අලුත්
+          first_name: newFirstName, 
+          last_name: newLastName    
         }),
       });
       const data = await response.json();
@@ -160,7 +161,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // --- අලුතින් එක්කළ Delete Function එක ---
   const handleDeleteDriver = async (driver) => {
     if(window.confirm(`ඔබට ${driver.username} ගේ ගිණුම සම්පූර්ණයෙන්ම මකා දැමීමට අවශ්‍ය බව විශ්වාසද? මෙම ක්‍රියාව ආපසු හැරවිය නොහැක.`)) {
       try {
@@ -246,7 +246,7 @@ export default function AdminDashboard() {
           onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addItemToArray(input, setArray, array, setInput))}
         />
         <button type="button" onClick={() => addItemToArray(input, setArray, array, setInput)} className="px-4 py-2 bg-blue-100 text-blue-700 font-bold rounded-lg hover:bg-blue-200 transition flex items-center gap-1">
-          <Plus size={16}/> Add
+          <Plus size={16}/> <span className="hidden sm:inline">Add</span>
         </button>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -262,16 +262,30 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-100 overflow-hidden">
       
-      {/* Sidebar */}
-      <div className="w-64 bg-[#14348c] text-white p-6 flex flex-col shadow-xl z-10">
-        <h1 className="text-2xl font-bold mb-8 tracking-wide">Admin Panel</h1>
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+        />
+      )}
+
+      {/* Sidebar - Responsive */}
+      <div className={`fixed inset-y-0 left-0 transform ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 lg:static lg:block w-64 bg-[#14348c] text-white p-6 flex flex-col shadow-xl z-50 transition-transform duration-300 ease-in-out`}>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-2xl font-bold tracking-wide">Admin Panel</h1>
+          <button className="lg:hidden p-1 bg-white/10 rounded-lg hover:bg-white/20 transition" onClick={() => setIsMobileMenuOpen(false)}>
+            <X size={24} />
+          </button>
+        </div>
+        
         <nav className="flex-1 space-y-3">
           {menuItems.map(item => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => { setActiveTab(item.id); setIsMobileMenuOpen(false); }}
               className={`w-full flex items-center gap-3 p-3 rounded-xl font-medium transition-all duration-200 ${activeTab === item.id ? 'bg-white/20 shadow-md' : 'hover:bg-white/10'}`}
             >
               <item.icon size={20} /> {item.name}
@@ -283,166 +297,183 @@ export default function AdminDashboard() {
         </button>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 p-8 overflow-y-auto">
+      {/* Main Content Wrapper */}
+      <div className="flex-1 flex flex-col h-screen overflow-hidden">
         
-        {activeTab === 'dashboard' && (
-          <div><h1 className="text-3xl font-bold text-gray-800 mb-6">Dashboard Summary</h1><p className="text-gray-600">මෙතනට අපි ඉදිරියේදී මුළු සාරාංශයම ගේමු.</p></div>
-        )}
-
-        {/* --- USER MANAGEMENT TAB --- */}
-        {activeTab === 'users' && (
-          <div className="space-y-8">
-            <h1 className="text-3xl font-bold text-gray-800">User Management</h1>
-            <div className="flex flex-col lg:flex-row gap-8 items-start">
-              {/* Add User Card */}
-              <div className="w-full lg:w-1/3 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h2 className="text-lg font-bold text-[#14348c] mb-6 flex items-center gap-2"><UserPlus size={20} /> නව රියදුරු ගිණුමක් සෑදීම</h2>
-                {addMessage && <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-medium">{addMessage}</div>}
-                {addError && <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-medium">{addError}</div>}
-                <form onSubmit={handleAddUser} className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="w-1/2"><label className="block text-gray-700 font-bold mb-1.5 text-sm">මුල් නම</label><input type="text" value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: කමල්" /></div>
-                    <div className="w-1/2"><label className="block text-gray-700 font-bold mb-1.5 text-sm">අවසන් නම</label><input type="text" value={newLastName} onChange={(e) => setNewLastName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: පෙරේරා" /></div>
-                  </div>
-                  <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Username</label><input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: kamal123" required /></div>
-                  <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Password</label><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="අවම අකුරු 6ක්..." required /></div>
-                  <button type="submit" disabled={isAdding} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-md text-sm ${isAdding ? 'bg-blue-400' : 'bg-[#14348c] hover:bg-blue-800 hover:shadow-lg'}`}>{isAdding ? 'සාදමින් පවතී...' : 'නව ගිණුම සාදන්න'}</button>
-                </form>
-              </div>
-
-              {/* Existing Users List */}
-              <div className="w-full lg:w-2/3 bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                <h2 className="text-lg font-bold text-[#14348c] mb-6 flex items-center gap-2"><Users size={20} /> දැනට සිටින රියදුරන්</h2>
-                {isLoadingDrivers ? <p className="text-gray-500 text-sm">ලෝඩ් වෙමින් පවතී...</p> : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-50 text-gray-600 font-medium">
-                        <tr>
-                          <th className="py-3 px-4 rounded-l-xl">නම / Username</th>
-                          <th className="py-3 px-4">Status / Validity</th>
-                          <th className="py-3 px-4">Last Login</th>
-                          <th className="py-3 px-4 rounded-r-xl text-right">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {drivers.map(driver => (
-                          <tr key={driver._id} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="py-4 px-4">
-                              <p className="font-bold text-gray-800">{driver.first_name || '-'} {driver.last_name || ''}</p>
-                              <p className="text-xs text-gray-500">@{driver.username}</p>
-                            </td>
-                            <td className="py-4 px-4">
-                              <div className="flex flex-col gap-1">
-                                {driver.is_active ? <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Active</span> : <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-bold w-max">Expired</span>}
-                                <span className="text-xs text-gray-500 font-medium">{driver.account_valid_until} තෙක්</span>
-                              </div>
-                            </td>
-                            <td className="py-4 px-4 text-xs text-gray-500">
-                               <div className="flex items-center gap-1 mt-2"><Clock size={14}/> {driver.last_login_date}</div>
-                            </td>
-                            <td className="py-4 px-4 text-right">
-                              <div className="flex justify-end gap-1.5">
-                                <button onClick={() => openModal('name', driver)} className="p-2 text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 transition" title="Edit Name"><Edit size={16} /></button>
-                                <button onClick={() => openModal('validity', driver)} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition" title="Edit Validity"><Calendar size={16} /></button>
-                                <button onClick={() => openModal('password', driver)} className="p-2 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition" title="Reset Password"><KeyRound size={16} /></button>
-                                <button onClick={() => handleDeleteDriver(driver)} className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition" title="Delete Account"><Trash2 size={16} /></button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                        {drivers.length === 0 && <tr><td colSpan="4" className="py-6 text-center text-gray-500">රියදුරන් කිසිවෙකු නොමැත.</td></tr>}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-            </div>
+        {/* Mobile Header (Only visible on small screens) */}
+        <div className="lg:hidden bg-white shadow-sm border-b border-gray-200 px-4 py-3 flex items-center justify-between z-10">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setIsMobileMenuOpen(true)} className="p-1 text-[#14348c] hover:bg-gray-100 rounded-lg transition">
+              <Menu size={28} />
+            </button>
+            <h1 className="font-bold text-gray-800 text-lg">
+              {menuItems.find(i => i.id === activeTab)?.name || 'Admin Panel'}
+            </h1>
           </div>
-        )}
+        </div>
 
-        {/* --- NOTIFICATIONS TAB --- */}
-        {activeTab === 'notifications' && (
-          <div className="space-y-6 max-w-3xl">
-            <div className="flex justify-between items-center mb-2">
-              <h1 className="text-3xl font-bold text-gray-800">App Notifications</h1>
-              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center gap-2">
-                <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
-              </button>
+        {/* Scrollable Content Area */}
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+          
+          {activeTab === 'dashboard' && (
+            <div><h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 hidden lg:block">Dashboard Summary</h1><p className="text-gray-600">මෙතනට අපි ඉදිරියේදී මුළු සාරාංශයම ගේමු.</p></div>
+          )}
+
+          {/* --- USER MANAGEMENT TAB --- */}
+          {activeTab === 'users' && (
+            <div className="space-y-6 md:space-y-8">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800 hidden lg:block">User Management</h1>
+              <div className="flex flex-col lg:flex-row gap-6 md:gap-8 items-start">
+                
+                {/* Add User Card */}
+                <div className="w-full lg:w-1/3 bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+                  <h2 className="text-lg font-bold text-[#14348c] mb-4 md:mb-6 flex items-center gap-2"><UserPlus size={20} /> නව රියදුරු ගිණුමක් සෑදීම</h2>
+                  {addMessage && <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 text-green-700 text-sm font-medium">{addMessage}</div>}
+                  {addError && <div className="mb-4 p-3 bg-red-50 border-l-4 border-red-500 text-red-700 text-sm font-medium">{addError}</div>}
+                  <form onSubmit={handleAddUser} className="space-y-4">
+                    <div className="flex flex-col sm:flex-row gap-3 sm:gap-2">
+                      <div className="w-full sm:w-1/2"><label className="block text-gray-700 font-bold mb-1.5 text-sm">මුල් නම</label><input type="text" value={newFirstName} onChange={(e) => setNewFirstName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: කමල්" /></div>
+                      <div className="w-full sm:w-1/2"><label className="block text-gray-700 font-bold mb-1.5 text-sm">අවසන් නම</label><input type="text" value={newLastName} onChange={(e) => setNewLastName(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: පෙරේරා" /></div>
+                    </div>
+                    <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Username</label><input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="උදා: kamal123" required /></div>
+                    <div><label className="block text-gray-700 font-bold mb-1.5 text-sm">Password</label><input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none bg-gray-50 text-sm" placeholder="අවම අකුරු 6ක්..." required /></div>
+                    <button type="submit" disabled={isAdding} className={`w-full py-3 rounded-xl text-white font-bold transition-all shadow-md text-sm ${isAdding ? 'bg-blue-400' : 'bg-[#14348c] hover:bg-blue-800 hover:shadow-lg'}`}>{isAdding ? 'සාදමින් පවතී...' : 'නව ගිණුම සාදන්න'}</button>
+                  </form>
+                </div>
+
+                {/* Existing Users List */}
+                <div className="w-full lg:w-2/3 bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+                  <h2 className="text-lg font-bold text-[#14348c] mb-4 md:mb-6 flex items-center gap-2"><Users size={20} /> දැනට සිටින රියදුරන්</h2>
+                  {isLoadingDrivers ? <p className="text-gray-500 text-sm">ලෝඩ් වෙමින් පවතී...</p> : (
+                    <div className="overflow-x-auto pb-4">
+                      <table className="w-full text-left text-sm min-w-[600px]">
+                        <thead className="bg-gray-50 text-gray-600 font-medium">
+                          <tr>
+                            <th className="py-3 px-4 rounded-l-xl">නම / Username</th>
+                            <th className="py-3 px-4">Status / Validity</th>
+                            <th className="py-3 px-4">Last Login</th>
+                            <th className="py-3 px-4 rounded-r-xl text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {drivers.map(driver => (
+                            <tr key={driver._id} className="hover:bg-gray-50/50 transition-colors">
+                              <td className="py-4 px-4">
+                                <p className="font-bold text-gray-800">{driver.first_name || '-'} {driver.last_name || ''}</p>
+                                <p className="text-xs text-gray-500">@{driver.username}</p>
+                              </td>
+                              <td className="py-4 px-4">
+                                <div className="flex flex-col gap-1">
+                                  {driver.is_active ? <span className="text-green-600 bg-green-50 px-2 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1 w-max"><CheckCircle2 size={12}/> Active</span> : <span className="text-red-600 bg-red-50 px-2 py-0.5 rounded-full text-xs font-bold w-max">Expired</span>}
+                                  <span className="text-xs text-gray-500 font-medium">{driver.account_valid_until} තෙක්</span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-4 text-xs text-gray-500">
+                                 <div className="flex items-center gap-1 mt-2"><Clock size={14}/> {driver.last_login_date}</div>
+                              </td>
+                              <td className="py-4 px-4 text-right">
+                                <div className="flex justify-end gap-1 sm:gap-1.5">
+                                  <button onClick={() => openModal('name', driver)} className="p-2 text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 transition" title="Edit Name"><Edit size={16} /></button>
+                                  <button onClick={() => openModal('validity', driver)} className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition" title="Edit Validity"><Calendar size={16} /></button>
+                                  <button onClick={() => openModal('password', driver)} className="p-2 text-orange-600 bg-orange-50 rounded-lg hover:bg-orange-100 transition" title="Reset Password"><KeyRound size={16} /></button>
+                                  <button onClick={() => handleDeleteDriver(driver)} className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition" title="Delete Account"><Trash2 size={16} /></button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {drivers.length === 0 && <tr><td colSpan="4" className="py-6 text-center text-gray-500">රියදුරන් කිසිවෙකු නොමැත.</td></tr>}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+          )}
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-              <h2 className="text-lg font-bold text-[#14348c] mb-4 flex items-center gap-2">
-                <Megaphone size={20} /> නව පණිවිඩයක් එක් කරන්න
-              </h2>
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ මාතෘකාව (Title)</label>
-                  <input 
-                    type="text" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none text-sm"
-                    placeholder="උදා: පද්ධති යාවත්කාලීන කිරීමක්!"
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ විස්තරය (Description)</label>
-                  <textarea 
-                    value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none min-h-[100px] text-sm"
-                    placeholder="විස්තරය මෙහි ටයිප් කරන්න..."
-                  ></textarea>
-                </div>
-                <button onClick={handleAddNotification} className="px-6 py-3 bg-blue-100 text-blue-700 font-bold rounded-xl hover:bg-blue-200 transition flex items-center gap-2">
-                  <Plus size={18}/> ලැයිස්තුවට එක් කරන්න
+          {/* --- NOTIFICATIONS TAB --- */}
+          {activeTab === 'notifications' && (
+            <div className="space-y-6 max-w-3xl">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 hidden lg:block">App Notifications</h1>
+                <button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center justify-center gap-2">
+                  <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
                 </button>
               </div>
 
-              <hr className="my-6 border-gray-200" />
+              <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+                <h2 className="text-lg font-bold text-[#14348c] mb-4 flex items-center gap-2">
+                  <Megaphone size={20} /> නව පණිවිඩයක් එක් කරන්න
+                </h2>
+                <div className="space-y-4 mb-6">
+                  <div>
+                    <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ මාතෘකාව (Title)</label>
+                    <input 
+                      type="text" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none text-sm"
+                      placeholder="උදා: පද්ධති යාවත්කාලීන කිරීමක්!"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ විස්තරය (Description)</label>
+                    <textarea 
+                      value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none min-h-[100px] text-sm"
+                      placeholder="විස්තරය මෙහි ටයිප් කරන්න..."
+                    ></textarea>
+                  </div>
+                  <button onClick={handleAddNotification} className="w-full sm:w-auto px-6 py-3 bg-blue-100 text-blue-700 font-bold rounded-xl hover:bg-blue-200 transition flex items-center justify-center gap-2">
+                    <Plus size={18}/> ලැයිස්තුවට එක් කරන්න
+                  </button>
+                </div>
 
-              <h2 className="text-lg font-bold text-gray-800 mb-4">දැනට ඇති පණිවිඩ ලැයිස්තුව</h2>
-              <div className="space-y-3">
-                 {notifications.map(n => (
-                   <div key={n.id} className="p-4 border border-gray-200 rounded-xl flex justify-between items-start bg-gray-50">
-                     <div>
-                       <h3 className="font-bold text-[#14348c]">{n.title}</h3>
-                       <p className="text-sm text-gray-600 mt-1">{n.message}</p>
-                       <span className="text-xs text-gray-400 mt-2 block font-medium">{n.date}</span>
+                <hr className="my-6 border-gray-200" />
+
+                <h2 className="text-lg font-bold text-gray-800 mb-4">දැනට ඇති පණිවිඩ ලැයිස්තුව</h2>
+                <div className="space-y-3">
+                   {notifications.map(n => (
+                     <div key={n.id} className="p-4 border border-gray-200 rounded-xl flex justify-between items-start bg-gray-50 gap-4">
+                       <div className="flex-1">
+                         <h3 className="font-bold text-[#14348c] break-words">{n.title}</h3>
+                         <p className="text-sm text-gray-600 mt-1 break-words">{n.message}</p>
+                         <span className="text-xs text-gray-400 mt-2 block font-medium">{n.date}</span>
+                       </div>
+                       <button onClick={() => handleRemoveNotification(n.id)} className="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded-lg transition-colors shrink-0"><Trash2 size={18}/></button>
                      </div>
-                     <button onClick={() => handleRemoveNotification(n.id)} className="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={18}/></button>
-                   </div>
-                 ))}
-                 {notifications.length === 0 && <p className="text-sm text-gray-500 italic">පණිවිඩ කිසිවක් නැත.</p>}
+                   ))}
+                   {notifications.length === 0 && <p className="text-sm text-gray-500 italic">පණිවිඩ කිසිවක් නැත.</p>}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* --- APP SETTINGS TAB --- */}
-        {activeTab === 'settings' && (
-          <div className="space-y-8 max-w-4xl">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-gray-800">App Settings (Drop-downs)</h1>
-              <button onClick={handleSaveSettings} disabled={isSavingSettings} className="px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center gap-2">
-                <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
-              </button>
-            </div>
+          {/* --- APP SETTINGS TAB --- */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6 md:space-y-8 max-w-4xl">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 hidden lg:block">App Settings</h1>
+                <button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center justify-center gap-2">
+                  <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
+                </button>
+              </div>
 
-            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <ArrayManager title="භාණ්ඩ මිනුම් ඒකක (Units)" placeholder="උදා: kg, ml, පීරිසි..." array={units} setArray={setUnits} input={unitInput} setInput={setUnitInput} />
-                <ArrayManager title="වියදම් වර්ග (Expense Categories)" placeholder="උදා: ඉන්ධන..." array={expenseCategories} setArray={setExpenseCategories} input={expenseInput} setInput={setExpenseInput} />
-                <ArrayManager title="ආදායම් වර්ග (Income Categories)" placeholder="උදා: ටිප් එකක්..." array={incomeCategories} setArray={setIncomeCategories} input={incomeInput} setInput={setIncomeInput} />
+              <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200 space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <ArrayManager title="භාණ්ඩ මිනුම් ඒකක (Units)" placeholder="උදා: kg, ml, පීරිසි..." array={units} setArray={setUnits} input={unitInput} setInput={setUnitInput} />
+                  <ArrayManager title="වියදම් වර්ග (Expense Categories)" placeholder="උදා: ඉන්ධන..." array={expenseCategories} setArray={setExpenseCategories} input={expenseInput} setInput={setExpenseInput} />
+                  <ArrayManager title="ආදායම් වර්ග (Income Categories)" placeholder="උදා: ටිප් එකක්..." array={incomeCategories} setArray={setIncomeCategories} input={incomeInput} setInput={setIncomeInput} />
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
+        </div>
       </div>
 
       {/* --- Action Modal (Edit Name / Edit Validity / Reset Password) --- */}
       {modalConfig.isOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl mx-4">
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
               {modalConfig.type === 'validity' && <Calendar className="text-blue-600"/>}
               {modalConfig.type === 'password' && <KeyRound className="text-orange-600"/>}
@@ -458,17 +489,17 @@ export default function AdminDashboard() {
             </p>
 
             {modalConfig.type === 'name' ? (
-              <div className="flex gap-2 mb-6">
-                <input type="text" placeholder="මුල් නම" value={modalInput} onChange={(e) => setModalInput(e.target.value)} className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none" />
-                <input type="text" placeholder="අවසන් නම" value={modalInput2} onChange={(e) => setModalInput2(e.target.value)} className="w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none" />
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-6">
+                <input type="text" placeholder="මුල් නම" value={modalInput} onChange={(e) => setModalInput(e.target.value)} className="w-full sm:w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none" />
+                <input type="text" placeholder="අවසන් නම" value={modalInput2} onChange={(e) => setModalInput2(e.target.value)} className="w-full sm:w-1/2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none" />
               </div>
             ) : (
               <input type={modalConfig.type === 'validity' ? 'date' : 'text'} value={modalInput} onChange={(e) => setModalInput(e.target.value)} className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none mb-6" />
             )}
 
             <div className="flex gap-3">
-              <button onClick={() => setModalConfig({ isOpen: false, type: '', driver: null })} className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200">අවලංගු කරන්න</button>
-              <button onClick={handleModalSubmit} disabled={modalLoading} className="flex-1 py-2.5 bg-[#14348c] text-white font-bold rounded-xl hover:bg-blue-800">{modalLoading ? 'Updating...' : 'සේව් කරන්න'}</button>
+              <button onClick={() => setModalConfig({ isOpen: false, type: '', driver: null })} className="flex-1 py-2.5 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition">අවලංගු කරන්න</button>
+              <button onClick={handleModalSubmit} disabled={modalLoading} className="flex-1 py-2.5 bg-[#14348c] text-white font-bold rounded-xl hover:bg-blue-800 transition">{modalLoading ? 'Updating...' : 'සේව් කරන්න'}</button>
             </div>
           </div>
         </div>
