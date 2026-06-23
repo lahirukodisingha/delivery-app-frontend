@@ -411,7 +411,16 @@ export default function AdminDashboard() {
 
           {/* --- NOTIFICATIONS TAB --- */} 
           {activeTab === 'notifications' && (
-            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div className="space-y-6 max-w-3xl">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 hidden lg:block">App Notifications</h1>
+                {/* Save All Changes බොත්තම නැවතත් එක් කරන ලදී */}
+                <button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center justify-center gap-2">
+                  <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
+                </button>
+              </div>
+
+              <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
                 <h2 className="text-lg font-bold text-[#14348c] mb-4 flex items-center gap-2">
                   <Megaphone size={20} /> නව පණිවිඩයක් එක් කරන්න
                 </h2> 
@@ -461,7 +470,6 @@ export default function AdminDashboard() {
                    {notifications.map(n => (
                      <div key={n.id} className="p-4 border border-gray-200 rounded-xl flex justify-between items-start bg-gray-50 gap-4">
                        <div className="flex-1">
-                         {/* කලින් හදපු පණිවිඩ String එකක් ලෙසත්, අලුත් ඒවා Object ලෙසත් ඇති නිසා මෙසේ Check කරයි */}
                          <h3 className="font-bold text-[#14348c] break-words">
                             {typeof n.title === 'object' ? n.title.si : n.title}
                          </h3>
@@ -476,6 +484,7 @@ export default function AdminDashboard() {
                    {notifications.length === 0 && <p className="text-sm text-gray-500 italic">පණිවිඩ කිසිවක් නැත.</p>}
                 </div>
               </div>
+            </div>
           )}
 
           {/* --- APP SETTINGS TAB --- */}
