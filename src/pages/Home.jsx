@@ -184,6 +184,13 @@ export default function Home() {
     }
   };
 
+  // භාෂාවට අනුව නිවැරදි වචනය තෝරන Function එක
+  const getLocalizedText = (textObj) => {
+    if (!textObj) return '';
+    if (typeof textObj === 'string') return textObj; // පරණ දත්ත නම් කෙලින්ම පෙන්වයි
+    return textObj[language] || textObj['si'] || ''; // අලුත් දත්ත නම් භාෂාව අනුව පෙන්වයි
+  };
+
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const t = translations[language] || translations['si'];
   const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
@@ -306,18 +313,19 @@ export default function Home() {
                     <div className="flex items-center gap-3">
                       <div className={`p-1.5 rounded-full ${notif.isRead ? 'bg-gray-200 dark:bg-gray-800 text-gray-500' : 'bg-blue-200 dark:bg-blue-800 text-blue-700 dark:text-blue-300'}`}><Info size={18} /></div>
                       <div>
-                        <h3 className={`text-[14px] pr-2 ${notif.isRead ? 'font-medium text-gray-600 dark:text-gray-400' : 'font-extrabold text-[#14348c] dark:text-blue-300'}`}>{notif.title}</h3>
+                        <h3 className={`text-[14px] pr-2 ${notif.isRead ? 'font-medium text-gray-600 dark:text-gray-400' : 'font-extrabold text-[#14348c] dark:text-blue-300'}`}>{getLocalizedText(notif.title)}</h3>
                         <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 block mt-0.5">{notif.date}</span>
                       </div>
                     </div>
                     <button className={`p-1 rounded-full text-gray-400 transition-transform duration-300 shrink-0 ${isExpanded ? 'rotate-180' : ''}`}><ChevronDown size={18} /></button>
                   </div>
                   <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? 'max-h-40 opacity-100 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700' : 'max-h-0 opacity-0 mt-0 pt-0 border-t-0'}`}>
-                    <p className={`text-[13px] leading-relaxed ${notif.isRead ? theme.colors.mutedText : theme.colors.inputText}`}>{notif.message}</p>
+                    <p className={`text-[13px] leading-relaxed ${notif.isRead ? theme.colors.mutedText : theme.colors.inputText}`}>{getLocalizedText(notif.message)}</p>
                   </div>
                 </div>
               );
             })
+
           )}
         </div>
       </div>

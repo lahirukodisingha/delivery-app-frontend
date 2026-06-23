@@ -21,8 +21,12 @@ export default function AdminDashboard() {
 
   // --- App Settings & Notifications States ---
   const [notifications, setNotifications] = useState([]);
-  const [notifTitle, setNotifTitle] = useState('');
-  const [notifMessage, setNotifMessage] = useState('');
+  const [notifInput, setNotifInput] = useState({
+    si: { title: '', message: '' },
+    en: { title: '', message: '' },
+    ta: { title: '', message: '' }
+  });
+  const [activeLangTab, setActiveLangTab] = useState('si');
 
   const [units, setUnits] = useState([]);
   const [expenseCategories, setExpenseCategories] = useState([]);
@@ -203,19 +207,33 @@ export default function AdminDashboard() {
   };
 
   const handleAddNotification = () => {
-    if (!notifTitle.trim() || !notifMessage.trim()) {
-      alert("Title සහ Description දෙකම ඇතුලත් කරන්න!");
+    // සිංහල මාතෘකාව හෝ විස්තරය අනිවාර්ය කරමු
+    if (!notifInput.si.title.trim() || !notifInput.si.message.trim()) {
+      alert("කරුණාකර අවම වශයෙන් සිංහල මාතෘකාව සහ විස්තරය හෝ ඇතුලත් කරන්න!");
       return;
     }
     const newNotif = {
       id: Date.now().toString(),
-      title: notifTitle.trim(),
-      message: notifMessage.trim(),
+      title: {
+        si: notifInput.si.title.trim(),
+        en: notifInput.en.title.trim() || notifInput.si.title.trim(), // ඉංග්‍රීසි නැත්නම් සිංහල එකම යවයි
+        ta: notifInput.ta.title.trim() || notifInput.si.title.trim()
+      },
+      message: {
+        si: notifInput.si.message.trim(),
+        en: notifInput.en.message.trim() || notifInput.si.message.trim(),
+        ta: notifInput.ta.message.trim() || notifInput.si.message.trim()
+      },
       date: new Date().toISOString().split('T')[0]
     };
+    
     setNotifications([newNotif, ...notifications]); 
-    setNotifTitle('');
-    setNotifMessage('');
+    setNotifInput({
+      si: { title: '', message: '' },
+      en: { title: '', message: '' },
+      ta: { title: '', message: '' }
+    });
+    setActiveLangTab('si');
   };
 
   const handleRemoveNotification = (id) => {
@@ -391,33 +409,42 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* --- NOTIFICATIONS TAB --- */}
+          {/* --- NOTIFICATIONS TAB --- */} 
           {activeTab === 'notifications' && (
-            <div className="space-y-6 max-w-3xl">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-800 hidden lg:block">App Notifications</h1>
-                <button onClick={handleSaveSettings} disabled={isSavingSettings} className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-md flex items-center justify-center gap-2">
-                  <Save size={18}/> {isSavingSettings ? 'Saving...' : 'Save All Changes'}
-                </button>
-              </div>
-
-              <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+            <div className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
                 <h2 className="text-lg font-bold text-[#14348c] mb-4 flex items-center gap-2">
                   <Megaphone size={20} /> නව පණිවිඩයක් එක් කරන්න
-                </h2>
+                </h2> 
+
+                {/* භාෂාව තෝරන Tabs */}
+                <div className="flex gap-2 mb-4 bg-gray-100 p-1 rounded-xl w-max">
+                  <button onClick={() => setActiveLangTab('si')} className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${activeLangTab === 'si' ? 'bg-white shadow text-[#14348c]' : 'text-gray-500 hover:bg-white/50'}`}>සිංහල</button>
+                  <button onClick={() => setActiveLangTab('en')} className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${activeLangTab === 'en' ? 'bg-white shadow text-[#14348c]' : 'text-gray-500 hover:bg-white/50'}`}>English</button>
+                  <button onClick={() => setActiveLangTab('ta')} className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${activeLangTab === 'ta' ? 'bg-white shadow text-[#14348c]' : 'text-gray-500 hover:bg-white/50'}`}>தமிழ்</button>
+                </div>
+
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ මාතෘකාව (Title)</label>
+                    <label className="block text-gray-700 font-bold mb-1.5 text-sm flex justify-between">
+                      <span>පණිවිඩයේ මාතෘකාව (Title)</span>
+                      <span className="text-blue-500 bg-blue-50 px-2 py-0.5 rounded text-xs">{activeLangTab.toUpperCase()}</span>
+                    </label>
                     <input 
-                      type="text" value={notifTitle} onChange={(e) => setNotifTitle(e.target.value)}
+                      type="text" 
+                      value={notifInput[activeLangTab].title} 
+                      onChange={(e) => setNotifInput({...notifInput, [activeLangTab]: {...notifInput[activeLangTab], title: e.target.value}})}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none text-sm"
-                      placeholder="උදා: පද්ධති යාවත්කාලීන කිරීමක්!"
+                      placeholder="මාතෘකාව මෙහි ටයිප් කරන්න..."
                     />
                   </div>
                   <div>
-                    <label className="block text-gray-700 font-bold mb-1.5 text-sm">පණිවිඩයේ විස්තරය (Description)</label>
+                    <label className="block text-gray-700 font-bold mb-1.5 text-sm flex justify-between">
+                      <span>පණිවිඩයේ විස්තරය (Description)</span>
+                      <span className="text-blue-500 bg-blue-50 px-2 py-0.5 rounded text-xs">{activeLangTab.toUpperCase()}</span>
+                    </label>
                     <textarea 
-                      value={notifMessage} onChange={(e) => setNotifMessage(e.target.value)}
+                      value={notifInput[activeLangTab].message} 
+                      onChange={(e) => setNotifInput({...notifInput, [activeLangTab]: {...notifInput[activeLangTab], message: e.target.value}})}
                       className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#14348c] focus:outline-none min-h-[100px] text-sm"
                       placeholder="විස්තරය මෙහි ටයිප් කරන්න..."
                     ></textarea>
@@ -434,8 +461,13 @@ export default function AdminDashboard() {
                    {notifications.map(n => (
                      <div key={n.id} className="p-4 border border-gray-200 rounded-xl flex justify-between items-start bg-gray-50 gap-4">
                        <div className="flex-1">
-                         <h3 className="font-bold text-[#14348c] break-words">{n.title}</h3>
-                         <p className="text-sm text-gray-600 mt-1 break-words">{n.message}</p>
+                         {/* කලින් හදපු පණිවිඩ String එකක් ලෙසත්, අලුත් ඒවා Object ලෙසත් ඇති නිසා මෙසේ Check කරයි */}
+                         <h3 className="font-bold text-[#14348c] break-words">
+                            {typeof n.title === 'object' ? n.title.si : n.title}
+                         </h3>
+                         <p className="text-sm text-gray-600 mt-1 break-words">
+                            {typeof n.message === 'object' ? n.message.si : n.message}
+                         </p>
                          <span className="text-xs text-gray-400 mt-2 block font-medium">{n.date}</span>
                        </div>
                        <button onClick={() => handleRemoveNotification(n.id)} className="text-red-500 hover:text-red-700 bg-red-100 p-2 rounded-lg transition-colors shrink-0"><Trash2 size={18}/></button>
@@ -444,7 +476,6 @@ export default function AdminDashboard() {
                    {notifications.length === 0 && <p className="text-sm text-gray-500 italic">පණිවිඩ කිසිවක් නැත.</p>}
                 </div>
               </div>
-            </div>
           )}
 
           {/* --- APP SETTINGS TAB --- */}
