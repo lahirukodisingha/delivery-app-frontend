@@ -60,25 +60,26 @@ export default function Home() {
     const user = JSON.parse(userStr);
     setDriverName(user.username); 
 
+    // --- අලුතින් එක් කළ කොටස: යූසර්ගේ ගිණුම සෑදූ දිනය ලබාගැනීම ---
+    // (පරණ ගිණුමක created_at නොමැති නම් 0 ලෙස ගනී, එවිට ඔවුනට සියලු පරණ නිවේදන පෙන්වයි)
+    const userCreatedAt = user.created_at ? new Date(user.created_at).getTime() : 0;
+
     const loadAllData = async () => {
       try {
-        // =========================================================================
-        // පියවර 1: තත්පරයක්වත් පරක්කු නොවී LocalStorage වලින් දත්ත අරන් පෙන්වීම
-        // =========================================================================
         let currentReadIds = JSON.parse(localStorage.getItem(`readNotifs_${user.username}`) || '[]');
         setReadNotifIds(currentReadIds);
 
         const savedSettings = JSON.parse(localStorage.getItem('appSettings') || '{}');
         setGlobalNotice(savedSettings.global_notice || '');
         if (savedSettings.notifications) {
-           setNotifications(savedSettings.notifications.map(n => ({
+           // --- අලුත් වෙනස: යූසර් සෑදූ දිනයට පසුව ආපූ නිවේදන පමණක් Filter කිරීම ---
+           const relevantNotifs = savedSettings.notifications.filter(n => parseInt(n.id) >= userCreatedAt);
+           
+           setNotifications(relevantNotifs.map(n => ({
               ...n, isRead: currentReadIds.includes(n.id)
            })));
         }
 
-        // =========================================================================
-        // පියවර 2: අනිත් Dashboard දත්ත පටවා ගැනීම (ඉතා වේගවත්)
-        // =========================================================================
         const profileData = await db.profile.get(1);
         if (profileData && profileData.profilePic) setProfilePic(profileData.profilePic);
 
@@ -120,13 +121,8 @@ export default function Home() {
           }
         }
 
-        // දත්ත සියල්ලම Load වී අවසන්! දැන් Loading Screen එක අයින් කරන්න.
         setIsChecking(false);
-
-        // =========================================================================
-        // පියවර 3: අපිට නොපෙනී Background එකෙන් අලුත් නොටිෆිකේෂන් සෙවීම
-        // =========================================================================
-        fetchBackgroundUpdates(user.username, currentReadIds);
+        fetchBackgroundUpdates(user.username, currentReadIds, userCreatedAt);
 
       } catch (err) {
         console.error("Error loading home data:", err);
@@ -134,8 +130,8 @@ export default function Home() {
       } 
     };
 
-    // Background Fetch Function එක
-    const fetchBackgroundUpdates = async (username, initialReadIds) => {
+    // Background Fetch Function
+    const fetchBackgroundUpdates = async (username, initialReadIds, userCreatedAtTime) => {
       try {
         let serverReadIds = initialReadIds;
         const readRes = await fetch(`https://delivery-app-backend-coral.vercel.app/api/sync/user-notifs?username=${username}&t=${Date.now()}`, { cache: 'no-store' });
@@ -152,14 +148,15 @@ export default function Home() {
           localStorage.setItem('appSettings', JSON.stringify(data));
           setGlobalNotice(data.global_notice || '');
           if (data.notifications) {
-            setNotifications(data.notifications.map(n => ({
+            // --- අලුත් වෙනස: සර්වර් එකෙන් එන දත්ත වලිනුත් අලුත් ඒවා පමණක් Filter කිරීම ---
+            const relevantNotifs = data.notifications.filter(n => parseInt(n.id) >= userCreatedAtTime);
+            
+            setNotifications(relevantNotifs.map(n => ({
               ...n, isRead: serverReadIds.includes(n.id) 
             })));
           }
         }
-      } catch (error) {
-        // Offline නම් හෝ දෝෂයක් ආවොත් කිසිවක් නොකරයි (UI එකට බාධාවක් නැත)
-      }
+      } catch (error) {}
     };
 
     loadAllData();
@@ -186,7 +183,6 @@ export default function Home() {
       } catch(e) { }
     }
   };
-
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const t = translations[language] || translations['si'];
