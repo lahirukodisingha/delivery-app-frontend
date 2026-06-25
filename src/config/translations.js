@@ -8,6 +8,13 @@ export const translations = {
     changePassword: "මුරපදය වෙනස් කරන්න",
     currentPassword: "දැනට ඇති මුරපදය",
     newPassword: "නව මුරපදය",
+    confirmNewPassword: "නව මුරපදය තහවුරු කරන්න",
+    usernameCannotChange: "* පරිශීලක නාමය (Username) වෙනස් කළ නොහැක",
+    enterCurrentPassword: "කරුණාකර දැනට ඇති මුරපදය ඇතුලත් කරන්න",
+    passwordsDoNotMatch: "නව මුරපදයන් එකිනෙක නොගැලපේ!",
+    internetRequired: "මුරපදය වෙනස් කිරීමට අන්තර්ජාල සම්බන්ධතාවයක් අවශ්‍යයි!",
+    connectionError: "සර්වර් එක හා සම්බන්ධ වීමට නොහැක",
+    fileTooLarge2MB: "ඡායාරූපයේ ප්‍රමාණය වැඩියි (උපරිම 2MB)",
     language: "භාෂාව (Language)",
     theme: "දර්ශන මාදිලිය (Theme)",
     lightMode: "Light Mode (සාමාන්‍ය)",
@@ -34,7 +41,7 @@ export const translations = {
     navReports: "වාර්තා",
     navMore: "වෙනත්",
 
-    // --- Add Shop Page (නව කොටස) ---
+    // --- Add Shop Page ---
     addShopTitle: "නව කඩයක්",
     noRouteAlert: "කරුණාකර පළමුව ගමන් මාර්ගයක් (Route) සාදා ඉන්පසු කඩය ඇතුලත් කරන්න.",
     shopSavedSuccess: "කඩය සාර්ථකව සුරැකුවා!",
@@ -50,7 +57,7 @@ export const translations = {
     phonePlaceholder: "07X XXX XXXX",
     saveShopBtn: "කඩය සුරකින්න",
 
-    // --- Add Item Page (නව කොටස) ---
+    // --- Add Item Page ---
     addItemTitle: "නව භාණ්ඩයක්",
     itemPhotoLabel: "භාණ්ඩයේ ඡායාරූපය",
     addPhotoBtn: "ඡායාරූපය එක් කරන්න",
@@ -62,7 +69,7 @@ export const translations = {
     saveItemBtn: "සුරකින්න",
     itemSavedSuccess: "භාණ්ඩය සාර්ථකව සුරැකුවා!",
 
-    // --- Add Route Page (නව කොටස) ---
+    // --- Add Route Page ---
     addRouteTitle: "නව රූට් එකක්",
     routeNameLabel: "රූට් එකේ නම",
     routeNamePlaceholder: "උදා: නුවර පාර",
@@ -71,7 +78,7 @@ export const translations = {
     existingRoutesTitle: "දැනට ඇති රූට්",
     noRoutesYet: "තාමත් රූට් එකතු කර නොමැත.",
 
-    // --- Add Bill Page (නව කොටස) ---
+    // --- Add Bill Page ---
     addBillTitle: "නව බිලක්",
     billSummaryTitle: "බිල්පත් සාරාංශය",
     dateLabel: "දිනය",
@@ -106,7 +113,7 @@ export const translations = {
     remarksPlaceholder: "විශේෂ සටහන්...",
     saveBillBtn: "සටහන සුරකින්න",
 
-    // --- Login Page (නව කොටස) ---
+    // --- Login Page ---
     loginTitle: "ආයුබෝවන්!",
     loginSubtitle: "කරුණාකර පද්ධතියට ඇතුල් වන්න",
     usernameLabel: "පරිශීලක නාමය",
@@ -118,9 +125,11 @@ export const translations = {
     loginFailed: "ඇතුල් වීම අසාර්ථකයි.",
     serverError: "සර්වර් එකට සම්බන්ධ වීමට නොහැක.",
 
-    // --- Settings Page (නව කොටස) ---
+    // --- Business Profile Page (Settings) ---
     settingsTitle: "ව්‍යාපාරික තොරතුරු",
     settingsDesc: "ඔබගේ ව්‍යාපාරයේ තොරතුරු මෙහි ඇතුලත් කරන්න. මෙම තොරතුරු බිල්පත් මුද්‍රණය සඳහා භාවිතා වේ.",
+    businessLogoTitle: "ව්‍යාපාරික ලාංඡනය",
+    fileTooLarge1MB: "ඡායාරූපයේ ප්‍රමාණය වැඩියි (උපරිම 1MB)",
     businessNameLabel: "ව්‍යාපාරික නම",
     businessNamePlaceholder: "උදා: සිරිසඳ ට්‍රේඩර්ස්",
     addressPlaceholder2: "උදා: අංක 45, නුවර පාර, මාවනැල්ල",
@@ -131,19 +140,17 @@ export const translations = {
     saveInfoBtn: "තොරතුරු සුරකින්න",
     settingsSavedSuccess: "සැකසුම් සාර්ථකව සුරැකුවා!",
 
-    // --- Routes Tab Page (නව කොටස) ---
+    // --- Routes Tab Page ---
     routesTabTitle: "ගමන් මාර්ග",
     selectTodayRoute: "අද දින ගමන් මාර්ගය තෝරන්න",
     activeStatus: "සක්‍රියයි",
     inactiveStatus: "අක්‍රියයි",
     noRoutesAdded: "තාමත් රූට් එකතු කර නොමැත. කරුණාකර නව රූට් එකක් එකතු කරන්න.",
 
-
     noActiveRoute: "අද දින සඳහා ගමන් මාර්ගයක් තෝරා නොමැත.",
     selectRouteBtn: "රූට් එකක් තෝරන්න",
     noShopsInRoute: "මෙම රූට් එක සඳහා කඩවල් කිසිවක් එක් කර නොමැත.",
     pleaseSelectRouteFirst: "පළමුව රූට් එකක් තෝරන්න",
-
 
     shopsTabTitle: "කඩ ලැයිස්තුව",
     allRoutes: "සියලුම ගමන් මාර්ග",
@@ -215,8 +222,7 @@ export const translations = {
     shopDeletedSuccess: "කඩය සාර්ථකව මකා දමන ලදී!",
     existingShopsTitle: "දැනට ඇති කඩවල්",
     noShopsAddedYet: "තවමත් කඩවල් ඇතුලත් කර නැත.",
-    cancelBtn: "අවලංගු කරන්න",
-
+    
     addNewItemBtn: "නව භාණ්ඩයක් ඇතුලත් කරන්න",
     updateItemBtn: "භාණ්ඩය යාවත්කාලීන කරන්න",
     itemUpdatedSuccess: "භාණ්ඩය සාර්ථකව යාවත්කාලීන කළා!",
@@ -239,15 +245,11 @@ export const translations = {
     stepShop: "නව කඩයක් එකතු කරන්න",
     stepItem: "නව අයිටම් එකතු කරන්න",
 
-
     logoutConfirm: "ඔබට ඇප් එකෙන් ඉවත් වීමට අවශ්‍යද?",
 
-    duplicateRouteAlert: "මෙම නමින් ගමන් මාර්ගයක් (Route) දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.", // අලුතින් එකතු කල පේළිය
-
-    duplicateShopAlert: "මෙම නමින් කඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.", // අලුතින් එකතු කල පේළිය
-
-    duplicateItemAlert: "මෙම නමින් භාණ්ඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.", // අලුතින් එකතු කල පේළිය
-    
+    duplicateRouteAlert: "මෙම නමින් ගමන් මාර්ගයක් (Route) දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.",
+    duplicateShopAlert: "මෙම නමින් කඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.",
+    duplicateItemAlert: "මෙම නමින් භාණ්ඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.",
   },
 
   
@@ -258,6 +260,13 @@ export const translations = {
     changePassword: "Change Password",
     currentPassword: "Current Password",
     newPassword: "New Password",
+    confirmNewPassword: "Confirm New Password",
+    usernameCannotChange: "* Username cannot be changed",
+    enterCurrentPassword: "Please enter your current password",
+    passwordsDoNotMatch: "New passwords do not match!",
+    internetRequired: "Internet connection required to change password!",
+    connectionError: "Could not connect to server",
+    fileTooLarge2MB: "File is too large (Max 2MB)",
     language: "Language",
     theme: "Theme Mode",
     lightMode: "Light Mode",
@@ -284,7 +293,7 @@ export const translations = {
     navReports: "Reports",
     navMore: "More",
 
-    // --- Add Shop Page (නව කොටස) ---
+    // --- Add Shop Page ---
     addShopTitle: "New Shop",
     noRouteAlert: "Please create a Route first before adding a shop.",
     shopSavedSuccess: "Shop saved successfully!",
@@ -300,7 +309,7 @@ export const translations = {
     phonePlaceholder: "07X XXX XXXX",
     saveShopBtn: "Save Shop",
 
-    // --- Add Item Page (නව කොටස) ---
+    // --- Add Item Page ---
     addItemTitle: "New Item",
     itemPhotoLabel: "Item Photo",
     addPhotoBtn: "Add Photo",
@@ -312,7 +321,7 @@ export const translations = {
     saveItemBtn: "Save",
     itemSavedSuccess: "Item saved successfully!",
 
-    // --- Add Route Page (නව කොටස) ---
+    // --- Add Route Page ---
     addRouteTitle: "New Route",
     routeNameLabel: "Route Name",
     routeNamePlaceholder: "e.g., Kandy Road",
@@ -321,7 +330,7 @@ export const translations = {
     existingRoutesTitle: "Existing Routes",
     noRoutesYet: "No routes added yet.",
 
-    // --- Add Bill Page (නව කොටස) ---
+    // --- Add Bill Page ---
     addBillTitle: "New Bill",
     billSummaryTitle: "Bill Summary",
     dateLabel: "Date",
@@ -356,7 +365,7 @@ export const translations = {
     remarksPlaceholder: "Special notes...",
     saveBillBtn: "Save Record",
 
-    // --- Login Page (නව කොටස) ---
+    // --- Login Page ---
     loginTitle: "Welcome!",
     loginSubtitle: "Please login to the system",
     usernameLabel: "Username",
@@ -368,9 +377,11 @@ export const translations = {
     loginFailed: "Login failed.",
     serverError: "Cannot connect to the server.",
 
-    // --- Settings Page (නව කොටස) ---
+    // --- Settings Page ---
     settingsTitle: "Business Profile",
     settingsDesc: "Enter your business details here. These will be used for printing bills.",
+    businessLogoTitle: "Business Logo",
+    fileTooLarge1MB: "Logo is too large (Max 1MB)",
     businessNameLabel: "Business Name",
     businessNamePlaceholder: "e.g., Sirisanda Traders",
     addressPlaceholder2: "e.g., No 45, Kandy Road, Mawanella",
@@ -381,7 +392,7 @@ export const translations = {
     saveInfoBtn: "Save Information",
     settingsSavedSuccess: "Settings saved successfully!",
 
-    // --- Routes Tab Page (නව කොටස) ---
+    // --- Routes Tab Page ---
     routesTabTitle: "Routes",
     selectTodayRoute: "Select Today's Route",
     activeStatus: "Active",
@@ -463,8 +474,7 @@ export const translations = {
     shopDeletedSuccess: "Shop deleted successfully!",
     existingShopsTitle: "Existing Shops",
     noShopsAddedYet: "No shops added yet.",
-    cancelBtn: "Cancel",
-
+    
     addNewItemBtn: "Add New Item",
     updateItemBtn: "Update Item",
     itemUpdatedSuccess: "Item updated successfully!",
@@ -489,11 +499,9 @@ export const translations = {
 
     logoutConfirm: "Are you sure you want to logout?",
 
-    duplicateRouteAlert: "A route with this name already exists. Please provide a different name.", // අලුතින් එකතු කල පේළිය
-
-    duplicateShopAlert: "A shop with this name already exists. Please provide a different name.", // අලුතින් එකතු කල පේළිය
-
-    duplicateItemAlert: "An item with this name already exists. Please provide a different name.", // අලුතින් එකතු කල පේළිය
+    duplicateRouteAlert: "A route with this name already exists. Please provide a different name.", 
+    duplicateShopAlert: "A shop with this name already exists. Please provide a different name.", 
+    duplicateItemAlert: "An item with this name already exists. Please provide a different name.", 
 
   },
 
@@ -504,6 +512,13 @@ export const translations = {
     changePassword: "கடவுச்சொல்லை மாற்று",
     currentPassword: "தற்போதைய கடவுச்சொல்",
     newPassword: "புதிய கடவுச்சொல்",
+    confirmNewPassword: "புதிய கடவுச்சொல்லை உறுதிப்படுத்தவும்",
+    usernameCannotChange: "* பயனர் பெயரை மாற்ற முடியாது",
+    enterCurrentPassword: "தற்போதைய கடவுச்சொல்லை உள்ளிடவும்",
+    passwordsDoNotMatch: "புதிய கடவுச்சொற்கள் பொருந்தவில்லை!",
+    internetRequired: "கடவுச்சொல்லை மாற்ற இணைய இணைப்பு தேவை!",
+    connectionError: "சேவையகத்துடன் இணைக்க முடியவில்லை",
+    fileTooLarge2MB: "புகைப்படத்தின் அளவு அதிகமாக உள்ளது (அதிகபட்சம் 2MB)",
     language: "மொழி (Language)",
     theme: "தீம் (Theme)",
     lightMode: "Light Mode",
@@ -530,7 +545,7 @@ export const translations = {
     navReports: "அறிக்கைகள்",
     navMore: "மேலும்",
 
-    // --- Add Shop Page (නව කොටස) ---
+    // --- Add Shop Page ---
     addShopTitle: "புதிய கடை",
     noRouteAlert: "கடையைச் சேர்க்கும் முன் புதிய வழியை (Route) உருவாக்கவும்.",
     shopSavedSuccess: "கடை வெற்றிகரமாக சேமிக்கப்பட்டது!",
@@ -557,7 +572,7 @@ export const translations = {
     saveItemBtn: "சேமி",
     itemSavedSuccess: "பொருள் வெற்றிகரமாக சேமிக்கப்பட்டது!",
 
-    // --- Add Route Page (නව කොටස) ---
+    // --- Add Route Page ---
     addRouteTitle: "புதிய வழி",
     routeNameLabel: "வழியின் பெயர்",
     routeNamePlaceholder: "உதா: கண்டி வீதி",
@@ -566,7 +581,7 @@ export const translations = {
     existingRoutesTitle: "தற்போதுள்ள வழிகள்",
     noRoutesYet: "இன்னும் வழிகள் சேர்க்கப்படவில்லை.",
 
-    // --- Add Bill Page (නව කොටස) ---
+    // --- Add Bill Page ---
     addBillTitle: "புதிய பில்",
     billSummaryTitle: "பில் சுருக்கம்",
     dateLabel: "தேதி",
@@ -601,7 +616,7 @@ export const translations = {
     remarksPlaceholder: "சிறப்பு குறிப்புகள்...",
     saveBillBtn: "பதிவை சேமி",
 
-    // --- Login Page (නව කොටස) ---
+    // --- Login Page ---
     loginTitle: "வணக்கம்!",
     loginSubtitle: "கணினியில் நுழையவும்",
     usernameLabel: "பயனர் பெயர்",
@@ -613,9 +628,11 @@ export const translations = {
     loginFailed: "உள்நுழைவு தோல்வி.",
     serverError: "சேவையகத்துடன் இணைக்க முடியவில்லை.",
 
-    // --- Settings Page (නව කොටස) ---
+    // --- Settings Page ---
     settingsTitle: "வணிக விவரம்",
     settingsDesc: "உங்கள் வணிக விவரங்களை இங்கே உள்ளிடவும். இவை பில்களை அச்சிட பயன்படுத்தப்படும்.",
+    businessLogoTitle: "வணிக லோகோ",
+    fileTooLarge1MB: "லோகோ அளவு அதிகமாக உள்ளது (அதிகபட்சம் 1MB)",
     businessNameLabel: "வணிகப் பெயர்",
     businessNamePlaceholder: "உதா: சிறிசந்த ட்ரேடர்ஸ்",
     addressPlaceholder2: "உதா: எண் 45, கண்டி வீதி, மாவனல்லை",
@@ -626,7 +643,7 @@ export const translations = {
     saveInfoBtn: "தகவலைச் சேமி",
     settingsSavedSuccess: "அமைப்புகள் வெற்றிகரமாக சேமிக்கப்பட்டன!",
 
-    // --- Routes Tab Page (නව කොටස) ---
+    // --- Routes Tab Page ---
     routesTabTitle: "வழிகள்",
     selectTodayRoute: "இன்றைய வழியைத் தேர்ந்தெடுக்கவும்",
     activeStatus: "செயலில்",
@@ -708,8 +725,7 @@ export const translations = {
     shopDeletedSuccess: "கடை வெற்றிகரமாக நீக்கப்பட்டது!",
     existingShopsTitle: "தற்போதுள்ள கடைகள்",
     noShopsAddedYet: "இன்னும் கடைகள் சேர்க்கப்படவில்லை.",
-    cancelBtn: "ரத்துசெய்",
-
+    
     addNewItemBtn: "புதிய பொருளைச் சேர்",
     updateItemBtn: "பொருளைப் புதுப்பி",
     itemUpdatedSuccess: "பொருள் வெற்றிகரமாக புதுப்பிக்கப்பட்டது!",
@@ -734,11 +750,8 @@ export const translations = {
 
     logoutConfirm: "நீங்கள் பயன்பாட்டிலிருந்து வெளியேற விரும்புகிறீர்களா?",
 
-
-    duplicateRouteAlert: "இந்த பெயரில் ஏற்கனவே ஒரு வழி உள்ளது. வேறு பெயரை உள்ளிடவும்.", // அලුතින් එකතු කල පේළිය
-
-    duplicateShopAlert: "இந்த பெயரில் ஏற்கனவே ஒரு கடை உள்ளது. வேறு பெயரை உள்ளிடவும்.", // அලුතින් එකතු කල පේළිය
-
-    duplicateItemAlert: "இந்தப் பெயரில் ஏற்கனவே ஒரு பொருள் உள்ளது. வேறு பெயரை உள்ளிடவும்.", // அලුතින් එකතු කල පේළිය
+    duplicateRouteAlert: "இந்த பெயரில் ஏற்கனவே ஒரு வழி உள்ளது. வேறு பெயரை உள்ளிடவும்.", 
+    duplicateShopAlert: "இந்த பெயரில் ஏற்கனவே ஒரு கடை உள்ளது. வேறு பெயரை உள்ளிடவும்.", 
+    duplicateItemAlert: "இந்தப் பெயரில் ஏற்கனவே ஒரு பொருள் உள்ளது. வேறு பெயரை உள்ளிடவும்.", 
   }
 };
