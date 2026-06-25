@@ -192,7 +192,7 @@ export default function BusinessProfile() {
               <Camera size={18} color="white" />
             </button>
           </div>
-          <p className="text-[11px] font-bold text-gray-400 mt-4 uppercase tracking-widest">ව්‍යාපාරික ලාංඡනය</p>
+          <p className="text-[11px] font-bold text-gray-400 mt-4 uppercase tracking-widest">{t.businessLogoTitle}</p>
         </div>
 
         <form onSubmit={handleSaveSettings} className="space-y-6">
