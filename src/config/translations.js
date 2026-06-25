@@ -627,7 +627,7 @@ export const translations = {
     loggingInBtn: "உள்நுழைகிறது...",
     loginFailed: "உள்நுழைவு தோல்வி.",
     serverError: "சேவையகத்துடன் இணைக்க முடியவில்லை.",
-    
+
 
     // --- Settings Page ---
     settingsTitle: "வணிக விவரம்",
