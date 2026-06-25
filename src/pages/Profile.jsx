@@ -312,10 +312,10 @@ export default function Profile() {
             {/* අලුතින් එක් කළ Confirm Password කොටුව */}
             <FormInput 
               type="password"
-              label={language === 'si' ? 'නව මුරපදය තහවුරු කරන්න' : 'Confirm New Password'}
+              label={t.confirmNewPassword}
               value={confirmPassword} 
               onChange={(e) => setConfirmPassword(e.target.value)} 
-              placeholder={language === 'si' ? 'නව මුරපදය තහවුරු කරන්න' : 'Confirm New Password'} 
+              placeholder={t.confirmNewPassword} 
             />
           </div>
 
