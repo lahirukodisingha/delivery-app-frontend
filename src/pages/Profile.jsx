@@ -93,7 +93,7 @@ export default function Profile() {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        showAlert(language === 'si' ? 'ඡායාරූපයේ ප්‍රමාණය වැඩියි (උපරිම 2MB)' : 'File is too large (Max 2MB)', 'error');
+        showAlert(t.fileTooLarge2MB);
         return;
       }
 
