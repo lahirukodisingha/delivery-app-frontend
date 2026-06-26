@@ -22,282 +22,220 @@ export default function Expenses() {
 
   const todayStr = new Date().toISOString().split('T')[0];
   
-  // Date Range States
   const [startDate, setStartDate] = useState(todayStr);
   const [endDate, setEndDate] = useState(todayStr);
-  
-  // New Record Date
   const [recordDate, setRecordDate] = useState(todayStr);
-  
   const [records, setRecords] = useState([]);
   
-  // Form States
-  const [type, setType] = useState('expense'); // 'income' or 'expense'
+  const [type, setType] = useState('expense'); 
   const [category, setCategory] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
 
+  const [expenseOptions, setExpenseOptions] = useState([]);
+  const [incomeOptions, setIncomeOptions] = useState([]);
+
   const [alertConfig, setAlertConfig] = useState({ 
     message: '', type: 'success', showCancel: false, onConfirm: null
   });
-
-  // --- Dynamic Categories States ---
-  const [expenseCategories, setExpenseCategories] = useState([]);
-  const [incomeCategories, setIncomeCategories] = useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) return navigate('/');
 
     setLanguage(localStorage.getItem('appLanguage') || 'si');
-    setIsChecking(false);
-  }, [navigate]);
 
-  useEffect(() => {
-    loadRecords();
-  }, [startDate, endDate]);
-
-  // Load Settings from LocalStorage for Dynamic Dropdowns
-  useEffect(() => {
-    const loadDynamicSettings = () => {
+    const loadSettings = () => {
       const savedSettings = localStorage.getItem('appSettings');
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings);
-        
-        if (parsed.expense_categories && parsed.expense_categories.length > 0) {
-           setExpenseCategories(parsed.expense_categories.map(cat => ({ label: cat, value: cat })));
+        if (parsed.expense_categories) {
+          setExpenseOptions(parsed.expense_categories.map(c => ({ value: c, label: c })));
+          setCategory(parsed.expense_categories[0] || '');
         }
-        if (parsed.income_categories && parsed.income_categories.length > 0) {
-           setIncomeCategories(parsed.income_categories.map(cat => ({ label: cat, value: cat })));
+        if (parsed.income_categories) {
+          setIncomeOptions(parsed.income_categories.map(c => ({ value: c, label: c })));
         }
       }
+      setIsChecking(false);
     };
-    loadDynamicSettings();
-  }, []);
+    loadSettings();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!isChecking) loadRecords();
+  }, [startDate, endDate, isChecking]);
 
   const loadRecords = async () => {
-    try {
-      const allRecords = await db.expenses
-        .filter(e => e.date >= startDate && e.date <= endDate)
-        .toArray();
-        
-      allRecords.sort((a, b) => b.id - a.id);
-      setRecords(allRecords);
-    } catch (error) {
-      console.error("Error loading expenses", error);
-    }
+    const data = await db.expenses
+      .filter(record => record.date >= startDate && record.date <= endDate)
+      .toArray();
+    data.sort((a, b) => b.id - a.id);
+    setRecords(data);
   };
 
   const t = translations[language] || translations['si'];
 
   const closeAlert = () => setAlertConfig({ ...alertConfig, message: '' });
-  const showAlert = (message, alertType = 'success', showCancel = false, onConfirm = null) => {
-    setAlertConfig({ message, type: alertType, showCancel, onConfirm });
+  const showAlert = (message, type = 'success', showCancel = false, onConfirm = null) => {
+    setAlertConfig({ message, type, showCancel, onConfirm });
   };
 
-  const handleAddRecord = async (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      showAlert(language === 'si' ? 'කරුණාකර නිවැරදි මුදලක් ඇතුලත් කරන්න.' : 'Please enter a valid amount.', 'error');
-      return;
-    }
-    if (!category) {
-      showAlert(language === 'si' ? 'කරුණාකර වර්ගයක් තෝරන්න.' : 'Please select a category.', 'error');
+    if (!category || !amount) {
+      showAlert(t.enterItemsOrPaymentAlert || 'කරුණාකර සියලු විස්තර ඇතුලත් කරන්න', 'error');
       return;
     }
 
     try {
       await db.expenses.add({
-        date: recordDate, 
+        date: recordDate,
         type,
         category,
         amount: parseFloat(amount),
-        note,
-        timestamp: Date.now(),
+        note: note.trim(),
         syncStatus: 'pending'
       });
-
+      
+      showAlert(t.recordSaved || 'සටහන සාර්ථකව සුරැකුවා!', 'success');
       setAmount('');
       setNote('');
-      setCategory('');
       loadRecords();
-      
-      showAlert(language === 'si' ? 'සටහන සාර්ථකව එක් කළා!' : 'Record added successfully!', 'success');
-    } catch (error) {
-      showAlert('Error saving record', 'error');
+    } catch (err) {
+      showAlert(t.saveError || 'දෝෂයක් මතු විය!', 'error');
     }
   };
 
   const handleDelete = (id) => {
     showAlert(
-      language === 'si' ? 'මෙම සටහන මකා දැමීමට අවශ්‍යද?' : 'Are you sure you want to delete this record?',
-      'confirm',
-      true,
+      t.deleteRecordConfirm || 'මෙම සටහන මකා දැමීමට අවශ්‍යද?', 
+      'confirm', 
+      true, 
       async () => {
-        await db.expenses.delete(id);
-        loadRecords();
-        setTimeout(() => showAlert(language === 'si' ? 'සටහන මකා දමන ලදී!' : 'Deleted successfully!', 'success'), 300);
+        try {
+          await db.expenses.delete(id);
+          showAlert(t.recordDeleted || 'සටහන මකා දැමුවා!', 'success');
+          loadRecords();
+        } catch (err) {
+          showAlert(t.saveError || 'දෝෂයක් මතු විය!', 'error');
+        }
       }
     );
   };
 
-  const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
-
-  const dropdownOptions = [
-    { label: language === 'si' ? 'තෝරන්න...' : 'Select...', value: '' },
-    ...currentCategories
-  ];
+  if (isChecking) return <LoadingScreen />;
 
   const totalIncome = records.filter(r => r.type === 'income').reduce((sum, r) => sum + r.amount, 0);
   const totalExpense = records.filter(r => r.type === 'expense').reduce((sum, r) => sum + r.amount, 0);
   const netBalance = totalIncome - totalExpense;
 
-  if (isChecking) return <LoadingScreen />;
+  const currentOptions = type === 'expense' ? expenseOptions : incomeOptions;
 
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
       <CustomAlert 
-        message={alertConfig.message} 
-        type={alertConfig.type} 
-        showCancel={alertConfig.showCancel}
-        onConfirm={alertConfig.onConfirm}
-        onClose={closeAlert} 
-        language={language}
+        message={alertConfig.message} type={alertConfig.type} showCancel={alertConfig.showCancel}
+        onConfirm={alertConfig.onConfirm} onClose={closeAlert} language={language}
       />
 
-      <PageHeader title={language === 'si' ? 'ආදායම් සහ වියදම්' : 'Income & Expenses'} backPath="/more" />
+      <PageHeader title={t.expenseTrackerTitle || "දෛනික වියදම් සහ ආදායම්"} />
 
       <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 hide-scrollbar">
-        
-        <div className="flex gap-3 mb-6">
-          <div className="flex-1">
-            <FormInput type="date" label={language === 'si' ? 'ආරම්භක දිනය' : 'Start Date'} value={startDate} onChange={(e) => setStartDate(e.target.value)} icon={Calendar} />
+
+        {/* Summary Cards */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
+          <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-xl border border-green-200 dark:border-green-800 shadow-sm text-center">
+             <p className="text-[11px] font-bold text-green-600 dark:text-green-400 mb-1">{t.totalIncome || "ආදායම"}</p>
+             <p className="text-[14px] font-bold text-green-700 dark:text-green-300">රු. {totalIncome.toFixed(0)}</p>
           </div>
-          <div className="flex-1">
-            <FormInput type="date" label={language === 'si' ? 'අවසාන දිනය' : 'End Date'} value={endDate} onChange={(e) => setEndDate(e.target.value)} icon={Calendar} />
+          <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-xl border border-red-200 dark:border-red-800 shadow-sm text-center">
+             <p className="text-[11px] font-bold text-red-600 dark:text-red-400 mb-1">{t.totalExpense || "වියදම"}</p>
+             <p className="text-[14px] font-bold text-red-700 dark:text-red-300">රු. {totalExpense.toFixed(0)}</p>
+          </div>
+          <div className={`p-3 rounded-xl border shadow-sm text-center ${netBalance >= 0 ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800' : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'}`}>
+             <p className={`text-[11px] font-bold mb-1 ${netBalance >= 0 ? 'text-[#14348c] dark:text-blue-400' : 'text-orange-600 dark:text-orange-400'}`}>{t.netBalance || "ඉතිරිය"}</p>
+             <p className={`text-[14px] font-bold ${netBalance >= 0 ? 'text-[#14348c] dark:text-blue-300' : 'text-orange-700 dark:text-orange-300'}`}>රු. {Math.abs(netBalance).toFixed(0)}</p>
           </div>
         </div>
 
-        <div className={`rounded-2xl p-5 mb-6 shadow-sm border ${theme.colors.cardBg} ${theme.colors.inputBorder} transition-colors`}>
-          <p className={`${theme.colors.mutedText} text-[12px] font-bold tracking-wide uppercase mb-1 flex items-center gap-2`}>
-            <Wallet size={14} /> {language === 'si' ? 'කාලසීමාවේ ඉතිරිය' : 'Period Net Balance'}
-          </p>
-          <h2 className={`text-3xl font-bold mb-4 ${netBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            {netBalance < 0 ? '-' : ''} රු. {Math.abs(netBalance).toFixed(2)}
-          </h2>
-          
-          <div className={`flex justify-between border-t ${theme.colors.divider} pt-3`}>
-            <div>
-              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{language === 'si' ? 'ආදායම් (+)' : 'Income'}</p>
-              <p className="text-green-600 dark:text-green-400 font-bold">රු. {totalIncome.toFixed(2)}</p>
-            </div>
-            <div className="text-right">
-              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{language === 'si' ? 'වියදම් (-)' : 'Expense'}</p>
-              <p className="text-red-600 dark:text-red-400 font-bold">රු. {totalExpense.toFixed(2)}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className={`${theme.colors.cardBg} rounded-2xl border ${theme.colors.inputBorder} p-4 mb-6 shadow-sm transition-colors`}>
-          <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
-            {language === 'si' ? 'නව සටහනක් එක් කරන්න' : 'Add New Record'}
+        {/* Add Record Form */}
+        <div className="bg-white dark:bg-gray-800/50 p-5 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-md mb-8">
+          <h3 className="font-bold text-[#14348c] dark:text-blue-400 text-[15px] mb-4 flex items-center gap-2">
+             <Wallet size={18} /> {t.addRecordBtn || "සටහන එක් කරන්න"}
           </h3>
           
-          <form onSubmit={handleAddRecord} className="space-y-4">
-            
-            <div>
-              <FormInput type="date" label={language === 'si' ? 'සටහන් කරන දිනය' : 'Record Date'} value={recordDate} onChange={(e) => setRecordDate(e.target.value)} icon={Calendar} required />
-            </div>
-
+          <form onSubmit={handleSave} className="space-y-4">
             <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
-              <button
-                type="button"
-                onClick={() => { setType('income'); setCategory(''); }}
-                className={`flex-1 py-2 text-[13px] font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${type === 'income' ? 'bg-green-500 text-white shadow-md' : 'text-gray-500 hover:text-green-600'}`}
-              >
-                <ArrowUpCircle size={16} /> {language === 'si' ? 'ආදායමක්' : 'Income'}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setType('expense'); setCategory(''); }}
-                className={`flex-1 py-2 text-[13px] font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${type === 'expense' ? 'bg-red-500 text-white shadow-md' : 'text-gray-500 hover:text-red-600'}`}
-              >
-                <ArrowDownCircle size={16} /> {language === 'si' ? 'වියදමක්' : 'Expense'}
-              </button>
+               <button type="button" onClick={() => { setType('income'); setCategory(incomeOptions[0]?.value || ''); }} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${type === 'income' ? 'bg-white dark:bg-gray-600 shadow text-green-600 dark:text-green-400' : 'text-gray-500'}`}>{t.typeIncome || "ආදායම්"}</button>
+               <button type="button" onClick={() => { setType('expense'); setCategory(expenseOptions[0]?.value || ''); }} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${type === 'expense' ? 'bg-white dark:bg-gray-600 shadow text-red-600 dark:text-red-400' : 'text-gray-500'}`}>{t.typeExpense || "වියදම්"}</button>
             </div>
 
             <div className="flex gap-3">
+              <div className="flex-1"><FormInput type="date" label={t.dateLabel || "දිනය"} value={recordDate} onChange={(e) => setRecordDate(e.target.value)} icon={Calendar} required /></div>
               <div className="flex-1 relative">
-                <FormSelect label={language === 'si' ? 'වර්ගය' : 'Category'} value={category} onChange={(e) => setCategory(e.target.value)} options={dropdownOptions} icon={Tag} required />
-                <div className="absolute right-3 bottom-[13px] pointer-events-none">
-                  <ChevronDown size={18} className={theme.colors.mutedText} />
-                </div>
-              </div>
-              <div className="flex-1">
-                <FormInput type="text" inputMode="decimal" label={language === 'si' ? 'මුදල (රු)' : 'Amount (Rs)'} value={amount} 
-                  onChange={(e) => {
-                    let val = e.target.value.replace(/[^0-9.]/g, '');
-                    if ((val.match(/\./g) || []).length <= 1) setAmount(val);
-                  }} 
-                  icon={Coins} placeholder="0.00" required 
-                />
+                 <FormSelect label={t.selectCategory || "වර්ගය"} value={category} onChange={(e) => setCategory(e.target.value)} options={currentOptions} icon={Tag} required />
+                 <div className="absolute right-3 bottom-[13px] pointer-events-none"><ChevronDown size={18} className={theme.colors.mutedText} /></div>
               </div>
             </div>
 
-            <FormInput type="text" label={t.remarksLabel || 'සටහන (Note)'} value={note} onChange={(e) => setNote(e.target.value)} icon={FileText} placeholder={language === 'si' ? 'කෙටි විස්තරයක්...' : 'Short description...'} />
+            <FormInput type="number" step="0.01" label={t.amountLabel || "මුදල (රු.)"} value={amount} onChange={(e) => setAmount(e.target.value)} icon={Coins} required placeholder="0.00" />
+            <FormInput label={t.noteLabel || "සටහනක්"} value={note} onChange={(e) => setNote(e.target.value)} icon={FileText} placeholder="Optional" />
 
-            <PrimaryButton type="submit" icon={Plus} className={type === 'income' ? 'bg-green-600! hover:bg-green-700!' : 'bg-red-600! hover:bg-red-700!'}>
-               {language === 'si' ? 'එක් කරන්න' : 'Add Record'}
-            </PrimaryButton>
+            <PrimaryButton type="submit" icon={Plus} className={`w-full ${type === 'income' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>{t.saveBtn || "සුරකින්න"}</PrimaryButton>
           </form>
         </div>
 
+        {/* Date Filter & Records List */}
         <div>
-          <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
-            {language === 'si' ? 'සටහන් ලැයිස්තුව' : 'Records List'}
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-bold text-gray-800 dark:text-gray-200 text-[16px]">{t.periodRange || "කාලසීමාව"}</h3>
+          </div>
           
-          {records.length === 0 ? (
-            <div className={`p-6 rounded-xl border border-dashed ${theme.colors.inputBorder} text-center transition-colors`}>
-              <FileText size={28} className={`${theme.colors.mutedText} mx-auto mb-2 opacity-50`} />
-              <p className={`${theme.colors.mutedText} text-sm font-medium`}>
-                {language === 'si' ? 'මෙම කාලසීමාව සඳහා සටහන් කිසිවක් නොමැත.' : 'No records for this period.'}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {records.map((record) => {
-                const isIncome = record.type === 'income';
-                const catObj = (isIncome ? incomeCategories : expenseCategories).find(c => c.value === record.category);
-                const catLabel = catObj ? catObj.label : record.category;
+          <div className="flex gap-3 mb-5">
+             <div className="flex-1"><FormInput type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></div>
+             <div className="flex-1"><FormInput type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></div>
+          </div>
 
-                return (
-                  <div key={record.id} className={`${theme.colors.cardBg} border ${theme.colors.inputBorder} p-3 rounded-xl shadow-sm flex items-center justify-between transition-colors`}>
-                    <div className="flex items-center gap-3">
-                      <div className={`w-10 h-10 shrink-0 rounded-full flex items-center justify-center ${isIncome ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
-                        {isIncome ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
+          <div className="space-y-3">
+             {records.length === 0 ? (
+                <div className="text-center py-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700">
+                   <p className="text-sm font-medium text-gray-500">{t.noRecordsFound || "මෙම දිනයට සටහන් කිසිවක් නැත."}</p>
+                </div>
+             ) : (
+                records.map(record => {
+                  const isIncome = record.type === 'income';
+                  const catLabel = isIncome 
+                    ? incomeOptions.find(o => o.value === record.category)?.label || record.category
+                    : expenseOptions.find(o => o.value === record.category)?.label || record.category;
+
+                  return (
+                    <div key={record.id} className="flex justify-between items-center bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isIncome ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'}`}>
+                          {isIncome ? <ArrowUpCircle size={20} /> : <ArrowDownCircle size={20} />}
+                        </div>
+                        <div>
+                          <p className={`font-bold text-[14px] ${theme.colors.inputText}`}>{catLabel}</p>
+                          <p className={`text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-0.5`}>{record.date}</p>
+                          {record.note && <p className={`text-[11px] ${theme.colors.mutedText} mt-0.5 leading-tight`}>{record.note}</p>}
+                        </div>
                       </div>
-                      <div>
-                        <p className={`font-bold text-[14px] ${theme.colors.inputText}`}>{catLabel}</p>
-                        <p className={`text-[10px] font-bold text-gray-400 dark:text-gray-500 mb-0.5`}>{record.date}</p>
-                        {record.note && <p className={`text-[11px] ${theme.colors.mutedText} mt-0.5 leading-tight`}>{record.note}</p>}
+                      
+                      <div className="flex items-center gap-4">
+                        <span className={`font-bold text-[15px] ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {isIncome ? '+' : '-'} {parseFloat(record.amount).toFixed(2)}
+                        </span>
+                        <button onClick={() => handleDelete(record.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
+                          <Trash2 size={18} />
+                        </button>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center gap-4">
-                      <span className={`font-bold text-[15px] ${isIncome ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {isIncome ? '+' : '-'} {parseFloat(record.amount).toFixed(2)}
-                      </span>
-                      <button onClick={() => handleDelete(record.id)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+                  );
+                })
+             )}
+          </div>
         </div>
 
       </div>
