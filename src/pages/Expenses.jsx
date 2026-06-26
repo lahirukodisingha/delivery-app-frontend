@@ -98,11 +98,11 @@ export default function Expenses() {
   const handleAddRecord = async (e) => {
     e.preventDefault();
     if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-      showAlert(language === 'si' ? 'කරුණාකර නිවැරදි මුදලක් ඇතුලත් කරන්න.' : 'Please enter a valid amount.', 'error');
+      showAlert(t.invalidAmount, 'error');
       return;
     }
     if (!category) {
-      showAlert(language === 'si' ? 'කරුණාකර වර්ගයක් තෝරන්න.' : 'Please select a category.', 'error');
+      showAlert(t.selectCategoryAlert, 'error');
       return;
     }
 
@@ -122,21 +122,21 @@ export default function Expenses() {
       setCategory('');
       loadRecords();
       
-      showAlert(language === 'si' ? 'සටහන සාර්ථකව එක් කළා!' : 'Record added successfully!', 'success');
+      showAlert(t.recordAddedSuccess, 'success');
     } catch (error) {
-      showAlert('Error saving record', 'error');
+      showAlert(t.recordSaveError, 'error');
     }
   };
 
   const handleDelete = (id) => {
     showAlert(
-      language === 'si' ? 'මෙම සටහන මකා දැමීමට අවශ්‍යද?' : 'Are you sure you want to delete this record?',
+      t.deleteRecordConfirm, // වෙනස් කළ ස්ථානය
       'confirm',
       true,
       async () => {
         await db.expenses.delete(id);
         loadRecords();
-        setTimeout(() => showAlert(language === 'si' ? 'සටහන මකා දමන ලදී!' : 'Deleted successfully!', 'success'), 300);
+        setTimeout(() => showAlert(t.recordDeletedSuccess, 'success'), 300);
       }
     );
   };
@@ -144,7 +144,7 @@ export default function Expenses() {
   const currentCategories = type === 'expense' ? expenseCategories : incomeCategories;
 
   const dropdownOptions = [
-    { label: language === 'si' ? 'තෝරන්න...' : 'Select...', value: '' },
+    { label: t.selectOption, value: '' },
     ...currentCategories
   ];
 
@@ -166,22 +166,22 @@ export default function Expenses() {
         language={language}
       />
 
-      <PageHeader title={language === 'si' ? 'ආදායම් සහ වියදම්' : 'Income & Expenses'} backPath="/more" />
+      <PageHeader title={t.incomeAndExpenses} backPath="/more" />
 
       <div className="flex-1 overflow-y-auto px-5 pt-4 pb-8 hide-scrollbar">
         
         <div className="flex gap-3 mb-6">
           <div className="flex-1">
-            <FormInput type="date" label={language === 'si' ? 'ආරම්භක දිනය' : 'Start Date'} value={startDate} onChange={(e) => setStartDate(e.target.value)} icon={Calendar} />
+            <FormInput type="date" label={t.startDate} value={startDate} onChange={(e) => setStartDate(e.target.value)} icon={Calendar} />
           </div>
           <div className="flex-1">
-            <FormInput type="date" label={language === 'si' ? 'අවසාන දිනය' : 'End Date'} value={endDate} onChange={(e) => setEndDate(e.target.value)} icon={Calendar} />
+            <FormInput type="date" label={t.endDate} value={endDate} onChange={(e) => setEndDate(e.target.value)} icon={Calendar} />
           </div>
         </div>
 
         <div className={`rounded-2xl p-5 mb-6 shadow-sm border ${theme.colors.cardBg} ${theme.colors.inputBorder} transition-colors`}>
           <p className={`${theme.colors.mutedText} text-[12px] font-bold tracking-wide uppercase mb-1 flex items-center gap-2`}>
-            <Wallet size={14} /> {language === 'si' ? 'කාලසීමාවේ ඉතිරිය' : 'Period Net Balance'}
+            <Wallet size={14} /> {t.periodNetBalance}
           </p>
           <h2 className={`text-3xl font-bold mb-4 ${netBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
             {netBalance < 0 ? '-' : ''} රු. {Math.abs(netBalance).toFixed(2)}
@@ -189,11 +189,11 @@ export default function Expenses() {
           
           <div className={`flex justify-between border-t ${theme.colors.divider} pt-3`}>
             <div>
-              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{language === 'si' ? 'ආදායම් (+)' : 'Income'}</p>
+              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{t.incomeLabel}</p>
               <p className="text-green-600 dark:text-green-400 font-bold">රු. {totalIncome.toFixed(2)}</p>
             </div>
             <div className="text-right">
-              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{language === 'si' ? 'වියදම් (-)' : 'Expense'}</p>
+              <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{t.expenseLabel}</p>
               <p className="text-red-600 dark:text-red-400 font-bold">රු. {totalExpense.toFixed(2)}</p>
             </div>
           </div>
@@ -201,13 +201,13 @@ export default function Expenses() {
 
         <div className={`${theme.colors.cardBg} rounded-2xl border ${theme.colors.inputBorder} p-4 mb-6 shadow-sm transition-colors`}>
           <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
-            {language === 'si' ? 'නව සටහනක් එක් කරන්න' : 'Add New Record'}
+            {t.addNewRecord}
           </h3>
           
           <form onSubmit={handleAddRecord} className="space-y-4">
             
             <div>
-              <FormInput type="date" label={language === 'si' ? 'සටහන් කරන දිනය' : 'Record Date'} value={recordDate} onChange={(e) => setRecordDate(e.target.value)} icon={Calendar} required />
+              <FormInput type="date" label={t.recordDateLabel} value={recordDate} onChange={(e) => setRecordDate(e.target.value)} icon={Calendar} required />
             </div>
 
             <div className="flex bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
@@ -216,26 +216,26 @@ export default function Expenses() {
                 onClick={() => { setType('income'); setCategory(''); }}
                 className={`flex-1 py-2 text-[13px] font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${type === 'income' ? 'bg-green-500 text-white shadow-md' : 'text-gray-500 hover:text-green-600'}`}
               >
-                <ArrowUpCircle size={16} /> {language === 'si' ? 'ආදායමක්' : 'Income'}
+                <ArrowUpCircle size={16} /> {t.incomeBtn}
               </button>
               <button
                 type="button"
                 onClick={() => { setType('expense'); setCategory(''); }}
                 className={`flex-1 py-2 text-[13px] font-bold rounded-lg flex justify-center items-center gap-2 transition-all ${type === 'expense' ? 'bg-red-500 text-white shadow-md' : 'text-gray-500 hover:text-red-600'}`}
               >
-                <ArrowDownCircle size={16} /> {language === 'si' ? 'වියදමක්' : 'Expense'}
+                <ArrowDownCircle size={16} /> {t.expenseBtn}
               </button>
             </div>
 
             <div className="flex gap-3">
               <div className="flex-1 relative">
-                <FormSelect label={language === 'si' ? 'වර්ගය' : 'Category'} value={category} onChange={(e) => setCategory(e.target.value)} options={dropdownOptions} icon={Tag} required />
+                <FormSelect label={t.categoryLabel} value={category} onChange={(e) => setCategory(e.target.value)} options={dropdownOptions} icon={Tag} required />
                 <div className="absolute right-3 bottom-[13px] pointer-events-none">
                   <ChevronDown size={18} className={theme.colors.mutedText} />
                 </div>
               </div>
               <div className="flex-1">
-                <FormInput type="text" inputMode="decimal" label={language === 'si' ? 'මුදල (රු)' : 'Amount (Rs)'} value={amount} 
+                <FormInput type="text" inputMode="decimal" label={t.amountRsLabel} value={amount} 
                   onChange={(e) => {
                     let val = e.target.value.replace(/[^0-9.]/g, '');
                     if ((val.match(/\./g) || []).length <= 1) setAmount(val);
@@ -245,24 +245,24 @@ export default function Expenses() {
               </div>
             </div>
 
-            <FormInput type="text" label={t.remarksLabel || 'සටහන (Note)'} value={note} onChange={(e) => setNote(e.target.value)} icon={FileText} placeholder={language === 'si' ? 'කෙටි විස්තරයක්...' : 'Short description...'} />
+            <FormInput type="text" label={t.remarksLabel || 'සටහන (Note)'} value={note} onChange={(e) => setNote(e.target.value)} icon={FileText} placeholder={t.shortDescPlaceholder} />
 
             <PrimaryButton type="submit" icon={Plus} className={type === 'income' ? 'bg-green-600! hover:bg-green-700!' : 'bg-red-600! hover:bg-red-700!'}>
-               {language === 'si' ? 'එක් කරන්න' : 'Add Record'}
+              {t.addRecordBtn}
             </PrimaryButton>
           </form>
         </div>
 
         <div>
           <h3 className={`font-bold text-[15px] ${theme.colors.inputText} mb-3`}>
-            {language === 'si' ? 'සටහන් ලැයිස්තුව' : 'Records List'}
+            {t.recordsList}
           </h3>
           
           {records.length === 0 ? (
             <div className={`p-6 rounded-xl border border-dashed ${theme.colors.inputBorder} text-center transition-colors`}>
               <FileText size={28} className={`${theme.colors.mutedText} mx-auto mb-2 opacity-50`} />
               <p className={`${theme.colors.mutedText} text-sm font-medium`}>
-                {language === 'si' ? 'මෙම කාලසීමාව සඳහා සටහන් කිසිවක් නොමැත.' : 'No records for this period.'}
+                {t.noRecordsPeriod}
               </p>
             </div>
           ) : (
