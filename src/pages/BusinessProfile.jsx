@@ -96,7 +96,7 @@ export default function BusinessProfile() {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 1 * 1024 * 1024) { 
-        showAlert(language === 'si' ? 'ඡායාරූපයේ ප්‍රමාණය වැඩියි (උපරිම 1MB)' : 'Logo is too large (Max 1MB)', 'error');
+        showAlert(t.fileTooLarge1MB || 'Logo is too large (Max 1MB)', 'error');
         return;
       }
 
@@ -127,20 +127,16 @@ export default function BusinessProfile() {
         await db.settings.add(settingData);
       }
 
-      // මුල් දත්ත State එක අලුත් දත්ත වලින් යාවත්කාලීන කිරීම
       setOriginalData(settingData);
-      
-      // හෝම් එකට යවන්නේ නැතුව Alert එක පමණක් පෙන්වීම
       showAlert(t.settingsSavedSuccess || 'සාර්ථකව යාවත්කාලීන කරන ලදී!', 'success');
       
     } catch (error) {
-      showAlert(translations[language]?.saveError || 'සුරැකීමේදී දෝෂයක් මතු විය!', 'error');
+      showAlert(t.saveError || 'සුරැකීමේදී දෝෂයක් මතු විය!', 'error');
     }
   };
 
   if (isChecking) return <LoadingScreen />;
 
-  // වෙනස්කම් ට්‍රැක් කිරීම
   const isModified = 
     businessName.trim() !== originalData.businessName ||
     address.trim() !== originalData.address ||
@@ -192,7 +188,7 @@ export default function BusinessProfile() {
               <Camera size={18} color="white" />
             </button>
           </div>
-          <p className="text-[11px] font-bold text-gray-400 mt-4 uppercase tracking-widest">{t.businessLogoTitle}</p>
+          <p className="text-[11px] font-bold text-gray-400 mt-4 uppercase tracking-widest">{t.businessLogoTitle || 'ව්‍යාපාරික ලාංඡනය'}</p>
         </div>
 
         <form onSubmit={handleSaveSettings} className="space-y-6">

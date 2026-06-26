@@ -33,7 +33,6 @@ export default function Profile() {
   
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
-  // අලුතින් එකතු කළ Confirm Password state එක
   const [confirmPassword, setConfirmPassword] = useState(''); 
   
   const [language, setLanguage] = useState('si'); 
@@ -93,7 +92,7 @@ export default function Profile() {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        showAlert(t.fileTooLarge2MB);
+        showAlert(t.fileTooLarge2MB || 'File is too large (Max 2MB)', 'error');
         return;
       }
 
@@ -115,21 +114,19 @@ export default function Profile() {
     if (userStr) {
       user = JSON.parse(userStr);
       
-      // මුරපදය වෙනස් කර ඇත්නම්
       if (newPassword.trim().length > 0) {
         if (currentPassword.trim().length === 0) {
-          showAlert(language === 'si' ? 'දැනට ඇති මුරපදය ඇතුලත් කරන්න' : 'Please enter current password', 'error');
+          showAlert(t.enterCurrentPassword || 'Please enter current password', 'error');
           return;
         }
 
-        // අලුත් මුරපද දෙක ගැලපෙනවද යන්න පරීක්ෂා කිරීම
         if (newPassword !== confirmPassword) {
-          showAlert(language === 'si' ? 'නව මුරපදයන් එකිනෙක නොගැලපේ!' : 'New passwords do not match!', 'error');
+          showAlert(t.passwordsDoNotMatch || 'New passwords do not match!', 'error');
           return;
         }
 
         if (!navigator.onLine) {
-          showAlert(language === 'si' ? 'මුරපදය වෙනස් කිරීමට අන්තර්ජාල සම්බන්ධතාවයක් අවශ්‍යයි!' : 'Internet connection required to change password!', 'error');
+          showAlert(t.internetRequired || 'Internet connection required to change password!', 'error');
           return;
         }
 
@@ -157,7 +154,7 @@ export default function Profile() {
           
         } catch (error) {
           console.error("Password change error:", error);
-          showAlert(language === 'si' ? 'සර්වර් එක හා සම්බන්ධ වීමට නොහැක' : 'Could not connect to server', 'error');
+          showAlert(t.connectionError || 'Could not connect to server', 'error');
           return;
         }
       }
@@ -169,7 +166,7 @@ export default function Profile() {
       
       await db.profile.put({
         id: 1,
-        username: user.username, // නම වෙනස් නොවේ
+        username: user.username,
         profilePic: profilePic,
         passwordChanged: isPassChanged,
         syncStatus: 'pending' 
@@ -182,11 +179,10 @@ export default function Profile() {
     setOriginalProfilePic(profilePic); 
     setCurrentPassword(''); 
     setNewPassword('');
-    setConfirmPassword(''); // Confirm Password එකත් හිස් කිරීම
+    setConfirmPassword(''); 
     
     showAlert(t.successMsg || 'සාර්ථකව යාවත්කාලීන කරන ලදී!', 'success', false); 
   };
-
 
   const handleThemeChange = (e) => {
     const selectedTheme = e.target.value;
@@ -284,7 +280,7 @@ export default function Profile() {
             </div>
             
             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium">
-              {language === 'si' ? '* පරිශීලක නාමය (Username) වෙනස් කළ නොහැක' : '* Username cannot be changed'}
+              {t.usernameCannotChange}
             </p>
           </div>
 
@@ -309,13 +305,12 @@ export default function Profile() {
               placeholder={t.newPassword} 
             />
 
-            {/* අලුතින් එක් කළ Confirm Password කොටුව */}
             <FormInput 
               type="password"
-              label={t.confirmNewPassword}
+              label={t.confirmNewPassword || 'Confirm New Password'}
               value={confirmPassword} 
               onChange={(e) => setConfirmPassword(e.target.value)} 
-              placeholder={t.confirmNewPassword} 
+              placeholder={t.confirmNewPassword || 'Confirm New Password'} 
             />
           </div>
 
