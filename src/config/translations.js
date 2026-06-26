@@ -270,7 +270,13 @@ export const translations = {
     pleaseCompleteOnboarding: "කරුණාකර පළමුව මුල් පිටුවේ ඇති පියවර සම්පූර්ණ කරන්න!",
     billsFrom: "බිල් වලින්:",
     otherFrom: "වෙනත්:",
-    noShopsFound: "කඩවල් කිසිවක් හමු නොවීය."
+    noShopsFound: "කඩවල් කිසිවක් හමු නොවීය.",
+
+    totalRsLabel: "එකතුව: රු.",
+    billRsLabel: "බිල: රු.",
+    creditRsLabel: "ණය: රු.",
+    unknownShop: "නොදන්නා කඩයක්",
+    unknownItem: "නොදන්නා භාණ්ඩයක්"
   },
 
   
@@ -542,7 +548,13 @@ export const translations = {
     pleaseCompleteOnboarding: "Please complete the onboarding steps on the home page first!",
     billsFrom: "From Bills:",
     otherFrom: "Other:",
-    noShopsFound: "No shops found."
+    noShopsFound: "No shops found.",
+
+    totalRsLabel: "Total: Rs.",
+    billRsLabel: "Bill: Rs.",
+    creditRsLabel: "Credit: Rs.",
+    unknownShop: "Unknown Shop",
+    unknownItem: "Unknown Item"
 
   },
 
@@ -814,6 +826,12 @@ export const translations = {
     pleaseCompleteOnboarding: "தயவுசெய்து முதலில் முகப்புப்பக்கத்தில் உள்ள படிகளை முடிக்கவும்!",
     billsFrom: "பில்களிலிருந்து:",
     otherFrom: "மற்றவை:",
-    noShopsFound: "கடைகள் எதுவும் கிடைக்கவில்லை."
+    noShopsFound: "கடைகள் எதுவும் கிடைக்கவில்லை.",
+
+    totalRsLabel: "மொத்தம்: ரூ.",
+    billRsLabel: "பில்: ரூ.",
+    creditRsLabel: "கடன்: ரூ.",
+    unknownShop: "அறியப்படாத கடை",
+    unknownItem: "அறியப்படாத பொருள்"
   }
 };
