@@ -16,10 +16,7 @@ export default function Reports() {
   const [isMapsLoaded, setIsMapsLoaded] = useState(false);
   const [language, setLanguage] = useState('si');
   
-  // වාර්තා වර්ගය මාරු කිරීම සඳහා (මුදල් vs භාණ්ඩ)
-  const [reportTab, setReportTab] = useState('financial'); // 'financial' | 'items'
-  
-  // ෆිල්ටර් වර්ගය: 'day', 'week', 'month', 'custom'
+  const [reportTab, setReportTab] = useState('financial'); 
   const [filterType, setFilterType] = useState('day');
   
   const getFormattedDate = (d) => {
@@ -35,16 +32,13 @@ export default function Reports() {
   
   const [displayRange, setDisplayRange] = useState({ start: '', end: '' });
 
-  // දත්ත ගබඩා (Maps)
   const [shopsMap, setShopsMap] = useState({});
   const [shopRouteMap, setShopRouteMap] = useState({});
   const [itemsMap, setItemsMap] = useState({});
   const [routesList, setRoutesList] = useState([]);
   
-  // භාණ්ඩ වාර්තා සඳහා අමතර ෆිල්ටර්
   const [selectedRouteId, setSelectedRouteId] = useState('all');
 
-  // ප්‍රතිඵල (Results)
   const [reportData, setReportData] = useState({
     totalSales: 0,
     totalBillsCollection: 0,
@@ -62,7 +56,6 @@ export default function Reports() {
     if (!token) return navigate('/');
     setLanguage(localStorage.getItem('appLanguage') || 'si');
     
-    // මූලික දත්ත වගු (Maps) සකස් කිරීම
     const initData = async () => {
       try {
         const allRoutes = await db.routes.toArray();
@@ -124,12 +117,10 @@ export default function Reports() {
 
         setDisplayRange({ start, end });
 
-        // 1. කාලසීමාවට අදාල බිල්පත් සහ වියදම් පෙරා ගැනීම
         const periodBills = await db.bills.filter(b => b.date >= start && b.date <= end).toArray();
         periodBills.sort((a, b) => b.id - a.id);
         const periodExpenses = await db.expenses.filter(e => e.date >= start && e.date <= end).toArray();
 
-        // --- මුදල් වාර්තා ගණනය කිරීම ---
         let sales = 0; let billsCash = 0; let pastDue = 0; let credit = 0; let otherCashNet = 0;
 
         periodBills.forEach(bill => {
@@ -154,7 +145,6 @@ export default function Reports() {
           billsList: periodBills
         });
 
-        // --- භාණ්ඩ වාර්තා ගණනය කිරීම ---
         const billIds = periodBills.map(b => b.id);
         let periodBillItems = [];
         if (billIds.length > 0) {
@@ -166,7 +156,6 @@ export default function Reports() {
           const b = periodBills.find(x => x.id === bi.billId);
           if (!b) return;
 
-          // රූට් එක අනුව ෆිල්ටර් කිරීම
           if (selectedRouteId !== 'all') {
             if (String(shopRouteMap[b.shopId]) !== String(selectedRouteId)) return;
           }
@@ -178,13 +167,14 @@ export default function Reports() {
           itemAgg[bi.itemId].revenue += parseFloat(bi.subTotal) || 0;
         });
 
+        const tUnknownItem = translations[language]?.unknownItem || 'Unknown Item';
+
         const itemSalesArr = Object.values(itemAgg).map(ia => ({
           ...ia,
-          itemName: itemsMap[ia.itemId]?.name || 'Unknown Item',
+          itemName: itemsMap[ia.itemId]?.name || tUnknownItem,
           unit: itemsMap[ia.itemId]?.unit || ''
         }));
         
-        // විකුණුම් ප්‍රමාණය අනුව අනුපිළිවෙල සැකසීම (Sort descending)
         itemSalesArr.sort((a, b) => b.qty - a.qty);
         setItemSalesData(itemSalesArr);
 
@@ -196,7 +186,7 @@ export default function Reports() {
     };
 
     loadReportForPeriod();
-  }, [filterType, selectedDate, customStartDate, customEndDate, selectedRouteId, isMapsLoaded, shopsMap, shopRouteMap, itemsMap]);
+  }, [filterType, selectedDate, customStartDate, customEndDate, selectedRouteId, isMapsLoaded, shopsMap, shopRouteMap, itemsMap, language]);
 
   const t = translations[language] || translations['si'];
 
@@ -217,10 +207,10 @@ export default function Reports() {
         {/* Tab Switcher (Financial vs Items) */}
         <div className="flex bg-gray-200/60 dark:bg-gray-800 p-1.5 rounded-xl mb-5 shadow-inner">
            <button onClick={() => setReportTab('financial')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-[13px] transition-all duration-300 ${reportTab === 'financial' ? 'bg-white dark:bg-gray-700 shadow text-[#14348c] dark:text-blue-400 scale-100' : 'text-gray-500 dark:text-gray-400 scale-95 hover:text-gray-700'}`}>
-              <Banknote size={16}/> මුදල් වාර්තා
+              <Banknote size={16}/> {t.financialReportsTab || "මුදල් වාර්තා"}
            </button>
            <button onClick={() => setReportTab('items')} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg font-bold text-[13px] transition-all duration-300 ${reportTab === 'items' ? 'bg-white dark:bg-gray-700 shadow text-orange-600 dark:text-orange-400 scale-100' : 'text-gray-500 dark:text-gray-400 scale-95 hover:text-gray-700'}`}>
-              <Package size={16}/> භාණ්ඩ වාර්තා
+              <Package size={16}/> {t.itemReportsTab || "භාණ්ඩ වාර්තා"}
            </button>
         </div>
         
@@ -283,8 +273,8 @@ export default function Reports() {
                     <div className="flex items-center gap-2 mb-1 text-green-600 dark:text-green-400"><Banknote size={16} /><span className="text-[11px] font-bold uppercase tracking-wider">{t.cashInHandLabel || "අතැති මුදල"}</span></div>
                     <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>රු. {reportData.finalCashInHand?.toFixed(2)}</h2>
                     <div className="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-800">
-                      <p className="text-[10px] text-gray-500 flex justify-between"><span>බිල් වලින්:</span><span className="font-bold">රු. {reportData.totalBillsCollection?.toFixed(2)}</span></p>
-                      <p className={`text-[10px] flex justify-between ${reportData.otherCashNet < 0 ? 'text-red-500' : reportData.otherCashNet > 0 ? 'text-green-500' : 'text-gray-500'}`}><span>වෙනත්:</span><span className="font-bold">{reportData.otherCashNet > 0 ? '+' : ''}රු. {reportData.otherCashNet?.toFixed(2)}</span></p>
+                      <p className="text-[10px] text-gray-500 flex justify-between"><span>{t.billsFrom || "බිල් වලින්:"}</span><span className="font-bold">රු. {reportData.totalBillsCollection?.toFixed(2)}</span></p>
+                      <p className={`text-[10px] flex justify-between ${reportData.otherCashNet < 0 ? 'text-red-500' : reportData.otherCashNet > 0 ? 'text-green-500' : 'text-gray-500'}`}><span>{t.otherFrom || "වෙනත්:"}</span><span className="font-bold">{reportData.otherCashNet > 0 ? '+' : ''}රු. {reportData.otherCashNet?.toFixed(2)}</span></p>
                     </div>
                   </div>
 
@@ -302,7 +292,7 @@ export default function Reports() {
                 <hr className={`${theme.colors.divider} border-t my-6`} />
 
                 <div className="flex justify-between items-center mb-2">
-                  <h2 className={`font-bold text-[16px] ${theme.colors.headerText}`}>බිල්පත් ලැයිස්තුව</h2>
+                  <h2 className={`font-bold text-[16px] ${theme.colors.headerText}`}>{t.billsList || "බිල්පත් ලැයිස්තුව"}</h2>
                   <span className={`text-[12px] font-bold text-white bg-[#14348c] dark:bg-blue-600 px-2 py-1 rounded-md shadow-sm`}>{reportData.billsList.length}</span>
                 </div>
                 
@@ -312,14 +302,14 @@ export default function Reports() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 shrink-0 rounded-full bg-blue-100 dark:bg-gray-700 text-[#14348c] dark:text-blue-400 flex items-center justify-center font-bold text-sm">{index + 1}</div>
                         <div>
-                          <h3 className={`font-bold text-[15px] ${theme.colors.inputText}`}>{shopsMap[bill.shopId] || 'Unknown Shop'}</h3>
+                          <h3 className={`font-bold text-[15px] ${theme.colors.inputText}`}>{shopsMap[bill.shopId] || t.unknownShop || 'Unknown Shop'}</h3>
                           <p className={`text-[11px] font-bold text-gray-400 mb-0.5`}>{bill.date}</p>
-                          <p className={`text-[12px] font-medium text-green-600 dark:text-green-400`}>එකතුව: රු. {(parseFloat(bill.receivedAmount) + parseFloat(bill.pastDueReceived || 0)).toFixed(2)}</p>
+                          <p className={`text-[12px] font-medium text-green-600 dark:text-green-400`}>{t.totalRsLabel || "එකතුව: රු."} {(parseFloat(bill.receivedAmount) + parseFloat(bill.pastDueReceived || 0)).toFixed(2)}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                         <p className={`text-[12px] font-bold ${theme.colors.mutedText}`}>බිල: රු. {parseFloat(bill.totalAmount).toFixed(2)}</p>
-                         {parseFloat(bill.dueAmount) > 0 && <p className="text-[12px] font-bold text-red-500">ණය: රු. {parseFloat(bill.dueAmount).toFixed(2)}</p>}
+                         <p className={`text-[12px] font-bold ${theme.colors.mutedText}`}>{t.billRsLabel || "බිල: රු."} {parseFloat(bill.totalAmount).toFixed(2)}</p>
+                         {parseFloat(bill.dueAmount) > 0 && <p className="text-[12px] font-bold text-red-500">{t.creditRsLabel || "ණය: රු."} {parseFloat(bill.dueAmount).toFixed(2)}</p>}
                       </div>
                     </div>
                   ))}
@@ -336,14 +326,14 @@ export default function Reports() {
             {/* Route Filter Dropdown */}
             <div className="mb-6 bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
               <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
-                 <MapPin size={16} className="text-green-600 dark:text-green-400"/> රූට් එක අනුව පෙන්වන්න
+                 <MapPin size={16} className="text-green-600 dark:text-green-400"/> {t.showByRoute || "රූට් එක අනුව පෙන්වන්න"}
               </label>
               <select 
                  value={selectedRouteId} 
                  onChange={(e) => setSelectedRouteId(e.target.value)}
                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#14348c]"
               >
-                 <option value="all">සියලුම රූට් (All Routes)</option>
+                 <option value="all">{t.allRoutesOption || "සියලුම රූට් (All Routes)"}</option>
                  {routesList.map(r => (
                     <option key={r.id} value={r.id}>{r.routeName}</option>
                  ))}
@@ -353,14 +343,14 @@ export default function Reports() {
             {itemSalesData.length === 0 ? (
               <div className={`${theme.colors.cardBg} rounded-xl border ${theme.colors.divider} p-8 text-center shadow-sm`}>
                 <Package size={36} className={`${theme.colors.mutedText} mx-auto mb-3 opacity-50`} />
-                <p className={`text-sm font-medium ${theme.colors.mutedText}`}>මෙම කාලය තුළ භාණ්ඩ කිසිවක් විකිණී නොමැත.</p>
+                <p className={`text-sm font-medium ${theme.colors.mutedText}`}>{t.noItemsSold || "මෙම කාලය තුළ භාණ්ඩ කිසිවක් විකිණී නොමැත."}</p>
               </div>
             ) : (
               <>
                 {/* Top 5 Items Widget */}
                 <div className="mb-6">
                   <h3 className="font-bold text-[15px] text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                    <TrendingUp size={18} className="text-orange-500"/> වැඩිපුරම විකිණුන භාණ්ඩ 5
+                    <TrendingUp size={18} className="text-orange-500"/> {t.top5Items || "වැඩිපුරම විකිණුන භාණ්ඩ 5"}
                   </h3>
                   <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 shadow-sm space-y-4">
                      {itemSalesData.slice(0, 5).map((item, idx) => {
@@ -386,14 +376,14 @@ export default function Reports() {
                 {/* Full Item List */}
                 <div>
                   <h3 className="font-bold text-[15px] text-gray-800 dark:text-gray-200 mb-3 flex items-center gap-2">
-                    <Search size={18} className="text-gray-500"/> සියලුම භාණ්ඩ විකුණුම් 
+                    <Search size={18} className="text-gray-500"/> {t.allItemSales || "සියලුම භාණ්ඩ විකුණුම්"} 
                   </h3>
                   <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
                     {itemSalesData.map((item, index) => (
                       <div key={item.itemId} className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
                          <div>
                             <p className="font-bold text-[15px] text-gray-800 dark:text-gray-200">{item.itemName}</p>
-                            <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">ආදායම: රු. {item.revenue.toFixed(2)}</p>
+                            <p className="text-[12px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">{t.revenueLbl || "ආදායම: රු."} {item.revenue.toFixed(2)}</p>
                          </div>
                          <div className="text-right">
                             <span className="inline-block px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-[#14348c] dark:text-blue-400 rounded-lg text-[14px] font-bold">
