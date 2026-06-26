@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../db/database';
 import { theme } from '../config/theme';
+import { translations } from '../config/translations';
 import { CloudLightning, CheckCircle2, AlertCircle, Wifi, WifiOff, RefreshCw, Store, MapPin, PackagePlus, Receipt, Wallet, User, Building2 } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
@@ -10,6 +11,10 @@ export default function BackupSync() {
   const [isError, setIsError] = useState(false);
   
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  // භාෂාව ලබාගැනීම
+  const [language, setLanguage] = useState('si');
+  const t = translations[language] || translations['si'];
   
   // සියලුම වර්ග 7 සඳහාම State එක සකස් කිරීම
   const [pendingCounts, setPendingCounts] = useState({
@@ -37,13 +42,17 @@ export default function BackupSync() {
   };
 
   useEffect(() => {
+
+    // භාෂාව ලබාගැනීම
+    setLanguage(localStorage.getItem('appLanguage') || 'si');
+
     loadPendingCounts();
 
     const handleOnline = () => setIsOnline(true);
     const handleOffline = () => {
       setIsOnline(false);
       setIsError(true);
-      setMessage('අන්තර්ජාල සම්බන්ධතාවයක් නොමැත. දත්ත දුරකථනයේ සුරක්ෂිතව ඇත.');
+      setMessage(t.offlineWarning);
     };
 
     window.addEventListener('online', handleOnline);
@@ -66,12 +75,12 @@ export default function BackupSync() {
 
   const handleAutoSync = async () => {
     setIsSyncing(true);
-    setMessage('දත්ත සර්වර් එකට යාවත්කාලීන වෙමින් පවතී...');
+    setMessage(t.syncingMessage);
     setIsError(false);
 
     try {
       const userStr = localStorage.getItem('user');
-      if (!userStr) throw new Error("පරිශීලක දත්ත නොමැත.");
+      if (!userStr) throw new Error(t.noUserDataError);
       const user = JSON.parse(userStr);
 
       const pRoutes = await db.routes.filter(x => x.syncStatus === 'pending').toArray();
@@ -114,15 +123,15 @@ export default function BackupSync() {
         await markAsSynced('profile', pProfile);
         await markAsSynced('billItems', pBillItems);
         
-        setMessage('සියලුම දත්ත සාර්ථකව සර්වර් එකට යාවත්කාලීන විය!');
+        setMessage(t.syncSuccessMsg);
         loadPendingCounts(); 
       } else {
         setIsError(true);
-        setMessage('සර්වර් දෝෂයකි. පසුව නැවත උත්සාහ කරනු ඇත.');
+        setMessage(t.serverErrorRetry);
       }
     } catch (error) {
       setIsError(true);
-      setMessage('සර්වර් එක හා සම්බන්ධ වීමට නොහැක. පසුව ස්වයංක්‍රීයව යාවත්කාලීන වනු ඇත.');
+      setMessage(t.cannotConnectSyncLater);
     }
     
     setTimeout(() => setIsSyncing(false), 2000);
@@ -135,20 +144,20 @@ export default function BackupSync() {
         <span className={`font-bold text-[14px] ${count > 0 ? colorClass.text : theme.colors.inputText}`}>{label}</span>
       </div>
       <span className={`font-bold px-3 py-1 rounded-lg text-[13px] ${count > 0 ? `${colorClass.badgeBg} ${colorClass.text}` : 'bg-gray-100 text-gray-400 dark:bg-gray-800'}`}>
-        {count > 0 ? `${count} යැවීමට ඇත` : 'සම්පූර්ණයි'}
+        {count > 0 ? `${count} ${t.pendingSend}` : t.completed}
       </span>
     </div>
   );
 
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col transition-colors duration-300`}>
-      <PageHeader title="Cloud Sync (දත්ත සමමුහුර්තකරණය)" />
+      <PageHeader title={t.cloudSyncTitle} />
       
       <div className="flex-1 overflow-y-auto px-5 py-6 hide-scrollbar">
         
         <div className={`flex items-center justify-center gap-2 py-3 rounded-xl mb-6 font-bold text-sm shadow-sm transition-all duration-500 ${isOnline ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-300 dark:border-green-800' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-300 dark:border-red-800'}`}>
            {isOnline ? <Wifi size={18}/> : <WifiOff size={18}/>}
-           {isOnline ? "අන්තර්ජාලය හා සම්බන්ධයි (Online)" : "අන්තර්ජාලය නොමැත (Offline)"}
+           {isOnline ? t.onlineMsg : t.offlineMsg}
         </div>
 
         <div className="flex flex-col items-center mb-6">
@@ -158,7 +167,7 @@ export default function BackupSync() {
            </div>
            
            <h2 className={`text-lg font-bold ${theme.colors.headerText} text-center`}>
-             {isSyncing ? 'දත්ත යාවත්කාලීන වෙමින් පවතී...' : (pendingCounts.total === 0 ? 'සියලු දත්ත යාවත්කාලීනයි' : 'ස්වයංක්‍රීයව යාවත්කාලීන වීමට සූදානම්')}
+             {isSyncing ? t.syncingMessage : (pendingCounts.total === 0 ? t.allDataUpdated : t.readyToAutoSync)}
            </h2>
         </div>
 
@@ -171,17 +180,16 @@ export default function BackupSync() {
 
         <hr className={`${theme.colors.divider} border-t mb-6`} />
 
-        <h3 className={`font-bold text-[15px] ${theme.colors.headerText} mb-4`}>දත්ත තත්වය (Sync Status)</h3>
+        <h3 className={`font-bold text-[15px] ${theme.colors.headerText} mb-4`}>{t.syncStatusTitle}</h3>
         
         {/* අලුතින් Profile සහ Settings ඇතුලත් කර ඇත */}
-        <StatusRow icon={User} label="ප්‍රොෆයිල් දත්ත" count={pendingCounts.profile} colorClass={{ bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', icon: 'text-teal-500', text: 'text-teal-700 dark:text-teal-300', badgeBg: 'bg-teal-100 dark:bg-teal-900/50' }} />
-        <StatusRow icon={Building2} label="ව්‍යාපාරික දත්ත" count={pendingCounts.settings} colorClass={{ bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', icon: 'text-indigo-500', text: 'text-indigo-700 dark:text-indigo-300', badgeBg: 'bg-indigo-100 dark:bg-indigo-900/50' }} />
-        <StatusRow icon={Receipt} label="බිල්පත්" count={pendingCounts.bills} colorClass={{ bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-200 dark:border-blue-800', icon: 'text-blue-500', text: 'text-blue-700 dark:text-blue-300', badgeBg: 'bg-blue-100 dark:bg-blue-900/50' }} />
-        <StatusRow icon={Store} label="කඩවල්" count={pendingCounts.shops} colorClass={{ bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', icon: 'text-purple-500', text: 'text-purple-700 dark:text-purple-300', badgeBg: 'bg-purple-100 dark:bg-purple-900/50' }} />
-        <StatusRow icon={MapPin} label="ගමන් මාර්ග" count={pendingCounts.routes} colorClass={{ bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', icon: 'text-orange-500', text: 'text-orange-700 dark:text-orange-300', badgeBg: 'bg-orange-100 dark:bg-orange-900/50' }} />
-        <StatusRow icon={PackagePlus} label="භාණ්ඩ" count={pendingCounts.items} colorClass={{ bg: 'bg-pink-50 dark:bg-pink-900/20', border: 'border-pink-200 dark:border-pink-800', icon: 'text-pink-500', text: 'text-pink-700 dark:text-pink-300', badgeBg: 'bg-pink-100 dark:bg-pink-900/50' }} />
-        <StatusRow icon={Wallet} label="වියදම්/ආදායම්" count={pendingCounts.expenses} colorClass={{ bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-200 dark:border-green-800', icon: 'text-green-500', text: 'text-green-700 dark:text-green-300', badgeBg: 'bg-green-100 dark:bg-green-900/50' }} />
-
+        <StatusRow icon={User} label={t.profileData} count={pendingCounts.profile} colorClass={{ bg: 'bg-teal-50 dark:bg-teal-900/20', border: 'border-teal-200 dark:border-teal-800', icon: 'text-teal-500', text: 'text-teal-700 dark:text-teal-300', badgeBg: 'bg-teal-100 dark:bg-teal-900/50' }} />
+        <StatusRow icon={Building2} label={t.businessData} count={pendingCounts.settings} colorClass={{ bg: 'bg-indigo-50 dark:bg-indigo-900/20', border: 'border-indigo-200 dark:border-indigo-800', icon: 'text-indigo-500', text: 'text-indigo-700 dark:text-indigo-300', badgeBg: 'bg-indigo-100 dark:bg-indigo-900/50' }} />
+        <StatusRow icon={Receipt} label={t.billsData} count={pendingCounts.bills} colorClass={{ bg: 'bg-blue-50 dark:bg-blue-900/20', border: 'border-blue-200 dark:border-blue-800', icon: 'text-blue-500', text: 'text-blue-700 dark:text-blue-300', badgeBg: 'bg-blue-100 dark:bg-blue-900/50' }} />
+        <StatusRow icon={Store} label={t.shopsData} count={pendingCounts.shops} colorClass={{ bg: 'bg-purple-50 dark:bg-purple-900/20', border: 'border-purple-200 dark:border-purple-800', icon: 'text-purple-500', text: 'text-purple-700 dark:text-purple-300', badgeBg: 'bg-purple-100 dark:bg-purple-900/50' }} />
+        <StatusRow icon={MapPin} label={t.routesData} count={pendingCounts.routes} colorClass={{ bg: 'bg-orange-50 dark:bg-orange-900/20', border: 'border-orange-200 dark:border-orange-800', icon: 'text-orange-500', text: 'text-orange-700 dark:text-orange-300', badgeBg: 'bg-orange-100 dark:bg-orange-900/50' }} />
+        <StatusRow icon={PackagePlus} label={t.itemsData} count={pendingCounts.items} colorClass={{ bg: 'bg-pink-50 dark:bg-pink-900/20', border: 'border-pink-200 dark:border-pink-800', icon: 'text-pink-500', text: 'text-pink-700 dark:text-pink-300', badgeBg: 'bg-pink-100 dark:bg-pink-900/50' }} />
+        <StatusRow icon={Wallet} label={t.expensesData} count={pendingCounts.expenses} colorClass={{ bg: 'bg-green-50 dark:bg-green-900/20', border: 'border-green-200 dark:border-green-800', icon: 'text-green-500', text: 'text-green-700 dark:text-green-300', badgeBg: 'bg-green-100 dark:bg-green-900/50' }} />
       </div>
     </div>
   );

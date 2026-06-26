@@ -276,7 +276,28 @@ export const translations = {
     billRsLabel: "බිල: රු.",
     creditRsLabel: "ණය: රු.",
     unknownShop: "නොදන්නා කඩයක්",
-    unknownItem: "නොදන්නා භාණ්ඩයක්"
+    unknownItem: "නොදන්නා භාණ්ඩයක්",
+
+    rsSymbol: "රු.",
+
+    offlineWarning: "අන්තර්ජාල සම්බන්ධතාවයක් නොමැත. දත්ත දුරකථනයේ සුරක්ෂිතව ඇත.",
+    syncingMessage: "දත්ත සර්වර් එකට යාවත්කාලීන වෙමින් පවතී...",
+    noUserDataError: "පරිශීලක දත්ත නොමැත.",
+    syncSuccessMsg: "සියලුම දත්ත සාර්ථකව සර්වර් එකට යාවත්කාලීන විය!",
+    serverErrorRetry: "සර්වර් දෝෂයකි. පසුව නැවත උත්සාහ කරනු ඇත.",
+    cannotConnectSyncLater: "සර්වර් එක හා සම්බන්ධ වීමට නොහැක. පසුව ස්වයංක්‍රීයව යාවත්කාලීන වනු ඇත.",
+    cloudSyncTitle: "Cloud Sync (දත්ත සමමුහුර්තකරණය)",
+    onlineMsg: "අන්තර්ජාලය හා සම්බන්ධයි (Online)",
+    offlineMsg: "අන්තර්ජාලය නොමැත (Offline)",
+    allDataUpdated: "සියලු දත්ත යාවත්කාලීනයි",
+    readyToAutoSync: "ස්වයංක්‍රීයව යාවත්කාලීන වීමට සූදානම්",
+    profileData: "ප්‍රොෆයිල් දත්ත",
+    businessData: "ව්‍යාපාරික දත්ත",
+    billsData: "බිල්පත්",
+    shopsData: "කඩවල්",
+    routesData: "ගමන් මාර්ග",
+    itemsData: "භාණ්ඩ",
+    expensesData: "වියදම්/ආදායම්",
   },
 
   
@@ -554,7 +575,28 @@ export const translations = {
     billRsLabel: "Bill: Rs.",
     creditRsLabel: "Credit: Rs.",
     unknownShop: "Unknown Shop",
-    unknownItem: "Unknown Item"
+    unknownItem: "Unknown Item",
+
+    rsSymbol: "Rs.",
+
+    offlineWarning: "No internet connection. Data is safe on the phone.",
+    syncingMessage: "Updating data to the server...",
+    noUserDataError: "User data not found.",
+    syncSuccessMsg: "All data successfully updated to the server!",
+    serverErrorRetry: "Server error. Will try again later.",
+    cannotConnectSyncLater: "Cannot connect to server. Will auto-sync later.",
+    cloudSyncTitle: "Cloud Sync",
+    onlineMsg: "Connected to Internet (Online)",
+    offlineMsg: "No Internet (Offline)",
+    allDataUpdated: "All data is up to date",
+    readyToAutoSync: "Ready for auto-sync",
+    profileData: "Profile Data",
+    businessData: "Business Data",
+    billsData: "Bills",
+    shopsData: "Shops",
+    routesData: "Routes",
+    itemsData: "Items",
+    expensesData: "Expenses/Income",
 
   },
 
@@ -832,6 +874,26 @@ export const translations = {
     billRsLabel: "பில்: ரூ.",
     creditRsLabel: "கடன்: ரூ.",
     unknownShop: "அறியப்படாத கடை",
-    unknownItem: "அறியப்படாத பொருள்"
+    unknownItem: "அறியப்படாத பொருள்",
+    rsSymbol: "ரூ.",
+
+    offlineWarning: "இணைய இணைப்பு இல்லை. தரவு தொலைபேசியில் பாதுகாப்பாக உள்ளது.",
+    syncingMessage: "சேவையகத்திற்கு தரவைப் புதுப்பிக்கிறது...",
+    noUserDataError: "பயனர் தரவு கிடைக்கவில்லை.",
+    syncSuccessMsg: "அனைத்து தரவுகளும் வெற்றிகரமாக சேவையகத்திற்கு புதுப்பிக்கப்பட்டன!",
+    serverErrorRetry: "சேவையக பிழை. பின்னர் மீண்டும் முயற்சிக்கப்படும்.",
+    cannotConnectSyncLater: "சேவையகத்துடன் இணைக்க முடியவில்லை. பின்னர் தானாக ஒத்திசைக்கப்படும்.",
+    cloudSyncTitle: "கிளவுட் ஒத்திசைவு (Cloud Sync)",
+    onlineMsg: "இணையத்துடன் இணைக்கப்பட்டுள்ளது (Online)",
+    offlineMsg: "இணையம் இல்லை (Offline)",
+    allDataUpdated: "அனைத்து தரவுகளும் புதுப்பிக்கப்பட்டுள்ளன",
+    readyToAutoSync: "தானாக ஒத்திசைக்க தயாராக உள்ளது",
+    profileData: "சுயவிவர தரவு",
+    businessData: "வணிக தரவு",
+    billsData: "பில்கள்",
+    shopsData: "கடைகள்",
+    routesData: "வழிகள்",
+    itemsData: "பொருட்கள்",
+    expensesData: "செலவுகள்/வருமானம்",
   }
 };
