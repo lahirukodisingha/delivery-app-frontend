@@ -184,17 +184,17 @@ export default function Expenses() {
             <Wallet size={14} /> {t.periodNetBalance}
           </p>
           <h2 className={`text-3xl font-bold mb-4 ${netBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-            {netBalance < 0 ? '-' : ''} රු. {Math.abs(netBalance).toFixed(2)}
+            {netBalance < 0 ? '-' : ''} {t.rsSymbol} {Math.abs(netBalance).toFixed(2)}
           </h2>
           
           <div className={`flex justify-between border-t ${theme.colors.divider} pt-3`}>
             <div>
               <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{t.incomeLabel}</p>
-              <p className="text-green-600 dark:text-green-400 font-bold">රු. {totalIncome.toFixed(2)}</p>
+              <p className="text-green-600 dark:text-green-400 font-bold">{t.rsSymbol} {totalIncome.toFixed(2)}</p>
             </div>
             <div className="text-right">
               <p className={`${theme.colors.mutedText} text-[11px] font-bold`}>{t.expenseLabel}</p>
-              <p className="text-red-600 dark:text-red-400 font-bold">රු. {totalExpense.toFixed(2)}</p>
+              <p className="text-red-600 dark:text-red-400 font-bold">{t.rsSymbol} {totalExpense.toFixed(2)}</p>
             </div>
           </div>
         </div>
