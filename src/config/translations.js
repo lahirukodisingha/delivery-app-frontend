@@ -250,6 +250,27 @@ export const translations = {
     duplicateRouteAlert: "මෙම නමින් ගමන් මාර්ගයක් (Route) දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.",
     duplicateShopAlert: "මෙම නමින් කඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.",
     duplicateItemAlert: "මෙම නමින් භාණ්ඩයක් දැනටමත් පවතී. කරුණාකර වෙනත් නමක් ලබා දෙන්න.",
+
+
+    syncStatusTitle: "දත්ත තත්වය (Sync Status)",
+    pendingSend: "යැවීමට ඇත",
+    completed: "සම්පූර්ණයි",
+    duplicateCopy: "[ පිටපතක් පමණි / DUPLICATE ]",
+    printCustomer: "පාරිභෝගිකයා:",
+    printItem: "භාණ්ඩය",
+    printQty: "ප්‍රමාණය",
+    printAmount: "මුදල",
+    printComeAgain: "නැවත එන්න!",
+    rePrintBtn: "නැවත ප්‍රින්ට්",
+    periodNetBalance: "කාලසීමාවේ ඉතිරිය",
+    addNewRecord: "නව සටහනක් එක් කරන්න",
+    recordDateLabel: "සටහන් කරන දිනය",
+    recordsList: "සටහන් ලැයිස්තුව",
+    noRecordsPeriod: "මෙම කාලසීමාව සඳහා සටහන් කිසිවක් නොමැත.",
+    pleaseCompleteOnboarding: "කරුණාකර පළමුව මුල් පිටුවේ ඇති පියවර සම්පූර්ණ කරන්න!",
+    billsFrom: "බිල් වලින්:",
+    otherFrom: "වෙනත්:",
+    noShopsFound: "කඩවල් කිසිවක් හමු නොවීය."
   },
 
   
@@ -503,6 +524,26 @@ export const translations = {
     duplicateShopAlert: "A shop with this name already exists. Please provide a different name.", 
     duplicateItemAlert: "An item with this name already exists. Please provide a different name.", 
 
+    syncStatusTitle: "Sync Status",
+    pendingSend: "Pending",
+    completed: "Completed",
+    duplicateCopy: "[ DUPLICATE COPY ]",
+    printCustomer: "Customer:",
+    printItem: "Item",
+    printQty: "Qty",
+    printAmount: "Amount",
+    printComeAgain: "Come Again!",
+    rePrintBtn: "Re-Print",
+    periodNetBalance: "Period Net Balance",
+    addNewRecord: "Add New Record",
+    recordDateLabel: "Record Date",
+    recordsList: "Records List",
+    noRecordsPeriod: "No records for this period.",
+    pleaseCompleteOnboarding: "Please complete the onboarding steps on the home page first!",
+    billsFrom: "From Bills:",
+    otherFrom: "Other:",
+    noShopsFound: "No shops found."
+
   },
 
   ta: {
@@ -754,5 +795,25 @@ export const translations = {
     duplicateRouteAlert: "இந்த பெயரில் ஏற்கனவே ஒரு வழி உள்ளது. வேறு பெயரை உள்ளிடவும்.", 
     duplicateShopAlert: "இந்த பெயரில் ஏற்கனவே ஒரு கடை உள்ளது. வேறு பெயரை உள்ளிடவும்.", 
     duplicateItemAlert: "இந்தப் பெயரில் ஏற்கனவே ஒரு பொருள் உள்ளது. வேறு பெயரை உள்ளிடவும்.", 
+
+    syncStatusTitle: "ஒத்திசைவு நிலை (Sync Status)",
+    pendingSend: "நிலுவையில்",
+    completed: "முடிந்தது",
+    duplicateCopy: "[ நகல் / DUPLICATE ]",
+    printCustomer: "வாடிக்கையாளர்:",
+    printItem: "பொருள்",
+    printQty: "அளவு",
+    printAmount: "தொகை",
+    printComeAgain: "மீண்டும் வருக!",
+    rePrintBtn: "மீண்டும் அச்சிடு",
+    periodNetBalance: "கால நிகர இருப்பு",
+    addNewRecord: "புதிய பதிவைச் சேர்",
+    recordDateLabel: "பதிவு தேதி",
+    recordsList: "பதிவுகள் பட்டியல்",
+    noRecordsPeriod: "இந்த காலத்திற்கு பதிவுகள் இல்லை.",
+    pleaseCompleteOnboarding: "தயவுசெய்து முதலில் முகப்புப்பக்கத்தில் உள்ள படிகளை முடிக்கவும்!",
+    billsFrom: "பில்களிலிருந்து:",
+    otherFrom: "மற்றவை:",
+    noShopsFound: "கடைகள் எதுவும் கிடைக்கவில்லை."
   }
 };
