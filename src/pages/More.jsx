@@ -74,7 +74,7 @@ export default function More() {
 
   // ලොක් වී ඇති බොත්තමක් එබූ විට පෙන්වන Alert එක
   const handleLockedFeature = () => {
-    showAlert(language === 'si' ? 'කරුණාකර පළමුව මුල් පිටුවේ ඇති පියවර සම්පූර්ණ කරන්න!' : 'Please complete the onboarding steps on the home page first!', 'error');
+    showAlert(t.pleaseCompleteOnboarding, 'error');
   };
 
   // මෙනු ලැයිස්තුවේ අයිතම 3 (Locked තත්ත්වයන් සමඟ)
