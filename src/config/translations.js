@@ -354,6 +354,25 @@ export const translations = {
     printSuccess: "සාර්ථකව ප්‍රින්ට් වුණා!",
     saveBtn: "සුරකින්න",
     printBtn: "ප්‍රින්ට් කරන්න",
+
+    // ... පවතින අනෙකුත් වචන ...
+    printPreview: "Print Preview",
+    printDate: "Date:",
+    printNo: "No:",
+    printCustomer: "Customer:",
+    printItem: "Item",
+    printQty: "Qty",
+    printAmount: "Amount",
+    printTotalAmount: "Total Amount:",
+    printPaidToday: "Paid for Today:",
+    printTodayDue: "Today's Due:",
+    printPreviousDue: "Previous Due:",
+    printPaidPastDue: "Paid for Past Due:",
+    printTotalDueBal: "Total Due Balance:",
+    printThankYou: "Thank You!",
+    printComeAgain: "නැවත එන්න!",
+    cancelBtn: "අවලංගු කරන්න",
+    printBtn: "ප්‍රින්ට් කරන්න",
   },
 
   
@@ -710,6 +729,25 @@ export const translations = {
     saveBtn: "Save",
     printBtn: "Print",
 
+    // ... පවතින අනෙකුත් වචන ...
+    printPreview: "Print Preview",
+    printDate: "Date:",
+    printNo: "No:",
+    printCustomer: "Customer:",
+    printItem: "Item",
+    printQty: "Qty",
+    printAmount: "Amount",
+    printTotalAmount: "Total Amount:",
+    printPaidToday: "Paid for Today:",
+    printTodayDue: "Today's Due:",
+    printPreviousDue: "Previous Due:",
+    printPaidPastDue: "Paid for Past Due:",
+    printTotalDueBal: "Total Due Balance:",
+    printThankYou: "Thank You!",
+    printComeAgain: "Come Again!",
+    cancelBtn: "Cancel",
+    printBtn: "Print",
+
   },
 
   ta: {
@@ -1062,6 +1100,25 @@ export const translations = {
     // ... පවතින අනෙකුත් වචන ...
     printSuccess: "வெற்றிகரமாக அச்சிடப்பட்டது!",
     saveBtn: "சேமி",
+    printBtn: "அச்சிடு",
+
+    // ... පවතින අනෙකුත් වචන ...
+    printPreview: "அச்சு முன்னோட்டம்",
+    printDate: "தேதி:",
+    printNo: "எண்:",
+    printCustomer: "வாடிக்கையாளர்:",
+    printItem: "பொருள்",
+    printQty: "அளவு",
+    printAmount: "தொகை",
+    printTotalAmount: "மொத்த தொகை:",
+    printPaidToday: "இன்று செலுத்தியது:",
+    printTodayDue: "இன்றைய நிலுவை:",
+    printPreviousDue: "முந்தைய நிலுவை:",
+    printPaidPastDue: "பழைய நிலுவைக்கு செலுத்தியது:",
+    printTotalDueBal: "மொத்த நிலுவை:",
+    printThankYou: "நன்றி!",
+    printComeAgain: "மீண்டும் வருக!",
+    cancelBtn: "ரத்துசெய்",
     printBtn: "அச்சிடு",
   }
 };

@@ -134,37 +134,41 @@ export default function EditBill() {
     setAlertConfig({ message, type, showCancel, onConfirm });
   };
 
-  const handleIncrement = (itemId) => setQuantities(prev => ({ ...prev, [itemId]: (prev[itemId] || 0) + 1 }));
-  
-  const handleDecrement = (itemId) => {
+  const handleIncrement = (id) => {
     setQuantities(prev => {
-      const current = prev[itemId] || 0;
-      if (current <= 1) {
+      const currentVal = parseFloat(prev[id]) || 0;
+      return { ...prev, [id]: String(currentVal + 1) };
+    });
+  };
+  
+  const handleDecrement = (id) => {
+    setQuantities(prev => {
+      const currentVal = parseFloat(prev[id]) || 0;
+      if (currentVal <= 1) {
         const newState = { ...prev };
-        delete newState[itemId]; 
+        delete newState[id]; 
         return newState;
       }
-      return { ...prev, [itemId]: current - 1 };
+      return { ...prev, [id]: String(currentVal - 1) };
     });
   };
 
-  const handleQuantityChange = (itemId, value) => {
-    const val = parseFloat(value);
-    if (isNaN(val) || val <= 0) {
+  const handleQuantityChange = (id, value) => {
+    if (value === '' || parseFloat(value) < 0) {
       setQuantities(prev => {
         const newState = { ...prev };
-        delete newState[itemId];
+        delete newState[id];
         return newState;
       });
     } else {
-      setQuantities(prev => ({ ...prev, [itemId]: val }));
+      setQuantities(prev => ({ ...prev, [id]: value }));
     }
   };
 
   const filteredItems = availableItems.filter(item => item.itemName.toLowerCase().includes(searchTerm.toLowerCase()));
   const activeBillItems = availableItems.filter(item => quantities[item.id] > 0).map(item => ({
     itemId: item.id, itemName: item.itemName, unit: item.unit, unitPrice: item.unitPrice,
-    quantity: quantities[item.id], subTotal: item.unitPrice * quantities[item.id]
+    quantity: parseFloat(quantities[item.id]), subTotal: item.unitPrice * parseFloat(quantities[item.id])
   }));
 
   const totalAmount = activeBillItems.reduce((total, item) => total + item.subTotal, 0);
@@ -220,12 +224,12 @@ export default function EditBill() {
       await db.billItems.where({ billId: parseInt(targetBillId) }).delete();
 
       const itemsToSave = activeBillItems.map(item => ({
-        billId: parseInt(targetBillId), itemId: item.itemId, quantity: item.quantity, pricePerUnit: item.unitPrice, subTotal: item.subTotal
+        billId: parseInt(targetBillId), itemId: item.itemId, quantity: item.quantity, pricePerUnit: item.unitPrice, subTotal: item.subTotal, syncStatus: 'pending'
       }));
       
       if (itemsToSave.length > 0) await db.billItems.bulkAdd(itemsToSave);
 
-      const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || 'Unknown Shop';
+      const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || t.unknownShop || 'Unknown Shop';
       setCurrentBillData({
         billId: targetBillId,
         date,
@@ -247,7 +251,6 @@ export default function EditBill() {
   };
 
   const handlePrint = async () => {
-    // ඩේටාබේස් එකේ බිල ප්‍රින්ට් කළ බවට සටහන් කිරීම
     try {
       await db.bills.update(parseInt(currentBillData.billId), { isPrinted: true });
     } catch (error) {
@@ -262,23 +265,19 @@ export default function EditBill() {
         t.printSuccess || 'සාර්ථකව ප්‍රින්ට් වුණා!', 
         'success', 
         false, 
-        // AddBill සඳහා '/home' ද, EditBill සඳහා -1 ද ලෙස මෙහි navigate එක ඔබගේ ෆයිල් එකට අදාලව තබාගන්න
-        () => navigate('/home') 
+        () => navigate(-1) 
       );
     }, 150);
   };
 
   const handleCancelPrint = () => {
-    // 1. Popup එක වසා දමන්න
     setShowPrintPopup(false);
-    
-    // 2. අප්ඩේට් වූ බවට Alert එක පෙන්වීම
     setTimeout(() => {
       showAlert(
         t.billUpdatedSuccess || 'බිල්පත සාර්ථකව යාවත්කාලීන කළා!', 
         'success', 
         false, 
-        () => navigate(-1) // Alert එකේ 'හරි' එබූ පසු ආපසු History එකට යයි
+        () => navigate(-1) 
       );
     }, 150);
   };
@@ -290,14 +289,16 @@ export default function EditBill() {
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
-      <CustomAlert 
-        message={alertConfig.message} 
-        type={alertConfig.type} 
-        showCancel={alertConfig.showCancel}
-        onConfirm={alertConfig.onConfirm}
-        onClose={closeAlert} 
-        language={language}
-      />
+      <div className="relative z-[200]">
+        <CustomAlert 
+          message={alertConfig.message} 
+          type={alertConfig.type} 
+          showCancel={alertConfig.showCancel}
+          onConfirm={alertConfig.onConfirm}
+          onClose={closeAlert} 
+          language={language}
+        />
+      </div>
 
       {showPrintPopup && currentBillData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
@@ -305,7 +306,7 @@ export default function EditBill() {
             
             <div className="bg-gray-100 p-3 flex justify-between items-center border-b">
               <h3 className="font-bold text-gray-700 flex items-center gap-2">
-                <Printer size={18}/> Print Preview
+                <Printer size={18}/> {t.printPreview || 'Print Preview'}
               </h3>
               <button onClick={handleCancelPrint} className="text-gray-500 hover:text-red-500 transition"><X size={20}/></button>
             </div>
@@ -331,20 +332,20 @@ export default function EditBill() {
               <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
               
               <div className="flex justify-between mb-1">
-                <span>Date: {currentBillData.date}</span>
-                <span>No: #{currentBillData.billId.toString().padStart(4, '0')}</span>
+                <span>{t.printDate || 'Date:'} {currentBillData.date}</span>
+                <span>{t.printNo || 'No:'} #{currentBillData.billId.toString().padStart(4, '0')}</span>
               </div>
               <div className="mb-2">
-                <span>Customer: <span className="font-bold">{currentBillData.shopName}</span></span>
+                <span>{t.printCustomer || 'Customer:'} <span className="font-bold">{currentBillData.shopName}</span></span>
               </div>
 
               <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
               
               <div className="w-full mb-2">
                 <div className="flex font-bold border-b border-gray-400 pb-1 mb-1">
-                  <div className="flex-1">Item</div>
-                  <div className="w-12 text-right">Qty</div>
-                  <div className="w-20 text-right">Amount</div>
+                  <div className="flex-1">{t.printItem || 'Item'}</div>
+                  <div className="w-12 text-right">{t.printQty || 'Qty'}</div>
+                  <div className="w-20 text-right">{t.printAmount || 'Amount'}</div>
                 </div>
                 {currentBillData.items.map((item, idx) => (
                   <div key={idx} className="flex mb-1">
@@ -359,17 +360,17 @@ export default function EditBill() {
 
               <div className="space-y-1">
                 <div className="flex justify-between font-bold text-[14px]">
-                  <span>Total Amount:</span>
-                  <span>Rs. {currentBillData.totalAmount.toFixed(2)}</span>
+                  <span>{t.printTotalAmount || 'Total Amount:'}</span>
+                  <span>{t.rsSymbol || 'Rs.'} {currentBillData.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Paid for Today:</span>
-                  <span>- Rs. {currentBillData.payForToday.toFixed(2)}</span>
+                  <span>{t.printPaidToday || 'Paid for Today:'}</span>
+                  <span>- {t.rsSymbol || 'Rs.'} {currentBillData.payForToday.toFixed(2)}</span>
                 </div>
                 {currentBillData.dueForToday > 0 && (
                   <div className="flex justify-between text-gray-700">
-                    <span>Today's Due:</span>
-                    <span>Rs. {currentBillData.dueForToday.toFixed(2)}</span>
+                    <span>{t.printTodayDue || "Today's Due:"}</span>
+                    <span>{t.rsSymbol || 'Rs.'} {currentBillData.dueForToday.toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -377,13 +378,13 @@ export default function EditBill() {
                   <>
                     <div className="border-t border-gray-300 my-1"></div>
                     <div className="flex justify-between text-gray-700">
-                      <span>Previous Due:</span>
-                      <span>Rs. {currentBillData.previousDue.toFixed(2)}</span>
+                      <span>{t.printPreviousDue || 'Previous Due:'}</span>
+                      <span>{t.rsSymbol || 'Rs.'} {currentBillData.previousDue.toFixed(2)}</span>
                     </div>
                     {currentBillData.payForPast > 0 && (
                       <div className="flex justify-between">
-                        <span>Paid for Past Due:</span>
-                        <span>- Rs. {currentBillData.payForPast.toFixed(2)}</span>
+                        <span>{t.printPaidPastDue || 'Paid for Past Due:'}</span>
+                        <span>- {t.rsSymbol || 'Rs.'} {currentBillData.payForPast.toFixed(2)}</span>
                       </div>
                     )}
                   </>
@@ -391,15 +392,15 @@ export default function EditBill() {
 
                 <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
                 <div className="flex justify-between font-bold text-[14px]">
-                  <span>Total Due Balance:</span>
-                  <span>Rs. {currentBillData.totalDueNow.toFixed(2)}</span>
+                  <span>{t.printTotalDueBal || 'Total Due Balance:'}</span>
+                  <span>{t.rsSymbol || 'Rs.'} {currentBillData.totalDueNow.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="border-t-2 border-dashed border-gray-400 my-3"></div>
               <div className="text-center font-bold pb-2">
-                <p>Thank You!</p>
-                <p>Come Again</p>
+                <p>{t.printThankYou || 'Thank You!'}</p>
+                <p>{t.printComeAgain || 'Come Again!'}</p>
               </div>
             </div>
 
@@ -414,7 +415,7 @@ export default function EditBill() {
                 onClick={handlePrint}
                 className="flex-1 py-3 bg-[#14348c] text-white font-bold rounded-xl hover:bg-[#1b43aa] transition flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30"
               >
-                <Printer size={20}/> Print
+                <Printer size={20}/> {t.printBtn || 'Print'}
               </button>
             </div>
 
@@ -449,7 +450,7 @@ export default function EditBill() {
                   {previousDue > 0 ? t.previousDueLabel : t.noPreviousDue}
                 </span>
               </div>
-              {previousDue > 0 && <span className="font-bold text-[16px] text-red-600 dark:text-red-400">රු. {previousDue.toFixed(2)}</span>}
+              {previousDue > 0 && <span className="font-bold text-[16px] text-red-600 dark:text-red-400">{t.rsSymbol || 'රු.'} {previousDue.toFixed(2)}</span>}
             </div>
 
             <hr className={`${theme.colors.divider} border-t my-2`} />
@@ -479,11 +480,21 @@ export default function EditBill() {
                     <div key={item.id} className={`flex justify-between items-center p-3 border rounded-xl shadow-sm transition-all ${isSelected ? 'border-[#14348c] dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20' : `${theme.colors.inputBorder} ${theme.colors.cardBg}`}`}>
                       <div>
                         <p className={`font-bold text-[16px] ${isSelected ? 'text-[#14348c] dark:text-blue-400' : theme.colors.inputText}`}>{item.itemName}</p>
-                        <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>රු. {item.unitPrice} / {item.unit}</p>
+                        <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>{t.rsSymbol || 'රු.'} {item.unitPrice} / {item.unit}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => handleDecrement(item.id)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
-                        <input type="number" value={qty} onChange={(e) => handleQuantityChange(item.id, e.target.value)} className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} placeholder="0" />
+                        <input 
+                          type="text" 
+                          inputMode="decimal"
+                          value={qty} 
+                          onChange={(e) => {
+                              let val = e.target.value.replace(/[^0-9.]/g, '');
+                              if ((val.match(/\./g) || []).length <= 1) handleQuantityChange(item.id, val);
+                          }}
+                          className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} 
+                          placeholder="0" 
+                        />
                         <button type="button" onClick={() => handleIncrement(item.id)} className="w-9 h-9 rounded-full bg-[#1b43aa] dark:bg-blue-600 flex items-center justify-center text-white shadow-sm transition"><Plus size={18} /></button>
                       </div>
                     </div>
@@ -508,11 +519,20 @@ export default function EditBill() {
                     <div key={item.itemId} className="flex justify-between items-center p-3 border border-[#14348c] dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 rounded-xl shadow-sm">
                       <div>
                         <p className="font-bold text-[16px] text-[#14348c] dark:text-blue-300">{item.itemName}</p>
-                        <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>රු. {item.unitPrice} / {item.unit}</p>
+                        <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>{t.rsSymbol || 'රු.'} {item.unitPrice} / {item.unit}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => handleDecrement(item.itemId)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
-                        <input type="number" value={item.quantity} onChange={(e) => handleQuantityChange(item.itemId, e.target.value)} className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} />
+                        <input 
+                          type="text" 
+                          inputMode="decimal"
+                          value={quantities[item.itemId] || ''} 
+                          onChange={(e) => {
+                              let val = e.target.value.replace(/[^0-9.]/g, '');
+                              if ((val.match(/\./g) || []).length <= 1) handleQuantityChange(item.itemId, val);
+                          }}
+                          className={`w-12 text-center font-bold text-[16px] ${theme.colors.inputText} bg-transparent focus:outline-none p-0`} 
+                        />
                         <button type="button" onClick={() => handleIncrement(item.itemId)} className="w-9 h-9 rounded-full bg-[#1b43aa] dark:bg-blue-600 flex items-center justify-center text-white shadow-sm transition"><Plus size={18} /></button>
                       </div>
                     </div>
@@ -525,35 +545,75 @@ export default function EditBill() {
 
             <div className="flex justify-between items-center bg-blue-50 dark:bg-blue-900/30 p-4 rounded-xl border border-blue-200 dark:border-blue-800 shadow-inner">
               <span className="font-bold text-[#14348c] dark:text-blue-300">{t.todayTotalBill}</span>
-              <span className="font-bold text-2xl text-[#14348c] dark:text-blue-200">රු. {totalAmount.toFixed(2)}</span>
+              <span className="font-bold text-2xl text-[#14348c] dark:text-blue-200">{t.rsSymbol || 'රු.'} {totalAmount.toFixed(2)}</span>
             </div>
 
             <div className="space-y-4">
               <div>
                 <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Banknote size={18} className="text-green-600" /> {t.todayPaymentLabel}</label>
                 <div className="relative">
-                  <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
-                  <input type="number" value={isTodayPaymentEdited ? customTodayPayment : (totalAmount > 0 ? totalAmount : '')} onChange={(e) => { setIsTodayPaymentEdited(true); setCustomTodayPayment(e.target.value); }} className={`w-full pl-12 pr-4 py-3.5 border border-green-300 dark:border-green-800 rounded-xl text-xl font-bold text-green-700 dark:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 bg-green-50 dark:bg-green-900/20 shadow-inner`} placeholder="0.00" disabled={totalAmount === 0} />
+                  <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>{t.rsSymbol || 'රු.'}</span>
+                  <input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={isTodayPaymentEdited ? customTodayPayment : (totalAmount > 0 ? totalAmount : '')} 
+                    onChange={(e) => { 
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if ((val.match(/\./g) || []).length <= 1) {
+                            setIsTodayPaymentEdited(true); 
+                            setCustomTodayPayment(val); 
+                        }
+                    }} 
+                    className={`w-full pl-12 pr-4 py-3.5 border border-green-300 dark:border-green-800 rounded-xl text-xl font-bold text-green-700 dark:text-green-300 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500 bg-green-50 dark:bg-green-900/20 shadow-inner`} 
+                    placeholder="0.00" 
+                    disabled={totalAmount === 0} 
+                  />
                 </div>
-                {dueForToday > 0 && <p className="text-red-500 dark:text-red-400 text-sm font-bold mt-1.5 flex items-center gap-1"><AlertCircle size={14}/> {t.todayDueAmount} රු. {dueForToday.toFixed(2)}</p>}
+                {dueForToday > 0 && <p className="text-red-500 dark:text-red-400 text-sm font-bold mt-1.5 flex items-center gap-1"><AlertCircle size={14}/> {t.todayDueAmount} {t.rsSymbol || 'රු.'} {dueForToday.toFixed(2)}</p>}
               </div>
 
               <div>
                  <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Receipt size={18} className="text-orange-500" /> {t.pastDuePaymentLabel}</label>
                  <div className="relative">
-                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
-                   <input type="number" value={pastDuePayment} onChange={(e) => setPastDuePayment(e.target.value)} className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} placeholder="0.00" />
+                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>{t.rsSymbol || 'රු.'}</span>
+                   <input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={pastDuePayment} 
+                    onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if ((val.match(/\./g) || []).length <= 1) setPastDuePayment(val);
+                    }} 
+                    className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} 
+                    placeholder="0.00" 
+                  />
                  </div>
               </div>
 
               <hr className={`${theme.colors.divider} border-t my-2`} />
 
-              <FormInput type="number" label={t.cashGivenLabel} value={cashGiven} onChange={(e) => setCashGiven(e.target.value)} icon={Wallet} placeholder={t.cashGivenPlaceholder} />
+              <div>
+                 <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Wallet size={18} className={theme.colors.mutedText} /> {t.cashGivenLabel}</label>
+                 <div className="relative">
+                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>{t.rsSymbol || 'රු.'}</span>
+                   <input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={cashGiven} 
+                    onChange={(e) => {
+                        let val = e.target.value.replace(/[^0-9.]/g, '');
+                        if ((val.match(/\./g) || []).length <= 1) setCashGiven(val);
+                    }} 
+                    className={`w-full pl-12 pr-4 py-3 border ${theme.colors.inputBorder} rounded-xl ${theme.fonts.input} ${theme.colors.inputText} ${theme.colors.inputFocus} ${theme.colors.cardBg} shadow-sm`} 
+                    placeholder={t.cashGivenPlaceholder} 
+                  />
+                 </div>
+              </div>
 
               {changeToReturn > 0 && (
                 <div className="flex justify-between items-center bg-[#1b43aa] dark:bg-blue-600 p-4 rounded-xl border border-[#14348c] dark:border-blue-700 shadow-lg animate-pulse mt-4">
                   <div className="flex items-center gap-2"><Coins size={24} className="text-blue-200" /><span className="font-bold text-white text-lg">{t.changeToReturnLabel}</span></div>
-                  <span className="font-bold text-3xl text-white">රු. {changeToReturn.toFixed(2)}</span>
+                  <span className="font-bold text-3xl text-white">{t.rsSymbol || 'රු.'} {changeToReturn.toFixed(2)}</span>
                 </div>
               )}
 
@@ -566,7 +626,7 @@ export default function EditBill() {
         )}
       </div>
 
-      <div className={`flex-none ${theme.colors.navBg} border-t ${theme.colors.navBorder} px-4 py-3 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.03)] z-50`}>
+      <div className={`flex-none ${theme.colors.navBg} border-t ${theme.colors.navBorder} px-4 pt-3 pb-10 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] z-50`}>
         {currentStep === 1 ? (
           <PrimaryButton onClick={handleNextStep}>
             {t.nextStepBtn} <ArrowRight size={20} />
