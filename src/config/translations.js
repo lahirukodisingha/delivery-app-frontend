@@ -349,6 +349,11 @@ export const translations = {
     revenueLbl: "ආදායම: රු.",
     unknownItem: "නොදන්නා භාණ්ඩයක්",
     rsSymbol: "රු.",
+
+    // ... පවතින අනෙකුත් වචන ...
+    printSuccess: "සාර්ථකව ප්‍රින්ට් වුණා!",
+    saveBtn: "සුරකින්න",
+    printBtn: "ප්‍රින්ට් කරන්න",
   },
 
   
@@ -700,6 +705,11 @@ export const translations = {
     unknownItem: "Unknown Item",
     rsSymbol: "Rs.",
 
+    // ... පවතින අනෙකුත් වචන ...
+    printSuccess: "Printed successfully!",
+    saveBtn: "Save",
+    printBtn: "Print",
+
   },
 
   ta: {
@@ -1048,5 +1058,10 @@ export const translations = {
     revenueLbl: "வருமானம்: ரூ.",
     unknownItem: "அறியப்படாத பொருள்",
     rsSymbol: "ரூ.",
+
+    // ... පවතින අනෙකුත් වචන ...
+    printSuccess: "வெற்றிகரமாக அச்சிடப்பட்டது!",
+    saveBtn: "சேமி",
+    printBtn: "அச்சிடு",
   }
 };

@@ -87,13 +87,10 @@ export default function AddBill() {
         setShops(filteredShops);
         setAvailableItems(loadedItems);
         
-        // මේ කොටස අලුතින් Replace කරන්න
         if (filteredShops.length > 0) {
           if (preSelectedShopId) {
-            // Home එකෙන් කඩයක් ක්ලික් කරලා ආවා නම් කෙලින්ම ඒක සිලෙක්ට් කරනවා
             setSelectedShopId(preSelectedShopId.toString());
           } else {
-            // සාමාන්‍ය විදිහට පල්ලෙහා බට්න් එකෙන් ආවා නම්, ඊළඟට යන්න තියෙන කඩේ ඔටෝ තෝරනවා
             const savedVisited = JSON.parse(localStorage.getItem(`visited_${todayStr}`) || '[]');
             const nextShop = filteredShops.find(s => !savedVisited.includes(s.id));
             
@@ -145,7 +142,6 @@ export default function AddBill() {
 
   const handleIncrement = (id) => {
     setQuantities(prev => {
-      // දශම සංඛ්‍යාවක් ලෙස නිවැරදිව ලබාගෙන 1ක් එකතු කිරීම
       const currentVal = parseFloat(prev[id]) || 0;
       return { ...prev, [id]: String(currentVal + 1) };
     });
@@ -153,7 +149,6 @@ export default function AddBill() {
   
   const handleDecrement = (id) => {
     setQuantities(prev => {
-      // දශම සංඛ්‍යාවක් ලෙස නිවැරදිව ලබාගෙන 1ක් අඩු කිරීම
       const currentVal = parseFloat(prev[id]) || 0;
       if (currentVal <= 1) {
         const newState = { ...prev };
@@ -165,7 +160,6 @@ export default function AddBill() {
   };
 
   const handleQuantityChange = (id, value) => {
-    // අගය හිස් නම් හෝ සෘණ අගයක් නම් එය ඉවත් කරයි
     if (value === '' || parseFloat(value) < 0) {
       setQuantities(prev => {
         const newState = { ...prev };
@@ -173,7 +167,6 @@ export default function AddBill() {
         return newState;
       });
     } else {
-      // දශම තිත මැකී යාම වැළැක්වීමට මෙහිදී String එකක් ලෙසම අගය තබා ගනී
       setQuantities(prev => ({ ...prev, [id]: value }));
     }
   };
@@ -244,14 +237,11 @@ export default function AddBill() {
         quantity: item.quantity, 
         pricePerUnit: item.unitPrice, 
         subTotal: item.subTotal,
-        syncStatus: 'pending' // <--- අලුතින් එක් කළ කොටස
+        syncStatus: 'pending' 
       }));
       
       if (itemsToSave.length > 0) await db.billItems.bulkAdd(itemsToSave);
 
-      if (itemsToSave.length > 0) await db.billItems.bulkAdd(itemsToSave);
-
-      // --- අලුතින් එක්කළ කොටස: බිල සේව් වූ පසු කඩේ ඉබේම 'Visited' ලෙස සටහන් කිරීම ---
       const todayStr = getLocalDate();
       const visitedKey = `visited_${todayStr}`;
       const currentVisited = JSON.parse(localStorage.getItem(visitedKey) || '[]');
@@ -260,9 +250,8 @@ export default function AddBill() {
         currentVisited.push(shopIdNum);
         localStorage.setItem(visitedKey, JSON.stringify(currentVisited));
       }
-      // -------------------------------------------------------------------------
 
-      const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || 'Unknown Shop';
+      const shopName = shops.find(s => s.id === parseInt(selectedShopId))?.shopName || t.unknownShop || 'Unknown Shop';
       setCurrentBillData({
         billId,
         date,
@@ -283,7 +272,6 @@ export default function AddBill() {
     }
   };
 
-  // 1. ප්‍රින්ට් නොකර නිකන්ම සේව් කිරීම සඳහා
   const handleOnlySave = () => {
     setShowPrintPopup(false);
     setTimeout(() => {
@@ -296,7 +284,6 @@ export default function AddBill() {
     }, 150);
   };
 
-  // 2. ප්‍රින්ට් කර සේව් කිරීම සඳහා
   const handlePrint = async () => {
     try {
       await db.bills.update(parseInt(currentBillData.billId), { isPrinted: true });
@@ -317,15 +304,13 @@ export default function AddBill() {
     }, 150);
   };
 
-  // 3. කතිරය එබූ විට මුළු බිලම මකා දමා කැන්සල් කිරීම සඳහා
   const handleCancelEntireBill = () => {
     showAlert(
-      language === 'si' ? 'ඔබට මෙම බිල්පත අවලංගු කිරීමට අවශ්‍ය බව විශ්වාසද? (දත්ත මැකී යනු ඇත)' : 'Are you sure you want to cancel? (Data will be lost)',
+      t.cancelBillConfirm || 'ඔබට මෙම බිල්පත අවලංගු කිරීමට අවශ්‍ය බව විශ්වාසද? (දත්ත මැකී යනු ඇත)',
       'confirm',
       true,
       async () => {
         try {
-          // සුරැකූ බිල සහ භාණ්ඩ දත්ත ගබඩාවෙන් මකා දැමීම
           await db.bills.delete(currentBillData.billId);
           const itemsToDelete = await db.billItems.filter(item => item.billId === currentBillData.billId).toArray();
           const itemIds = itemsToDelete.map(item => item.id);
@@ -346,7 +331,6 @@ export default function AddBill() {
   return (
     <div className={`h-dvh ${theme.colors.background} flex flex-col relative overflow-hidden transition-colors duration-300`}>
       
-      {/* Alert එක Print Popup එකටත් උඩින් පෙන්වීමට z-[200] යොදා ඇත */}
       <div className="relative z-[200]">
         <CustomAlert 
           message={alertConfig.message} 
@@ -364,9 +348,8 @@ export default function AddBill() {
             
             <div className="bg-gray-100 p-3 flex justify-between items-center border-b">
               <h3 className="font-bold text-gray-700 flex items-center gap-2">
-                <Printer size={18}/> Print Preview
+                <Printer size={18}/> {t.printPreview || 'Print Preview'}
               </h3>
-              {/* මෙහි onClick එක handleCancelEntireBill ලෙස වෙනස් කර ඇත */}
               <button onClick={handleCancelEntireBill} className="text-gray-500 hover:text-red-500 transition"><X size={20}/></button>
             </div>
 
@@ -391,20 +374,20 @@ export default function AddBill() {
               <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
               
               <div className="flex justify-between mb-1">
-                <span>Date: {currentBillData.date}</span>
-                <span>No: #{currentBillData.billId.toString().padStart(4, '0')}</span>
+                <span>{t.printDate || 'Date:'} {currentBillData.date}</span>
+                <span>{t.printNo || 'No:'} #{currentBillData.billId.toString().padStart(4, '0')}</span>
               </div>
               <div className="mb-2">
-                <span>Customer: <span className="font-bold">{currentBillData.shopName}</span></span>
+                <span>{t.printCustomer || 'Customer:'} <span className="font-bold">{currentBillData.shopName}</span></span>
               </div>
 
               <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
               
               <div className="w-full mb-2">
                 <div className="flex font-bold border-b border-gray-400 pb-1 mb-1">
-                  <div className="flex-1">Item</div>
-                  <div className="w-12 text-right">Qty</div>
-                  <div className="w-20 text-right">Amount</div>
+                  <div className="flex-1">{t.printItem || 'Item'}</div>
+                  <div className="w-12 text-right">{t.printQty || 'Qty'}</div>
+                  <div className="w-20 text-right">{t.printAmount || 'Amount'}</div>
                 </div>
                 {currentBillData.items.map((item, idx) => (
                   <div key={idx} className="flex mb-1">
@@ -419,17 +402,17 @@ export default function AddBill() {
 
               <div className="space-y-1">
                 <div className="flex justify-between font-bold text-[14px]">
-                  <span>Total Amount:</span>
-                  <span>Rs. {currentBillData.totalAmount.toFixed(2)}</span>
+                  <span>{t.printTotalAmount || 'Total Amount:'}</span>
+                  <span>{t.rsSymbol || 'Rs.'} {currentBillData.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Paid for Today:</span>
-                  <span>- Rs. {currentBillData.payForToday.toFixed(2)}</span>
+                  <span>{t.printPaidToday || 'Paid for Today:'}</span>
+                  <span>- {t.rsSymbol || 'Rs.'} {currentBillData.payForToday.toFixed(2)}</span>
                 </div>
                 {currentBillData.dueForToday > 0 && (
                   <div className="flex justify-between text-gray-700">
-                    <span>Today's Due:</span>
-                    <span>Rs. {currentBillData.dueForToday.toFixed(2)}</span>
+                    <span>{t.printTodayDue || "Today's Due:"}</span>
+                    <span>{t.rsSymbol || 'Rs.'} {currentBillData.dueForToday.toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -437,13 +420,13 @@ export default function AddBill() {
                   <>
                     <div className="border-t border-gray-300 my-1"></div>
                     <div className="flex justify-between text-gray-700">
-                      <span>Previous Due:</span>
-                      <span>Rs. {currentBillData.previousDue.toFixed(2)}</span>
+                      <span>{t.printPreviousDue || 'Previous Due:'}</span>
+                      <span>{t.rsSymbol || 'Rs.'} {currentBillData.previousDue.toFixed(2)}</span>
                     </div>
                     {currentBillData.payForPast > 0 && (
                       <div className="flex justify-between">
-                        <span>Paid for Past Due:</span>
-                        <span>- Rs. {currentBillData.payForPast.toFixed(2)}</span>
+                        <span>{t.printPaidPastDue || 'Paid for Past Due:'}</span>
+                        <span>- {t.rsSymbol || 'Rs.'} {currentBillData.payForPast.toFixed(2)}</span>
                       </div>
                     )}
                   </>
@@ -451,14 +434,15 @@ export default function AddBill() {
 
                 <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
                 <div className="flex justify-between font-bold text-[14px]">
-                  <span>Total Due Balance:</span>
-                  <span>Rs. {currentBillData.totalDueNow.toFixed(2)}</span>
+                  <span>{t.printTotalDueBal || 'Total Due Balance:'}</span>
+                  <span>{t.rsSymbol || 'Rs.'} {currentBillData.totalDueNow.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="border-t-2 border-dashed border-gray-400 my-3"></div>
               <div className="text-center font-bold pb-2">
-                <p>Thank You!</p>
+                <p>{t.printThankYou || 'Thank You!'}</p>
+                <p>{t.printComeAgain || 'Come Again!'}</p>
               </div>
             </div>
 
@@ -467,13 +451,13 @@ export default function AddBill() {
                 onClick={handleOnlySave}
                 className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition flex justify-center items-center gap-2 shadow-lg"
               >
-                <Save size={20}/> {language === 'si' ? 'සේව් කරන්න' : 'Save'}
+                <Save size={20}/> {t.saveBtn || 'Save'}
               </button>
               <button 
                 onClick={handlePrint}
                 className="flex-1 py-3 bg-[#14348c] text-white font-bold rounded-xl hover:bg-[#1b43aa] transition flex justify-center items-center gap-2 shadow-lg shadow-blue-500/30"
               >
-                <Printer size={20}/> {language === 'si' ? 'ප්‍රින්ට් කරන්න' : 'Print'}
+                <Printer size={20}/> {t.printBtn || 'Print'}
               </button>
             </div>
 
@@ -498,8 +482,6 @@ export default function AddBill() {
               </div>
               <div className="w-1/2 relative">
                  <FormSelect label={t.shopLabel} value={selectedShopId} onChange={(e) => setSelectedShopId(e.target.value)} options={shopOptions} disabled={shops.length === 0} icon={Store} required placeholderOption={shops.length === 0 ? (localStorage.getItem('activeRouteId') ? t.noShopsInRoute : t.pleaseSelectRouteFirst) : undefined} />
-                 
-                 {/* අලුතින් එකතු කළ ත්‍රිකෝණ අයිකන් එක */}
                  <div className="absolute right-3 bottom-[13px] pointer-events-none">
                    <ChevronDown size={18} className={theme.colors.mutedText} />
                  </div>
@@ -513,7 +495,7 @@ export default function AddBill() {
                   {previousDue > 0 ? t.previousDueLabel : t.noPreviousDue}
                 </span>
               </div>
-              {previousDue > 0 && <span className="font-bold text-[16px] text-red-600 dark:text-red-400">රු. {previousDue.toFixed(2)}</span>}
+              {previousDue > 0 && <span className="font-bold text-[16px] text-red-600 dark:text-red-400">{t.rsSymbol || 'රු.'} {previousDue.toFixed(2)}</span>}
             </div>
 
             <hr className={`${theme.colors.divider} border-t my-2 transition-colors`} />
@@ -552,7 +534,7 @@ export default function AddBill() {
                       <div key={item.id} className={`flex justify-between items-center p-3 border rounded-xl shadow-sm transition-all ${isSelected ? 'border-[#14348c] dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20' : `${theme.colors.inputBorder} ${theme.colors.cardBg}`}`}>
                         <div>
                           <p className={`font-bold text-[16px] ${isSelected ? 'text-[#14348c] dark:text-blue-400' : theme.colors.inputText}`}>{item.itemName}</p>
-                          <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>රු. {item.unitPrice} / {item.unit}</p>
+                          <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>{t.rsSymbol || 'රු.'} {item.unitPrice} / {item.unit}</p>
                         </div>
                         <div className="flex items-center gap-2">
                           <button type="button" onClick={() => handleDecrement(item.id)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
@@ -595,14 +577,13 @@ export default function AddBill() {
                     <div key={item.itemId} className="flex justify-between items-center p-3 border border-[#14348c] dark:border-blue-500 bg-blue-50/30 dark:bg-blue-900/20 rounded-xl shadow-sm">
                       <div>
                         <p className="font-bold text-[16px] text-[#14348c] dark:text-blue-300">{item.itemName}</p>
-                        <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>රු. {item.unitPrice} / {item.unit}</p>
+                        <p className={`text-[13px] font-medium ${theme.colors.mutedText}`}>{t.rsSymbol || 'රු.'} {item.unitPrice} / {item.unit}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <button type="button" onClick={() => handleDecrement(item.itemId)} className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-700 dark:text-gray-300 transition"><Minus size={18} /></button>
                         <input 
                           type="text" 
                           inputMode="decimal"
-                          // මෙහිදී item.quantity වෙනුවට quantities[item.itemId] යොදා ඇත
                           value={quantities[item.itemId] || ''} 
                           onChange={(e) => {
                               let val = e.target.value.replace(/[^0-9.]/g, '');
@@ -622,7 +603,7 @@ export default function AddBill() {
 
             <div className="flex justify-between items-center bg-blue-50 dark:bg-blue-900/30 p-4 rounded-xl border border-blue-200 dark:border-blue-800 shadow-inner">
               <span className="font-bold text-[#14348c] dark:text-blue-300">{t.todayTotalBill}</span>
-              <span className="font-bold text-2xl text-[#14348c] dark:text-blue-200">රු. {totalAmount.toFixed(2)}</span>
+              <span className="font-bold text-2xl text-[#14348c] dark:text-blue-200">{t.rsSymbol || 'රු.'} {totalAmount.toFixed(2)}</span>
             </div>
 
             {previousDue > 0 && (
@@ -630,7 +611,7 @@ export default function AddBill() {
                 <span className="font-bold text-red-700 dark:text-red-300 flex items-center gap-2">
                   <AlertCircle size={18} /> {t.previousDueLabel || "පෙර හිඟ මුදල"}
                 </span>
-                <span className="font-bold text-xl text-red-600 dark:text-red-400">රු. {previousDue.toFixed(2)}</span>
+                <span className="font-bold text-xl text-red-600 dark:text-red-400">{t.rsSymbol || 'රු.'} {previousDue.toFixed(2)}</span>
               </div>
             )}
 
@@ -638,7 +619,7 @@ export default function AddBill() {
               <div>
                 <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Banknote size={18} className="text-green-600 dark:text-green-400" /> {t.todayPaymentLabel}</label>
                 <div className="relative">
-                  <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
+                  <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>{t.rsSymbol || 'රු.'}</span>
                   <input 
                     type="text" 
                     inputMode="decimal"
@@ -655,14 +636,14 @@ export default function AddBill() {
                     disabled={totalAmount === 0} 
                   />
                 </div>
-                {dueForToday > 0 && <p className="text-red-500 dark:text-red-400 text-sm font-bold mt-1.5 flex items-center gap-1"><AlertCircle size={14}/> {t.todayDueAmount} රු. {dueForToday.toFixed(2)}</p>}
+                {dueForToday > 0 && <p className="text-red-500 dark:text-red-400 text-sm font-bold mt-1.5 flex items-center gap-1"><AlertCircle size={14}/> {t.todayDueAmount} {t.rsSymbol || 'රු.'} {dueForToday.toFixed(2)}</p>}
               </div>
 
               {previousDue > 0 && (
                 <div className={`${activeBillItems.length === 0 ? 'p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-800 rounded-xl shadow-sm' : ''}`}>
                    <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Receipt size={18} className="text-orange-500 dark:text-orange-400" /> {t.pastDuePaymentLabel}</label>
                    <div className="relative">
-                     <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
+                     <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>{t.rsSymbol || 'රු.'}</span>
                      <input 
                       type="text" 
                       inputMode="decimal"
@@ -683,7 +664,7 @@ export default function AddBill() {
               <div>
                  <label className={`block ${theme.fonts.label} ${theme.colors.labelText} mb-2 flex items-center gap-2`}><Wallet size={18} className={theme.colors.mutedText} /> {t.cashGivenLabel}</label>
                  <div className="relative">
-                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>රු.</span>
+                   <span className={`absolute inset-y-0 left-0 pl-4 flex items-center ${theme.colors.mutedText} font-bold`}>{t.rsSymbol || 'රු.'}</span>
                    <input 
                     type="text" 
                     inputMode="decimal"
@@ -701,7 +682,7 @@ export default function AddBill() {
               {changeToReturn > 0 && (
                 <div className="flex justify-between items-center bg-[#1b43aa] dark:bg-blue-600 p-4 rounded-xl border border-[#14348c] dark:border-blue-700 shadow-lg animate-pulse mt-4">
                   <div className="flex items-center gap-2"><Coins size={24} className="text-blue-200" /><span className="font-bold text-white text-lg">{t.changeToReturnLabel}</span></div>
-                  <span className="font-bold text-3xl text-white">රු. {changeToReturn.toFixed(2)}</span>
+                  <span className="font-bold text-3xl text-white">{t.rsSymbol || 'රු.'} {changeToReturn.toFixed(2)}</span>
                 </div>
               )}
 
@@ -714,7 +695,6 @@ export default function AddBill() {
         )}
       </div>
 
-      {/* py-3 ඉවත් කර pt-3 සහ pb-8 යොදා යටින් වැඩිපුර ඉඩක් (Bottom Padding) ලබා දී ඇත */}
       <div className={`flex-none ${theme.colors.navBg} border-t ${theme.colors.navBorder} px-4 pt-3 pb-10 shadow-[0_-4px_10px_rgba(0,0,0,0.03)] z-50`}>
         {currentStep === 1 ? (
           <PrimaryButton onClick={handleNextStep}>
