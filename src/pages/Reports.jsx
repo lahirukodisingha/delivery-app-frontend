@@ -266,26 +266,31 @@ export default function Reports() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className={`${theme.colors.cardBg} rounded-xl p-4 border ${theme.colors.divider} shadow-sm`}>
                     <div className="flex items-center gap-2 mb-1 text-blue-600 dark:text-blue-400"><BarChart3 size={16} /><span className="text-[11px] font-bold uppercase tracking-wider">{t.totalAmountLabel || "මුළු මුදල"}</span></div>
-                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>රු. {reportData.totalSales.toFixed(2)}</h2>
+                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>{t.rsSymbol || "රු."} {reportData.totalSales.toFixed(2)}</h2>
                   </div>
                   
                   <div className={`${theme.colors.cardBg} rounded-xl p-4 border ${theme.colors.divider} shadow-sm`}>
                     <div className="flex items-center gap-2 mb-1 text-green-600 dark:text-green-400"><Banknote size={16} /><span className="text-[11px] font-bold uppercase tracking-wider">{t.cashInHandLabel || "අතැති මුදල"}</span></div>
-                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>රු. {reportData.finalCashInHand?.toFixed(2)}</h2>
+                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>{t.rsSymbol || "රු."} {reportData.finalCashInHand?.toFixed(2)}</h2>
                     <div className="mt-1.5 pt-1.5 border-t border-gray-100 dark:border-gray-800">
-                      <p className="text-[10px] text-gray-500 flex justify-between"><span>{t.billsFrom || "බිල් වලින්:"}</span><span className="font-bold">රු. {reportData.totalBillsCollection?.toFixed(2)}</span></p>
-                      <p className={`text-[10px] flex justify-between ${reportData.otherCashNet < 0 ? 'text-red-500' : reportData.otherCashNet > 0 ? 'text-green-500' : 'text-gray-500'}`}><span>{t.otherFrom || "වෙනත්:"}</span><span className="font-bold">{reportData.otherCashNet > 0 ? '+' : ''}රු. {reportData.otherCashNet?.toFixed(2)}</span></p>
+                      <p className="text-[10px] text-gray-500 flex justify-between"><span>{t.billsFrom || "බිල් වලින්:"}</span><span className="font-bold">{t.rsSymbol || "රු."} {reportData.totalBillsCollection?.toFixed(2)}</span></p>
+                      <p className={`text-[10px] flex justify-between ${reportData.otherCashNet < 0 ? 'text-red-500' : reportData.otherCashNet > 0 ? 'text-green-500' : 'text-gray-500'}`}>
+                        <span>{t.otherFrom || "වෙනත්:"}</span>
+                        <span className="font-bold">
+                          {reportData.otherCashNet > 0 ? '+' : ''}{reportData.otherCashNet < 0 ? '-' : ''} {t.rsSymbol || "රු."} {Math.abs(reportData.otherCashNet || 0).toFixed(2)}
+                        </span>
+                      </p>
                     </div>
                   </div>
 
                   <div className={`${theme.colors.cardBg} rounded-xl p-4 border ${theme.colors.divider} shadow-sm`}>
                     <div className="flex items-center gap-2 mb-1 text-orange-500 dark:text-orange-400"><Wallet size={16} /><span className="text-[11px] font-bold uppercase tracking-wider">{t.pastDueReceivedLabel || "ලැබුණු හිඟ"}</span></div>
-                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>රු. {reportData.pastDueReceived.toFixed(2)}</h2>
+                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>{t.rsSymbol || "රු."} {reportData.pastDueReceived.toFixed(2)}</h2>
                   </div>
 
                   <div className={`${theme.colors.cardBg} rounded-xl p-4 border ${theme.colors.divider} shadow-sm`}>
                     <div className="flex items-center gap-2 mb-1 text-red-500 dark:text-red-400"><Receipt size={16} /><span className="text-[11px] font-bold uppercase tracking-wider">{t.creditAmountLabel || "ණය මුදල"}</span></div>
-                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>රු. {reportData.totalCredit.toFixed(2)}</h2>
+                    <h2 className={`text-[17px] font-bold ${theme.colors.inputText}`}>{t.rsSymbol || "රු."} {reportData.totalCredit.toFixed(2)}</h2>
                   </div>
                 </div>
 
