@@ -363,7 +363,7 @@ export default function AddBill() {
                     style={{ filter: 'grayscale(100%) contrast(1.2) brightness(0.9)' }} 
                   />
                 )}
-                <h2 className="text-[18px] font-bold uppercase">{businessInfo?.businessName || 'MY BUSINESS'}</h2>
+                <h2 className="text-[18px] font-bold uppercase">{businessInfo?.businessName || t.myBusiness || 'MY BUSINESS'}</h2>
                 {businessInfo?.address && <p className="mt-1">{businessInfo.address}</p>}
                 {(businessInfo?.phone1 || businessInfo?.phone2) && (
                   <p className="mt-1">{businessInfo.phone1} {businessInfo.phone2 ? `/ ${businessInfo.phone2}` : ''}</p>
@@ -442,7 +442,6 @@ export default function AddBill() {
               <div className="border-t-2 border-dashed border-gray-400 my-3"></div>
               <div className="text-center font-bold pb-2">
                 <p>{t.printThankYou || 'Thank You!'}</p>
-                <p>{t.printComeAgain || 'Come Again!'}</p>
               </div>
             </div>
 
