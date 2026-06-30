@@ -373,6 +373,21 @@ export const translations = {
     printComeAgain: "නැවත එන්න!",
     cancelBtn: "අවලංගු කරන්න",
     printBtn: "ප්‍රින්ට් කරන්න",
+
+    // ... පවතින අනෙකුත් වචන ...
+    shopHistoryTitle: "බිල්පත් ඉතිහාසය",
+    noBillsFound: "මෙම කඩය සඳහා බිල්පත් කිසිවක් හමු නොවීය.",
+    deleteBtn: "මකන්න",
+    editBtn: "වෙනස් කරන්න",
+    rePrintBtn: "නැවත ප්‍රින්ට්",
+    billDeletedSuccess: "බිල සාර්ථකව මකා දමන ලදී!",
+    deleteConfirm: "මෙම බිල මකා දැමීමට අවශ්‍ය බව ඔබට විශ්වාසද? මෙයට අදාල භාණ්ඩ ද මැකී යනු ඇත.",
+
+    // ... පවතින අනෙකුත් වචන ...
+    rePrintPreview: "නැවත ප්‍රින්ට් පෙරදසුන",
+    printDataError: "දෝෂයක්! බිල්පත් දත්ත ලබාගැනීමට නොහැක.",
+    reprintBillTooltip: "බිල නැවත ප්‍රින්ට් කරන්න",
+    deleteError: "මකා දැමීමේදී දෝෂයක් මතු විය"
   },
 
   
@@ -748,6 +763,21 @@ export const translations = {
     cancelBtn: "Cancel",
     printBtn: "Print",
 
+    // ... පවතින අනෙකුත් වචන ...
+    shopHistoryTitle: "Bill History",
+    noBillsFound: "No bills found for this shop.",
+    deleteBtn: "Delete",
+    editBtn: "Edit",
+    rePrintBtn: "Re-Print",
+    billDeletedSuccess: "Bill deleted successfully!",
+    deleteConfirm: "Are you sure you want to delete this bill? Related items will also be deleted.",
+
+    // ... පවතින අනෙකුත් වචන ...
+    rePrintPreview: "Re-Print Preview",
+    printDataError: "Error! Unable to load bill data.",
+    reprintBillTooltip: "Re-print Bill",
+    deleteError: "Error deleting bill"
+
   },
 
   ta: {
@@ -1120,5 +1150,20 @@ export const translations = {
     printComeAgain: "மீண்டும் வருக!",
     cancelBtn: "ரத்துசெய்",
     printBtn: "அச்சிடு",
+
+    // ... පවතින අනෙකුත් වචන ...
+    shopHistoryTitle: "பில் வரலாறு",
+    noBillsFound: "இந்தக் கடைக்கான பில்கள் எதுவும் இல்லை.",
+    deleteBtn: "அழி",
+    editBtn: "திருத்து",
+    rePrintBtn: "மீண்டும் அச்சிடு",
+    billDeletedSuccess: "பில் வெற்றிகரமாக அழிக்கப்பட்டது!",
+    deleteConfirm: "இந்த பில்லை அழிக்க வேண்டுமா? இதனுடன் தொடர்புடைய பொருட்களும் அழிக்கப்படும்.",
+
+    // ... පවතින අනෙකුත් වචන ...
+    rePrintPreview: "மீண்டும் அச்சு முன்னோட்டம்",
+    printDataError: "பிழை! பில் தரவை ஏற்ற முடியவில்லை.",
+    reprintBillTooltip: "பில்லை மீண்டும் அச்சிடு",
+    deleteError: "பில்லை நீக்குவதில் பிழை"
   }
 };

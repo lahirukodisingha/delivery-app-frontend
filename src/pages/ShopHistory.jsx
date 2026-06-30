@@ -143,7 +143,7 @@ export default function ShopHistory() {
       setShowPrintPopup(true);
     } catch (error) {
       console.error("Error preparing reprint", error);
-      showAlert("දෝෂයක්! බිල්පත් දත්ත ලබාගැනීමට නොහැක.", 'error');
+      showAlert(t.printDataError || "දෝෂයක්! බිල්පත් දත්ත ලබාගැනීමට නොහැක.", 'error');
     }
   };
 
@@ -183,7 +183,7 @@ export default function ShopHistory() {
             
             <div className="bg-gray-100 p-3 flex justify-between items-center border-b">
               <h3 className="font-bold text-gray-700 flex items-center gap-2">
-                <Printer size={18}/> Re-Print Preview
+                <Printer size={18}/> {t.rePrintPreview || 'Re-Print Preview'}
               </h3>
               <button onClick={handleCancelPrint} className="text-gray-500 hover:text-red-500 transition"><X size={20}/></button>
             </div>
@@ -204,26 +204,26 @@ export default function ShopHistory() {
                   <p className="mt-1">{businessInfo.phone1} {businessInfo.phone2 ? `/ ${businessInfo.phone2}` : ''}</p>
                 )}
                 {businessInfo?.regNumber && <p className="mt-1">BR: {businessInfo.regNumber}</p>}
-                <p className="mt-2 text-[10px] bg-gray-200 inline-block px-2 py-0.5 rounded-full font-bold">[ DUPLICATE COPY ]</p>
+                <p className="mt-2 text-[10px] bg-gray-200 inline-block px-2 py-0.5 rounded-full font-bold">{t.duplicateCopy || '[ DUPLICATE COPY ]'}</p>
               </div>
 
               <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
               
               <div className="flex justify-between mb-1">
-                <span>Date: {currentBillData.date}</span>
-                <span>No: #{currentBillData.billId.toString().padStart(4, '0')}</span>
+                <span>{t.printDate || 'Date:'} {currentBillData.date}</span>
+                <span>{t.printNo || 'No:'} #{currentBillData.billId.toString().padStart(4, '0')}</span>
               </div>
               <div className="mb-2">
-                <span>Customer: <span className="font-bold">{currentBillData.shopName}</span></span>
+                <span>{t.printCustomer || 'Customer:'} <span className="font-bold">{currentBillData.shopName}</span></span>
               </div>
 
               <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
               
               <div className="w-full mb-2">
                 <div className="flex font-bold border-b border-gray-400 pb-1 mb-1">
-                  <div className="flex-1">Item</div>
-                  <div className="w-12 text-right">Qty</div>
-                  <div className="w-20 text-right">Amount</div>
+                  <div className="flex-1">{t.printItem || 'Item'}</div>
+                  <div className="w-12 text-right">{t.printQty || 'Qty'}</div>
+                  <div className="w-20 text-right">{t.printAmount || 'Amount'}</div>
                 </div>
                 {currentBillData.items.map((item, idx) => (
                   <div key={idx} className="flex mb-1">
@@ -238,17 +238,17 @@ export default function ShopHistory() {
 
               <div className="space-y-1">
                 <div className="flex justify-between font-bold text-[14px]">
-                  <span>Total Amount:</span>
-                  <span>Rs. {currentBillData.totalAmount.toFixed(2)}</span>
+                  <span>{t.printTotalAmount || 'Total Amount:'}</span>
+                  <span>{t.rsSymbol || 'Rs.'} {currentBillData.totalAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Paid for Today:</span>
-                  <span>- Rs. {currentBillData.payForToday.toFixed(2)}</span>
+                  <span>{t.printPaidToday || 'Paid for Today:'}</span>
+                  <span>- {t.rsSymbol || 'Rs.'} {currentBillData.payForToday.toFixed(2)}</span>
                 </div>
                 {currentBillData.dueForToday > 0 && (
                   <div className="flex justify-between text-gray-700">
-                    <span>Today's Due:</span>
-                    <span>Rs. {currentBillData.dueForToday.toFixed(2)}</span>
+                    <span>{t.printTodayDue || "Today's Due:"}</span>
+                    <span>{t.rsSymbol || 'Rs.'} {currentBillData.dueForToday.toFixed(2)}</span>
                   </div>
                 )}
                 
@@ -256,13 +256,13 @@ export default function ShopHistory() {
                   <>
                     <div className="border-t border-gray-300 my-1"></div>
                     <div className="flex justify-between text-gray-700">
-                      <span>Previous Due:</span>
-                      <span>Rs. {currentBillData.previousDue.toFixed(2)}</span>
+                      <span>{t.printPreviousDue || 'Previous Due:'}</span>
+                      <span>{t.rsSymbol || 'Rs.'} {currentBillData.previousDue.toFixed(2)}</span>
                     </div>
                     {currentBillData.payForPast > 0 && (
                       <div className="flex justify-between">
-                        <span>Paid for Past Due:</span>
-                        <span>- Rs. {currentBillData.payForPast.toFixed(2)}</span>
+                        <span>{t.printPaidPastDue || 'Paid for Past Due:'}</span>
+                        <span>- {t.rsSymbol || 'Rs.'} {currentBillData.payForPast.toFixed(2)}</span>
                       </div>
                     )}
                   </>
@@ -270,15 +270,15 @@ export default function ShopHistory() {
 
                 <div className="border-t-2 border-dashed border-gray-400 my-2"></div>
                 <div className="flex justify-between font-bold text-[14px]">
-                  <span>Total Due Balance:</span>
-                  <span>Rs. {currentBillData.totalDueNow.toFixed(2)}</span>
+                  <span>{t.printTotalDueBal || 'Total Due Balance:'}</span>
+                  <span>{t.rsSymbol || 'Rs.'} {currentBillData.totalDueNow.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="border-t-2 border-dashed border-gray-400 my-3"></div>
               <div className="text-center font-bold pb-2">
-                <p>Thank You!</p>
-                <p>Come Again</p>
+                <p>{t.printThankYou || 'Thank You!'}</p>
+                <p>{t.printComeAgain || 'Come Again'}</p>
               </div>
             </div>
 
@@ -293,7 +293,7 @@ export default function ShopHistory() {
                 onClick={handlePrint}
                 className="flex-1 py-3 bg-black text-white font-bold rounded-xl hover:bg-gray-800 transition flex justify-center items-center gap-2 shadow-lg"
               >
-                <Printer size={20}/> Re-Print
+                <Printer size={20}/> {t.rePrintBtn || 'Re-Print'}
               </button>
             </div>
 
@@ -301,7 +301,7 @@ export default function ShopHistory() {
         </div>
       )}
 
-      <PageHeader title={shop ? shop.shopName : t.shopHistoryTitle} backPath={backPath} />
+      <PageHeader title={shop ? shop.shopName : (t.shopHistoryTitle || "බිල්පත් ඉතිහාසය")} onBack={() => navigate(backPath)} />
 
       <div className="flex-1 overflow-y-auto px-5 pt-6 pb-8 hide-scrollbar">
         
@@ -332,7 +332,7 @@ export default function ShopHistory() {
                     </div>
                     <div className="text-right">
                       <span className={`text-[12px] font-bold ${theme.colors.mutedText} block`}>{t.totalAmount}</span>
-                      <span className="font-bold text-[16px] text-[#14348c] dark:text-blue-300">රු. {parseFloat(bill.totalAmount).toFixed(2)}</span>
+                      <span className="font-bold text-[16px] text-[#14348c] dark:text-blue-300">{t.rsSymbol || 'රු.'} {parseFloat(bill.totalAmount).toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -340,23 +340,20 @@ export default function ShopHistory() {
                     <div className="space-y-1.5">
                       <p className={`text-[13px] ${theme.colors.mutedText} flex items-center gap-1`}>
                         <Banknote size={14} className="text-green-600" /> {t.paidAmount} 
-                        {/* මෙහි තිබූ (receivedAmount + pastDueReceived) වෙනුවට receivedAmount පමණක් යොදා ඇත */}
-                        <strong className="text-green-600 ml-1">රු. {parseFloat(bill.receivedAmount || 0).toFixed(2)}</strong>
+                        <strong className="text-green-600 ml-1">{t.rsSymbol || 'රු.'} {parseFloat(bill.receivedAmount || 0).toFixed(2)}</strong>
                       </p>
 
-                      {/* අලුතින් එක් කළ හිඟ මුදල් ලැබුණු බව පෙන්වන තැඹිලි පාට කොටස */}
                       {parseFloat(bill.pastDueReceived) > 0 && (
                         <p className={`text-[13px] ${theme.colors.mutedText} flex items-center gap-1`}>
                           <Banknote size={14} className="text-orange-500" /> {t.pastDueReceivedLabel || 'ලැබුණු හිඟ මුදල:'} 
-                          <strong className="text-orange-500 ml-1">රු. {parseFloat(bill.pastDueReceived).toFixed(2)}</strong>
+                          <strong className="text-orange-500 ml-1">{t.rsSymbol || 'රු.'} {parseFloat(bill.pastDueReceived).toFixed(2)}</strong>
                         </p>
                       )}
 
-                      {/* පරණ ණය පෙන්වන රතු පාට කොටස */}
                       {parseFloat(bill.dueAmount) > 0 && (
                         <p className={`text-[13px] ${theme.colors.mutedText} flex items-center gap-1`}>
                           <AlertCircle size={14} className="text-red-500" /> {t.dueAmount} 
-                          <strong className="text-red-500 ml-1">රු. {parseFloat(bill.dueAmount).toFixed(2)}</strong>
+                          <strong className="text-red-500 ml-1">{t.rsSymbol || 'රු.'} {parseFloat(bill.dueAmount).toFixed(2)}</strong>
                         </p>
                       )}
                     </div>
@@ -366,7 +363,7 @@ export default function ShopHistory() {
                         <button 
                           onClick={() => handleReprintClick(bill)}
                           className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                          title="Re-print Bill"
+                          title={t.reprintBillTooltip || "Re-print Bill"}
                         >
                           <Printer size={18} />
                         </button>
@@ -375,12 +372,14 @@ export default function ShopHistory() {
                       <button 
                         onClick={() => navigate(`/edit-bill/${bill.id}`)}
                         className="p-2 rounded-lg bg-blue-100 dark:bg-blue-900/30 text-[#14348c] dark:text-blue-400 hover:bg-blue-200 transition-colors"
+                        title={t.editBtn || "Edit"}
                       >
                         <Edit size={18} />
                       </button>
                       <button 
                         onClick={() => handleDeleteBill(bill.id)}
                         className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 transition-colors"
+                        title={t.deleteBtn || "Delete"}
                       >
                         <Trash2 size={18} />
                       </button>
